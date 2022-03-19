@@ -1,0 +1,15 @@
+name: JadAPI
+version: ${project.version}
+main: dev.jadss.jadapi.JadAPI
+load: STARTUP
+authors: [jadss_pt]
+api-version: 1.17
+description: JadssAPI gives lots of methods for your plugins to help you!
+website: jadss.ml
+commands:
+  jadapi:
+    usage: /<command>
+    description: Main Command!
+  test:
+    usage: /<command>
+    description: TestCommand.
