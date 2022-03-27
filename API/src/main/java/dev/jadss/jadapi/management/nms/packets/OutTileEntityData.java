@@ -9,6 +9,7 @@ import dev.jadss.jadapi.management.nms.objects.world.entities.tile.TileEntity;
 import dev.jadss.jadapi.management.nms.objects.world.entities.tile.TileEntitySign;
 import dev.jadss.jadapi.management.nms.objects.world.positions.BlockPosition;
 import dev.jadss.jadapi.utils.JReflection;
+import net.minecraft.server.v1_16_R3.PacketPlayOutTileEntityData;
 
 public class OutTileEntityData extends DefinedPacket {
 
@@ -67,27 +68,31 @@ public class OutTileEntityData extends DefinedPacket {
 
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_8)) {
             this.blockPosition = new BlockPosition();
-            this.blockPosition.parse(JReflection.getUnspecificFieldObject(tileEntityDataPacketClass, BlockPosition.blockPositionClass, packet));
+            this.blockPosition.parse(JReflection.getFieldObject(tileEntityDataPacketClass, BlockPosition.blockPositionClass, packet));
 
-            this.id = JReflection.getUnspecificFieldObject(tileEntityDataPacketClass, int.class, packet);
+            this.id = JReflection.getFieldObject(tileEntityDataPacketClass, int.class, packet);
 
-            this.nbt = new ObjectPackage(JReflection.getUnspecificFieldObject(tileEntityDataPacketClass, NMS.nbtTagCompoundClass, packet));
+            this.nbt = new ObjectPackage(JReflection.getFieldObject(tileEntityDataPacketClass, NMS.nbtTagCompoundClass, packet));
         } else {
-            int x = JReflection.getUnspecificFieldObject(tileEntityDataPacketClass, int.class, 0, packet);
-            int y = JReflection.getUnspecificFieldObject(tileEntityDataPacketClass, int.class, 1, packet);
-            int z = JReflection.getUnspecificFieldObject(tileEntityDataPacketClass, int.class, 2, packet);
+            int x = JReflection.getFieldObject(tileEntityDataPacketClass, int.class, packet, (i) -> 0);
+            int y = JReflection.getFieldObject(tileEntityDataPacketClass, int.class, packet, (i) -> 1);
+            int z = JReflection.getFieldObject(tileEntityDataPacketClass, int.class, packet, (i) -> 2);
             this.blockPosition = new BlockPosition(x, y, z);
 
-            this.id = JReflection.getUnspecificFieldObject(tileEntityDataPacketClass, int.class, 3, packet);
+            this.id = JReflection.getFieldObject(tileEntityDataPacketClass, int.class, packet, (i) -> 3);
 
-            this.nbt = new ObjectPackage(JReflection.getUnspecificFieldObject(tileEntityDataPacketClass, NMS.nbtTagCompoundClass, packet));
+            this.nbt = new ObjectPackage(JReflection.getFieldObject(tileEntityDataPacketClass, NMS.nbtTagCompoundClass, packet));
         }
     }
 
     @Override
     public Object build() {
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_8)) {
-            return JReflection.executeConstructor(tileEntityDataPacketClass, new Class[]{BlockPosition.blockPositionClass, int.class, NMS.nbtTagCompoundClass}, blockPosition.build(), id, nbt.getObject());
+            if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_16)) {
+                throw new NMSException("This packet is not supported by this version of JADAPI.");
+            } else {
+                return JReflection.executeConstructor(tileEntityDataPacketClass, new Class[]{BlockPosition.blockPositionClass, int.class, NMS.nbtTagCompoundClass}, blockPosition.build(), id, nbt.getObject());
+            }
         } else {
             return JReflection.executeConstructor(tileEntityDataPacketClass, new Class[]{int.class, int.class, int.class, int.class, NMS.nbtTagCompoundClass}, blockPosition.getX(), blockPosition.getY(), blockPosition.getZ(), id, nbt.getObject());
         }

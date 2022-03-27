@@ -52,20 +52,20 @@ public class InUpdateSign extends DefinedPacket {
             throw new NMSException("The packet specified is not parsable by this class.");
 
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
-            int x = JReflection.getUnspecificFieldObject(updateSignPacketClass, int.class, 0, packet);
-            int y = JReflection.getUnspecificFieldObject(updateSignPacketClass, int.class, 1, packet);
-            int z = JReflection.getUnspecificFieldObject(updateSignPacketClass, int.class, 2, packet);
+            int x = JReflection.getFieldObject(updateSignPacketClass, int.class, packet, (i) -> 0);
+            int y = JReflection.getFieldObject(updateSignPacketClass, int.class, packet, (i) -> 1);
+            int z = JReflection.getFieldObject(updateSignPacketClass, int.class, packet, (i) -> 2);
             this.position = new BlockPosition(x, y, z);
         } else {
             this.position = new BlockPosition();
-            this.position.parse(JReflection.getUnspecificFieldObject(updateSignPacketClass, BlockPosition.blockPositionClass, packet));
+            this.position.parse(JReflection.getFieldObject(updateSignPacketClass, BlockPosition.blockPositionClass, packet));
         }
 
         if (JVersion.getServerVersion() == JVersion.v1_8) {
             //hey look I found a reason why I hate 1.8 now! literally a weirdo version! :joy:
             this.lines = new IChatBaseComponent[]{new IChatBaseComponent(), new IChatBaseComponent(), new IChatBaseComponent(), new IChatBaseComponent()};
 
-            Object[] array = (Object[]) JReflection.getUnspecificFieldObject(updateSignPacketClass, Array.newInstance(IChatBaseComponent.iChatBaseComponentClass, 0).getClass(), packet);
+            Object[] array = (Object[]) JReflection.getFieldObject(updateSignPacketClass, Array.newInstance(IChatBaseComponent.iChatBaseComponentClass, 0).getClass(), packet);
             try {
                 for (int i = 0; i < 4; i++)
                     this.lines[i].parse(array[i]);
@@ -78,7 +78,7 @@ public class InUpdateSign extends DefinedPacket {
         } else {
             this.lines = new IChatBaseComponent[]{new IChatBaseComponent(), new IChatBaseComponent(), new IChatBaseComponent(), new IChatBaseComponent()};
 
-            String[] array = JReflection.getUnspecificFieldObject(updateSignPacketClass, String[].class, packet);
+            String[] array = JReflection.getFieldObject(updateSignPacketClass, String[].class, packet);
             try {
                 for (int i = 0; i < 4; i++)
                     this.lines[i].setMessage(array[i]);
@@ -101,17 +101,17 @@ public class InUpdateSign extends DefinedPacket {
             packet = JReflection.executeConstructor(updateSignPacketClass, new Class[]{});
 
             if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
-                JReflection.setUnspecificField(updateSignPacketClass, int.class, 0, packet, position.getX());
-                JReflection.setUnspecificField(updateSignPacketClass, int.class, 1, packet, position.getY());
-                JReflection.setUnspecificField(updateSignPacketClass, int.class, 2, packet, position.getZ());
+                JReflection.setFieldObject(updateSignPacketClass, int.class, packet, position.getX(), (i) -> 0);
+                JReflection.setFieldObject(updateSignPacketClass, int.class, packet, position.getY(), (i) -> 1);
+                JReflection.setFieldObject(updateSignPacketClass, int.class, packet, position.getZ(), (i) -> 2);
             } else {
-                JReflection.setUnspecificField(updateSignPacketClass, BlockPosition.blockPositionClass, packet, position.build());
+                JReflection.setFieldObject(updateSignPacketClass, BlockPosition.blockPositionClass, packet, position.build());
             }
 
             if (JVersion.getServerVersion() == JVersion.v1_8) {
-                JReflection.setUnspecificField(updateSignPacketClass, Array.newInstance(IChatBaseComponent.iChatBaseComponentClass, 0).getClass(), packet, Arrays.stream(lines).map(IChatBaseComponent::build).toArray(Object[]::new));
+                JReflection.setFieldObject(updateSignPacketClass, Array.newInstance(IChatBaseComponent.iChatBaseComponentClass, 0).getClass(), packet, Arrays.stream(lines).map(IChatBaseComponent::build).toArray(Object[]::new));
             } else {
-                JReflection.setUnspecificField(updateSignPacketClass, String[].class, packet, Arrays.stream(lines).map(IChatBaseComponent::getMessage).toArray(String[]::new));
+                JReflection.setFieldObject(updateSignPacketClass, String[].class, packet, Arrays.stream(lines).map(IChatBaseComponent::getMessage).toArray(String[]::new));
             }
         }
         return packet;

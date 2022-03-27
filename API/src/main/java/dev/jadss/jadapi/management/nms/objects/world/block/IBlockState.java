@@ -21,9 +21,9 @@ public class IBlockState implements NMSObject, NMSManipulable {
 
     public String getId() {
         if(JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_15)) {
-            return JReflection.executeUnspecificMethod(iBlockStateClass, new Class[] {}, handle, String.class);
+            return JReflection.executeMethod(iBlockStateClass, new Class[] {}, handle, String.class, (i) -> 0);
         } else {
-            return JReflection.getUnspecificFieldObject(iBlockStateClass, String.class, handle);
+            return JReflection.getFieldObject(iBlockStateClass, String.class, handle);
         }
     }
 

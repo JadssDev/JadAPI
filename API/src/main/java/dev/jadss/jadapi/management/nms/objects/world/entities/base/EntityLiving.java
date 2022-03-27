@@ -23,16 +23,16 @@ public abstract class EntityLiving extends Entity {
 
     public void setSlot(EnumItemSlot slot, ItemStack item, boolean silent) {
         if(JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_8)) {
-            JReflection.executeUnspecificMethod(entityLivingClass, new Class[] { int.class, ItemStack.itemStackClass}, this.entity, null, slot.getSlot(), item.getHandle());
+            JReflection.executeMethod(entityLivingClass, new Class[] { int.class, ItemStack.itemStackClass}, this.entity, null, (i) -> 0, slot.getSlot(), item.getHandle());
         } else if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_15) ){
-            JReflection.executeUnspecificMethod(entityLivingClass, new Class[] { EnumItemSlot.enumItemSlotClass, ItemStack.itemStackClass }, this.entity, null, slot, item.getHandle());
+            JReflection.executeMethod(entityLivingClass, new Class[] { EnumItemSlot.enumItemSlotClass, ItemStack.itemStackClass }, this.entity, null, (i) -> 0, slot, item.getHandle());
         } else {
-            JReflection.executeUnspecificMethod(entityLivingClass, new Class[] { EnumItemSlot.enumItemSlotClass, ItemStack.itemStackClass, boolean.class }, this.entity, null, slot, item.getHandle(), silent);
+            JReflection.executeMethod(entityLivingClass, new Class[] { EnumItemSlot.enumItemSlotClass, ItemStack.itemStackClass, boolean.class }, this.entity, null, (i) -> 0, slot, item.getHandle(), silent);
         }
     }
 
     public void getSlot(EnumItemSlot slot) {
-        JReflection.executeUnspecificMethod(entityLivingClass, new Class[] { EnumItemSlot.enumItemSlotClass }, this.entity, ItemStack.itemStackClass, slot.getNMSObject());
+        JReflection.executeMethod(entityLivingClass, new Class[] { EnumItemSlot.enumItemSlotClass }, this.entity, ItemStack.itemStackClass, (i) -> 0, slot.getNMSObject());
     }
 
     private static final Class<?> attributeMapServerClass = JReflection.getReflectionClass("net.minecraft." + "server." + JReflection.getNMSVersion() + ".AttributeMapServer");
@@ -42,18 +42,18 @@ public abstract class EntityLiving extends Entity {
 
         Object attributeInstance;
         if(JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_15)) {
-            attributeInstance = JReflection.executeUnspecificMethod(entityLivingClass, new Class[] { Attribute.iAttributeClass }, this.entity, AttributeInstance.attributeInstanceClass, attribute.getHandle());
+            attributeInstance = JReflection.executeMethod(entityLivingClass, new Class[] { Attribute.iAttributeClass }, this.entity, AttributeInstance.attributeInstanceClass, (i) -> 0, attribute.getHandle());
         } else {
-            attributeInstance = JReflection.executeUnspecificMethod(entityLivingClass, new Class[] { Attribute.attributeBaseClass }, this.entity, AttributeInstance.attributeModifiableClass, attribute.getHandle());
+            attributeInstance = JReflection.executeMethod(entityLivingClass, new Class[] { Attribute.attributeBaseClass }, this.entity, AttributeInstance.attributeModifiableClass, (i) -> 0, attribute.getHandle());
         }
 
-        //Note: maybe dividing this into more classes will make it more reliable.
+        //Note: maybe dividing this into more classes will make it better.
         if(attributeInstance == null) {
             if(JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_15)) {
-                Object attributeMap = JReflection.getUnspecificFieldObject(entityLivingClass, AttributeInstance.attributeMapBaseClass, this.entity);
-                JReflection.executeUnspecificMethod(AttributeInstance.attributeMapBaseClass, new Class[] { Attribute.iAttributeClass }, attributeMap, AttributeInstance.attributeInstanceClass, attribute.getHandle());
+                Object attributeMap = JReflection.getFieldObject(entityLivingClass, AttributeInstance.attributeMapBaseClass, this.entity);
+                JReflection.executeMethod(AttributeInstance.attributeMapBaseClass, new Class[] { Attribute.iAttributeClass }, attributeMap, AttributeInstance.attributeInstanceClass, (i) -> 0, attribute.getHandle());
 
-                attributeInstance = JReflection.executeUnspecificMethod(entityLivingClass, new Class[] { Attribute.iAttributeClass }, this.entity, AttributeInstance.attributeInstanceClass, attribute.getHandle());
+                attributeInstance = JReflection.executeMethod(entityLivingClass, new Class[] { Attribute.iAttributeClass }, this.entity, AttributeInstance.attributeInstanceClass, (i) -> 0, attribute.getHandle());
             } else throw new NMSException("WHAT?");
         }
 

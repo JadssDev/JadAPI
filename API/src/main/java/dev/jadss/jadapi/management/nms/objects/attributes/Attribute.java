@@ -22,12 +22,12 @@ public class Attribute implements NMSObject, NMSManipulable {
     public AttributeType getType() { return type; }
 
     public String getName() {
-        return (String) JReflection.getUnspecificFieldObject(attributeBaseClass, String.class, handle);
+        return JReflection.getFieldObject(attributeBaseClass, String.class, handle);
     }
 
     public static String getNameFromNMS(Object nms) {
         if(attributeBaseClass.isAssignableFrom(nms.getClass()))
-            return (String) JReflection.getUnspecificFieldObject(attributeBaseClass, String.class, nms);
+            return JReflection.getFieldObject(attributeBaseClass, String.class, nms);
         else
             return null;
     }

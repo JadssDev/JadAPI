@@ -36,7 +36,7 @@ public class OutSpawnEntityLiving extends DefinedPacket {
         if (!canParse(packet))
             throw new NMSException("The packet specified is not parsable by this class.");
 
-        int entityID = JReflection.getUnspecificFieldObject(spawnEntityLivingPacketClass, int.class, packet);
+        int entityID = JReflection.getFieldObject(spawnEntityLivingPacketClass, int.class, packet);
         this.entityLiving = (EntityLiving) NMS.getEntity(JEntity.getEntity(entityID).getEntity());
     }
 

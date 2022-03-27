@@ -76,9 +76,9 @@ public class IBlockData implements NMSObject, NMSParsable, NMSBuildable, NMSCopy
         Map<Object, Object> states;
 
         if(JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_12)) {
-            states = (Map<Object, Object>) JReflection.executeUnspecificMethod(iBlockDataClass, new Class[] {}, object, immutableMapClass);
+            states = (Map<Object, Object>) JReflection.executeMethod(iBlockDataClass, new Class[] {}, object, immutableMapClass, (i) -> 0);
         } else {
-            states = (Map<Object, Object>) JReflection.getUnspecificFieldObject(iBlockDataHolderClass, immutableMapClass, object);
+            states = (Map<Object, Object>) JReflection.getFieldObject(iBlockDataHolderClass, immutableMapClass, object);
         }
 
         Map<StateType<?>, Object> statesMap = new HashMap<>();
@@ -105,9 +105,9 @@ public class IBlockData implements NMSObject, NMSParsable, NMSBuildable, NMSCopy
         for(Map.Entry<StateType<?>, Object> entry : blockStates.entrySet()) {
             System.out.println(entry.getKey().getNMSObject().toString() + " -> " + entry.getValue());
             if(JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_16)) {
-                blockData = JReflection.executeUnspecificMethod(iBlockDataHolderClass, new Class[] { IBlockState.iBlockStateClass, Comparable.class }, blockData, IBlockData.iBlockDataClass, entry.getKey().getNMSObject(), entry.getValue());
+                blockData = JReflection.executeMethod(iBlockDataHolderClass, new Class[] { IBlockState.iBlockStateClass, Comparable.class }, blockData, IBlockData.iBlockDataClass, (i) -> 0, entry.getKey().getNMSObject(), entry.getValue());
             } else {
-                blockData = JReflection.executeUnspecificMethod(iBlockDataClass, new Class[] { IBlockState.iBlockStateClass, Comparable.class }, blockData, IBlockData.iBlockDataClass, entry.getKey().getNMSObject(), entry.getValue());
+                blockData = JReflection.executeMethod(iBlockDataClass, new Class[] { IBlockState.iBlockStateClass, Comparable.class }, blockData, IBlockData.iBlockDataClass, (i) -> 0, entry.getKey().getNMSObject(), entry.getValue());
             }
         }
 

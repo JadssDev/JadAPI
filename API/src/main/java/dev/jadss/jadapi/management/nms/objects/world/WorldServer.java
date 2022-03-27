@@ -43,9 +43,9 @@ public class WorldServer implements NMSObject, NMSManipulable, NMSCopyable {
         UUID worldUUID;
 
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_15)) {
-            worldUUID = JReflection.getUnspecificFieldObject(worldStorageNBTClass, UUID.class, JReflection.executeMethod(worldServerClass, "getDataManager", world, new Class[]{}));
+            worldUUID = JReflection.getFieldObject(worldStorageNBTClass, UUID.class, JReflection.executeMethod(worldServerClass, "getDataManager", world, new Class[]{}));
         } else {
-            worldUUID = JReflection.getUnspecificFieldObject(worldServerClass, UUID.class, world);
+            worldUUID = JReflection.getFieldObject(worldServerClass, UUID.class, world);
         }
 
         return JWorld.getJWorlds().stream().filter(world -> world.getUUID().equals(worldUUID)).findFirst().orElse(null);
@@ -57,9 +57,9 @@ public class WorldServer implements NMSObject, NMSManipulable, NMSCopyable {
         Object tileEntity;
 
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
-            tileEntity = JReflection.executeUnspecificMethod(worldClass, new Class[]{int.class, int.class, int.class}, world, TileEntity.tileEntityClass, Math.floor(position.getX()), Math.floor(position.getY()), Math.floor(position.getZ()));
+            tileEntity = JReflection.executeMethod(worldClass, new Class[]{int.class, int.class, int.class}, world, TileEntity.tileEntityClass, (i) -> 0, Math.floor(position.getX()), Math.floor(position.getY()), Math.floor(position.getZ()));
         } else {
-            tileEntity = JReflection.executeUnspecificMethod(worldClass, new Class[]{BlockPosition.blockPositionClass}, world, TileEntity.tileEntityClass, position.build());
+            tileEntity = JReflection.executeMethod(worldClass, new Class[]{BlockPosition.blockPositionClass}, world, TileEntity.tileEntityClass, (i) -> 0, position.build());
         }
 
         return TileEntitySign.parseTileEntity(tileEntity);
@@ -67,7 +67,7 @@ public class WorldServer implements NMSObject, NMSManipulable, NMSCopyable {
 
 
     public IBlockData getBlockData(BlockPosition position) {
-        if ((boolean) JReflection.getFieldObject(worldClass, "captureTreeGeneration", this.world)) {
+        if ((boolean) JReflection.getFieldObjectByName(worldClass, "captureTreeGeneration", this.world)) {
             throw new NMSException("Wtf is bukkit doing? worthless garbage.");
         }
 
@@ -88,7 +88,7 @@ public class WorldServer implements NMSObject, NMSManipulable, NMSCopyable {
     public static final int NOTIFY_FLAG = 3;
 
     public boolean setBlockData(BlockPosition position, IBlockData blockData, boolean applyPhysics) {
-        if ((boolean) JReflection.getFieldObject(worldClass, "captureTreeGeneration", this.world)) {
+        if ((boolean) JReflection.getFieldObjectByName(worldClass, "captureTreeGeneration", this.world)) {
             throw new NMSException("Wtf is bukkit doing? worthless garbage.");
         }
 
@@ -116,29 +116,29 @@ public class WorldServer implements NMSObject, NMSManipulable, NMSCopyable {
             if (blockData.getBlock().isInvalid())
                 throw new NMSException("Invalid block data.");
 
-            return JReflection.executeUnspecificMethod(worldClass, new Class[]{int.class, int.class, int.class, Block.blockClass, int.class, int.class}, this.world, boolean.class, position.getX(), position.getY(), position.getZ(), blockData.getBlock(), blockData.getBlock().getBlockData(), flag);
+            return JReflection.executeMethod(worldClass, new Class[]{int.class, int.class, int.class, Block.blockClass, int.class, int.class}, this.world, boolean.class, (i) -> 0, position.getX(), position.getY(), position.getZ(), blockData.getBlock(), blockData.getBlock().getBlockData(), flag);
         } else if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_15)) {
-            return JReflection.executeUnspecificMethod(worldClass, new Class[]{BlockPosition.blockPositionClass, IBlockData.iBlockDataClass, int.class}, this.world, boolean.class, position.build(), blockData.build(), flag);
+            return JReflection.executeMethod(worldClass, new Class[]{BlockPosition.blockPositionClass, IBlockData.iBlockDataClass, int.class}, this.world, boolean.class, (i) -> 0, position.build(), blockData.build(), flag);
         } else {
-            return JReflection.executeUnspecificMethod(worldClass, new Class[]{BlockPosition.blockPositionClass, IBlockData.iBlockDataClass, int.class, int.class}, this.world, boolean.class, position.build(), blockData.build(), flag, 512);
+            return JReflection.executeMethod(worldClass, new Class[]{BlockPosition.blockPositionClass, IBlockData.iBlockDataClass, int.class, int.class}, this.world, boolean.class, (i) -> 0, position.build(), blockData.build(), flag, 512);
         }
     }
 
     //Flag probably does nothing from what I've seen.
     public void notifyNMS(BlockPosition blockPosition, IBlockData newBlock, IBlockData oldBlock, int flag) {
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
-            JReflection.executeUnspecificMethod(worldServerClass, new Class[]{int.class, int.class, int.class}, this.world, null, blockPosition.getX(), blockPosition.getY(), blockPosition.getZ());
+            JReflection.executeMethod(worldServerClass, new Class[]{int.class, int.class, int.class}, this.world, null, (i) -> 0, blockPosition.getX(), blockPosition.getY(), blockPosition.getZ());
         } else if (JVersion.getServerVersion() == JVersion.v1_8) {
-            JReflection.executeUnspecificMethod(worldServerClass, new Class[]{BlockPosition.blockPositionClass}, this.world, null, blockPosition.build());
+            JReflection.executeMethod(worldServerClass, new Class[]{BlockPosition.blockPositionClass}, this.world, null, (i) -> 0, blockPosition.build());
         } else if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_9)) {
-            JReflection.executeUnspecificMethod(worldServerClass, new Class[]{BlockPosition.blockPositionClass, IBlockData.iBlockDataClass, IBlockData.iBlockDataClass, int.class}, this.world, null, blockPosition.build(), newBlock.build(), oldBlock.build(), flag);
+            JReflection.executeMethod(worldServerClass, new Class[]{BlockPosition.blockPositionClass, IBlockData.iBlockDataClass, IBlockData.iBlockDataClass, int.class}, this.world, null, (i) -> 0, blockPosition.build(), newBlock.build(), oldBlock.build(), flag);
         }
     }
 
 
     //much care with this too, may generate a crash if used incorrectly.
     public Object getBlockNMS(BlockPosition position) {
-        return JReflection.executeUnspecificMethod(worldClass, new Class[]{BlockPosition.blockPositionClass}, this.world, IBlockData.iBlockDataClass, position.build());
+        return JReflection.executeMethod(worldClass, new Class[]{BlockPosition.blockPositionClass}, this.world, IBlockData.iBlockDataClass, (i) -> 0, position.build());
     }
 
     @Override

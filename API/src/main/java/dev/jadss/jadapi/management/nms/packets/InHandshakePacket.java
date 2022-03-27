@@ -8,6 +8,7 @@ import dev.jadss.jadapi.management.nms.enums.NMSEnum;
 import dev.jadss.jadapi.management.nms.interfaces.DefinedPacket;
 import dev.jadss.jadapi.management.nms.objects.network.PacketDataSerializer;
 import dev.jadss.jadapi.utils.JReflection;
+import net.minecraft.server.v1_8_R3.PacketHandshakingInSetProtocol;
 
 public class InHandshakePacket extends DefinedPacket {
 
@@ -70,15 +71,15 @@ public class InHandshakePacket extends DefinedPacket {
         if (!canParse(packet))
             throw new NMSException("The packet specified is not parsable by this class.");
 
-        this.protocol = JReflection.getUnspecificFieldObject(handshakePacketClass, int.class, (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? 1 : 0), packet);
-        this.hostname = JReflection.getUnspecificFieldObject(handshakePacketClass, String.class, packet);
-        Integer i = JReflection.getUnspecificFieldObject(handshakePacketClass, int.class, (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? 2 : 1), packet);
+        this.protocol = JReflection.getFieldObject(handshakePacketClass, int.class, packet, (i) -> JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? 1 : 0);
+        this.hostname = JReflection.getFieldObject(handshakePacketClass, String.class, packet);
+        Integer i = JReflection.getFieldObject(handshakePacketClass, int.class, packet, (index) -> JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? 2 : 1);
 
         if (i != null)
             this.port = i;
         else
             this.port = -1;
-        this.enumProtocol = NMSEnum.getEnum(EnumProtocol.class, (Enum<?>) JReflection.getUnspecificFieldObject(handshakePacketClass, EnumProtocol.enumProtocolClass, packet));
+        this.enumProtocol = NMSEnum.getEnum(EnumProtocol.class, JReflection.getFieldObject(handshakePacketClass, EnumProtocol.enumProtocolClass, packet));
     }
 
     public Object build() {
@@ -87,10 +88,10 @@ public class InHandshakePacket extends DefinedPacket {
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_16)) {
             packet = JReflection.executeConstructor(getParsingClass(), new Class[]{});
 
-            JReflection.setUnspecificField(handshakePacketClass, int.class, 0, packet, this.protocol);
-            JReflection.setUnspecificField(handshakePacketClass, String.class, 0, packet, this.hostname);
-            JReflection.setUnspecificField(handshakePacketClass, int.class, 1, packet, this.port);
-            JReflection.setUnspecificField(handshakePacketClass, EnumProtocol.enumProtocolClass, 0, packet, this.enumProtocol.getNMSEnumClass());
+            JReflection.setFieldObject(handshakePacketClass, int.class, packet, this.protocol, (i) -> 0);
+            JReflection.setFieldObject(handshakePacketClass, String.class, packet, this.hostname, (i) -> 0);
+            JReflection.setFieldObject(handshakePacketClass, int.class, packet, this.port, (i) -> 1);
+            JReflection.setFieldObject(handshakePacketClass, EnumProtocol.enumProtocolClass, packet, this.enumProtocol.getNMSObject(), (i) -> 0);
         } else {
             PacketDataSerializer dataSerializer = NMS.newPacketDataSerializer();
             dataSerializer.writeVarInt(this.protocol);

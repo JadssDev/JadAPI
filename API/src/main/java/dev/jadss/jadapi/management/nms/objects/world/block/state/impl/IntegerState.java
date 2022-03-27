@@ -20,7 +20,7 @@ public class IntegerState implements IntegerBlockState {
         this.maxValue = maxValue;
 
         if(StateType.isStatesSupported()) {
-            Object object = JReflection.executeUnspecificMethod(IntegerBlockState.blockStateIntegerClass, new Class[] { String.class, int.class, int.class}, null, IntegerBlockState.blockStateIntegerClass, nmsName, minValue, maxValue);
+            Object object = JReflection.executeMethod(IntegerBlockState.blockStateIntegerClass, new Class[] { String.class, int.class, int.class}, null, IntegerBlockState.blockStateIntegerClass, (i) -> 0, nmsName, minValue, maxValue);
             if(object != null)
                 this.blockState = new IBlockState(object);
             else

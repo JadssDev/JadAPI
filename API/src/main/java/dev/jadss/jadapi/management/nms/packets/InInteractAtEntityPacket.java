@@ -87,36 +87,37 @@ public class InInteractAtEntityPacket extends DefinedPacket {
         if (!canParse(packet))
             throw new NMSException("The packet specified is not parsable by this class.");
 
-        this.entityID = JReflection.getUnspecificFieldObject(interactEntityPacketClass, int.class, packet);
+        this.entityID = JReflection.getFieldObject(interactEntityPacketClass, int.class, packet);
 
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_16))
-            this.sneaking = JReflection.getUnspecificFieldObject(interactEntityPacketClass, boolean.class, packet);
+            this.sneaking = JReflection.getFieldObject(interactEntityPacketClass, boolean.class, packet);
         else
             this.sneaking = false;
 
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17)) {
-            Object object = JReflection.getUnspecificFieldObject(interactEntityPacketClass, specialEntityFocusedClass, packet);
+            Object object = JReflection.getFieldObject(interactEntityPacketClass, specialEntityFocusedClass, packet);
 
-            this.interactionType = NMSEnum.getEnum(InteractType.class, (Enum<?>) JReflection.executeUnspecificMethod(interactEntityPacketClass, new Class[]{}, object, InteractType.interactTypeClass));
+            this.interactionType = NMSEnum.getEnum(InteractType.class, JReflection.getFieldObject(interactEntityPacketClass, specialEntityFocusedClass, packet));
 
             if (interactionType == InteractType.INTERACT) {
                 this.vec3D = new Vec3D(0D, 0D, 0D);
-                this.handType = NMSEnum.getEnum(EnumHand.class, (Enum<?>) JReflection.getUnspecificFieldObject(interactEntityPacketClass, EnumHand.enumHandClass, object));
+                this.handType = NMSEnum.getEnum(EnumHand.class, JReflection.getFieldObject(object.getClass(), EnumHand.enumHandClass, object));
             } else if (interactionType == InteractType.ATTACK) {
                 this.vec3D = new Vec3D(0D, 0D, 0D);
                 this.handType = EnumHand.MAIN_HAND;
             } else if (interactionType == InteractType.INTERACT_AT) {
                 this.vec3D = new Vec3D();
-                this.vec3D.parse(JReflection.getUnspecificFieldObject(interactEntityPacketClass, Vec3D.vec3DClass, object));
-                this.handType = NMSEnum.getEnum(EnumHand.class, (Enum<?>) JReflection.getUnspecificFieldObject(interactEntityPacketClass, EnumHand.enumHandClass, object));
+                this.vec3D.parse(JReflection.getFieldObject(object.getClass(), Vec3D.vec3DClass, object));
+
+                this.handType = NMSEnum.getEnum(EnumHand.class, JReflection.getFieldObject(object.getClass(), EnumHand.enumHandClass, object));
             }
         } else { //just parse everything..... hope nothing fails too.
-            this.interactionType = NMSEnum.getEnum(InteractType.class, (Enum<?>) JReflection.getUnspecificFieldObject(interactEntityPacketClass, InteractType.interactTypeClass, packet));
+            this.interactionType = NMSEnum.getEnum(InteractType.class, JReflection.getFieldObject(interactEntityPacketClass, InteractType.interactTypeClass, packet));
 
             this.vec3D = new Vec3D();
-            this.vec3D.parse(JReflection.getUnspecificFieldObject(interactEntityPacketClass, Vec3D.vec3DClass, packet));
+            this.vec3D.parse(JReflection.getFieldObject(interactEntityPacketClass, Vec3D.vec3DClass, packet));
 
-            this.handType = NMSEnum.getEnum(EnumHand.class, (Enum<?>) JReflection.getUnspecificFieldObject(interactEntityPacketClass, EnumHand.enumHandClass, packet));
+            this.handType = NMSEnum.getEnum(EnumHand.class, JReflection.getFieldObject(interactEntityPacketClass, EnumHand.enumHandClass, packet));
         }
     }
 
@@ -125,31 +126,31 @@ public class InInteractAtEntityPacket extends DefinedPacket {
             Object specialObject = this.interactionType.build();
 
             if (this.interactionType == InteractType.INTERACT) {
-                JReflection.setUnspecificField(specialEntityFocusedClass, EnumHand.enumHandClass, specialObject, this.handType.getNMSObject());
+                JReflection.setFieldObject(specialEntityFocusedClass, EnumHand.enumHandClass, specialObject, this.handType.getNMSObject());
             } else if (this.interactionType == InteractType.ATTACK) {
                 //Nothing.. to set.
             } else if (this.interactionType == InteractType.INTERACT_AT) {
-                JReflection.setUnspecificField(specialEntityFocusedClass, EnumHand.enumHandClass, specialObject, this.handType.getNMSObject());
-                JReflection.setUnspecificField(specialEntityFocusedClass, Vec3D.vec3DClass, specialObject, this.vec3D.build());
+                JReflection.setFieldObject(specialEntityFocusedClass, EnumHand.enumHandClass, specialObject, this.handType.getNMSObject());
+                JReflection.setFieldObject(specialEntityFocusedClass, Vec3D.vec3DClass, specialObject, this.vec3D.build());
             }
 
             return JReflection.executeConstructor(interactEntityPacketClass, new Class[]{int.class, boolean.class, specialEntityFocusedClass}, entityID, sneaking, specialObject);
         } else {
             Object packet = JReflection.executeConstructor(interactEntityPacketClass, new Class[]{});
 
-            JReflection.setUnspecificField(interactEntityPacketClass, int.class, packet, entityID);
-            JReflection.setUnspecificField(interactEntityPacketClass, InteractType.interactTypeClass, packet, interactionType.getNMSObject());
+            JReflection.setFieldObject(interactEntityPacketClass, int.class, packet, entityID);
+            JReflection.setFieldObject(interactEntityPacketClass, InteractType.interactTypeClass, packet, interactionType.getNMSObject());
 
             if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_8)) {
-                JReflection.setUnspecificField(interactEntityPacketClass, Vec3D.vec3DClass, packet, vec3D.build());
+                JReflection.setFieldObject(interactEntityPacketClass, Vec3D.vec3DClass, packet, vec3D.build());
             }
 
             if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_9)) {
-                JReflection.setUnspecificField(interactEntityPacketClass, EnumHand.enumHandClass, packet, handType.getNMSObject());
+                JReflection.setFieldObject(interactEntityPacketClass, EnumHand.enumHandClass, packet, handType.getNMSObject());
             }
 
             if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_16)) {
-                JReflection.setUnspecificField(interactEntityPacketClass, boolean.class, packet, sneaking);
+                JReflection.setFieldObject(interactEntityPacketClass, boolean.class, packet, sneaking);
             }
 
             return packet;
@@ -173,7 +174,11 @@ public class InInteractAtEntityPacket extends DefinedPacket {
         ATTACK,
         INTERACT_AT;
 
-        public static final Class<?> interactTypeClass = JReflection.getReflectionClass((JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_16) ? "net.minecraft.server." + JReflection.getNMSVersion() + (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7) ? "EnumEntityUseAction" : "PacketPlayInUseEntity$EnumEntityUseAction") : "net.minecraft.network.protocol.game.PacketPlayInUseEntity$b"));
+        public static final Class<?> interactTypeClass = JReflection.getReflectionClass((JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_16) ?
+                "net.minecraft.server." + JReflection.getNMSVersion() + "." + (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7) ? "EnumEntityUseAction" : "PacketPlayInUseEntity$EnumEntityUseAction") :
+                "net.minecraft.network.protocol.game.PacketPlayInUseEntity$b"));
+
+        private static final InteractType[] VALUES = values();
 
         /**
          * Only works on versions above 1.17 for the new way they handle interaction types!
@@ -184,7 +189,23 @@ public class InInteractAtEntityPacket extends DefinedPacket {
             if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_17))
                 throw new NMSException("Not supported on this version!");
 
-            return JReflection.getUnspecificFieldObject(interactTypeClass, Function.class, this.getNMSObject()).apply(null);
+            return JReflection.getFieldObject(interactTypeClass, Function.class, this.getNMSObject()).apply(null);
+        }
+
+        public static InteractType customParse(Object interactType) {
+            if (interactType == null)
+                return InteractType.INTERACT;
+
+            if (specialEntityFocusedClass.isAssignableFrom(interactType.getClass())) {
+                if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_16))
+                    throw new NMSException("Not supported on this version!");
+                return customParse(JReflection.executeMethod(specialEntityFocusedClass, new Class[] {}, interactType, interactTypeClass, (i) -> 0));
+            } else if (interactTypeClass.equals(interactType.getClass())) {
+                Enum<?> e = (Enum<?>) interactType;
+                return VALUES[e.ordinal()];
+            } else {
+                throw new NMSException("Invalid object! Cannot parse this!");
+            }
         }
 
         @Override

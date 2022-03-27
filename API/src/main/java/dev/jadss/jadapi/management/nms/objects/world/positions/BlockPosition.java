@@ -69,9 +69,9 @@ public class BlockPosition implements NMSObject, NMSBuildable, NMSParsable, NMSC
         if (object == null) return;
         if (!canParse(object)) throw new NMSException("Cannot parse this object.");
 
-        this.x = JReflection.getUnspecificFieldObject(baseBlockPositionClass, int.class, 0, object);
-        this.y = JReflection.getUnspecificFieldObject(baseBlockPositionClass, int.class, 1, object);
-        this.z = JReflection.getUnspecificFieldObject(baseBlockPositionClass, int.class, 2, object);
+        this.x = JReflection.getFieldObject(baseBlockPositionClass, int.class, object, (i) -> 0);
+        this.y = JReflection.getFieldObject(baseBlockPositionClass, int.class, object, (i) -> 1);
+        this.z = JReflection.getFieldObject(baseBlockPositionClass, int.class, object, (i) -> 2);
     }
 
     @Override

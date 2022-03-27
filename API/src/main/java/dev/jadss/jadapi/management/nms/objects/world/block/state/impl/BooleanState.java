@@ -18,7 +18,7 @@ public class BooleanState implements BooleanBlockState {
         this.defaultValue = defaultValue;
 
         if(StateType.isStatesSupported()) {
-            Object object = JReflection.executeUnspecificMethod(BooleanBlockState.blockStateBooleanClass, new Class[] { String.class }, null, BooleanBlockState.blockStateBooleanClass, nmsName);
+            Object object = JReflection.executeMethod(BooleanBlockState.blockStateBooleanClass, new Class[] { String.class }, null, BooleanBlockState.blockStateBooleanClass, (i) -> 0, nmsName);
             if(object != null)
                 this.blockState = new IBlockState(object);
             else

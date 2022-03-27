@@ -42,7 +42,7 @@ public class OutSpawnNamedEntity extends DefinedPacket {
         if (!canParse(packet))
             throw new NMSException("The packet specified is not parsable by this class.");
 
-        int entityID = JReflection.getUnspecificFieldObject(spawnNamedEntityPacketClass, int.class, 0, packet);
+        int entityID = JReflection.getFieldObject(spawnNamedEntityPacketClass, int.class, packet, (i) -> 0);
 
         Player gettingIt = null;
         for (Player player : Bukkit.getOnlinePlayers()) {

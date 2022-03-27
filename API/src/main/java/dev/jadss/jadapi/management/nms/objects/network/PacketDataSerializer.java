@@ -48,12 +48,12 @@ public class PacketDataSerializer implements NMSObject, NMSManipulable, NMSCopya
     //Custom methods.
 
     public PacketDataSerializer writeVarLong(long var) {
-        JReflection.executeUnspecificMethod(packetDataSerializerClass, new Class[]{long.class}, packetDataSerializer, packetDataSerializerClass, var);
+        JReflection.executeMethod(packetDataSerializerClass, new Class[]{long.class}, packetDataSerializer, packetDataSerializerClass, (i) -> 0, var);
         return this;
     }
 
     public PacketDataSerializer writeVarInt(int var) {
-        JReflection.executeUnspecificMethod(packetDataSerializerClass, new Class[]{int.class}, packetDataSerializer, packetDataSerializerClass, var);
+        JReflection.executeMethod(packetDataSerializerClass, new Class[]{int.class}, packetDataSerializer, packetDataSerializerClass, (i) -> 0, var);
         return this;
     }
 
@@ -69,9 +69,9 @@ public class PacketDataSerializer implements NMSObject, NMSManipulable, NMSCopya
 
     public PacketDataSerializer writeString(String var, int i) {
         if(JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_12)) {
-            JReflection.executeUnspecificMethod(packetDataSerializerClass, new Class[] { String.class }, packetDataSerializer, packetDataSerializerClass, var);
+            JReflection.executeMethod(packetDataSerializerClass, new Class[] { String.class }, packetDataSerializer, packetDataSerializerClass, (index) -> 0, var);
         } else {
-            JReflection.executeUnspecificMethod(packetDataSerializerClass, new Class[] { String.class, int.class }, packetDataSerializer, packetDataSerializerClass, var, i);
+            JReflection.executeMethod(packetDataSerializerClass, new Class[] { String.class, int.class }, packetDataSerializer, packetDataSerializerClass, (index) -> 0, var, i);
         }
         return this;
     }
@@ -82,11 +82,11 @@ public class PacketDataSerializer implements NMSObject, NMSManipulable, NMSCopya
     }
 
     public long readVarLong() {
-        return JReflection.executeUnspecificMethod(packetDataSerializerClass, new Class[]{}, packetDataSerializer, long.class);
+        return JReflection.executeMethod(packetDataSerializerClass, new Class[]{}, packetDataSerializer, long.class, (i) -> 0);
     }
 
     public int readVarInt() {
-        return JReflection.executeUnspecificMethod(packetDataSerializerClass, new Class[]{}, packetDataSerializer, int.class);
+        return JReflection.executeMethod(packetDataSerializerClass, new Class[]{}, packetDataSerializer, int.class, (i) -> 0);
     }
 
     public double readDouble() {
@@ -98,7 +98,7 @@ public class PacketDataSerializer implements NMSObject, NMSManipulable, NMSCopya
     }
 
     public String readString(int i) {
-        return JReflection.executeUnspecificMethod(packetDataSerializerClass, new Class[]{int.class}, packetDataSerializer, String.class, i);
+        return JReflection.executeMethod(packetDataSerializerClass, new Class[]{int.class}, packetDataSerializer, String.class, (index) -> 0, i);
     }
 
     public String readString() {

@@ -16,7 +16,6 @@ import dev.jadss.jadapi.interfaces.managing.JPacketHooker;
 import dev.jadss.jadapi.interfaces.managing.JRegisterer;
 import dev.jadss.jadapi.listeners.*;
 import dev.jadss.jadapi.management.JManager;
-import dev.jadss.jadapi.management.channel.SignChangeHandler;
 import dev.jadss.jadapi.management.labymod.LabyService;
 import dev.jadss.jadapi.tasks.EventHandlersUpdater;
 import dev.jadss.jadapi.tasks.RemovalTimer;
@@ -30,6 +29,9 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryInteractEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredListener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -70,10 +72,6 @@ public class JadAPI extends JavaPlugin {
     public static final boolean serverConnectionEnabled = false;
     public static final boolean isFork = false; //You should change this if the API is a fork.. wow incredible.
 
-    //Prohibitions since I fucking hate both of these... even if reloads are actually kinda cool, jadapi does not support them, and for this reason it is true.
-    public static final boolean denyHibernatePlugin = true;
-    public static final boolean denyReloads = true;
-
     //Instances.
     private LabyService labyService;
     private JManager managerInstance;
@@ -106,9 +104,9 @@ public class JadAPI extends JavaPlugin {
         Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&eInitializing &3&lNMS &b&lversion &7> &3" + JReflection.getNMSVersion() + " &e."));
 
         if(JVersion.getServerVersion() == JVersion.UNKNOWN) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&a&m---------------------------------------------------------------"));
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&aJadAPI does not SUPPORT versions lower then 1.7, Bugs may occur."));
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&a&m---------------------------------------------------------------"));
+            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&a&m---------------------------------------------------------------------------------------"));
+            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&aJadAPI does not SUPPORT versions lower then 1.7, or too up-to-date, Bugs may occur, Please update your JadAPI!"));
+            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&a&m---------------------------------------------------------------------------------------"));
         } else if(JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eCurrently, &3&l1.7 is majorly supported&e, but bugs may occur on &bNBT Tags&e."));
         }
@@ -133,43 +131,39 @@ public class JadAPI extends JavaPlugin {
         new JSender(Bukkit.getConsoleSender()).sendMessage("&3&lMaterials &bProcessed&e!");
 
         new JSender(Bukkit.getConsoleSender()).sendMessage("&ePatching &b&lEnchantments&e...");
-        JReflection.setFieldObject(Enchantment.class, "acceptingNew", null, true);
+        JReflection.setFieldObjectByName(Enchantment.class, "acceptingNew", null, true);
         new JSender(Bukkit.getConsoleSender()).sendMessage("&b&lEnchantments &3Patched&e! GG");
 
         new JSender(Bukkit.getConsoleSender()).sendMessage("&eInitialization &3&lCompleted&e!");
 
-        if(1==1) return;
-        {//TEST ZONE!
-            try {
-            } catch(Exception ex) {
-                ex.printStackTrace();
-            }
-        }
     }
 
     @Override
     public void onLoad() {
-        if(ReloadChecker.reloadExists()) {
-            if(this.denyReloads) {
-                new JSender(Bukkit.getConsoleSender()).sendMessage("&3&lJadAPI &7>> &3JadAPI &edoesn't support &b&lReloads&e!");
-                new JSender(Bukkit.getConsoleSender()).sendMessage("&3&lJadAPI &7>> &eEnding Bukkit instance...");
-                System.exit("JadAPI does not like reloads.".getBytes().length);
-            }
-        }
-
         try {
+            new JSender(Bukkit.getConsoleSender()).sendMessage("&3&lJadAPI &7>>");
+            new JSender(Bukkit.getConsoleSender()).sendMessage("&eSetting up to &a&lenable&e...");
+
+            new JSender(Bukkit.getConsoleSender()).sendMessage("&eCreating &3&lJQuickEvent &bhandlers&e.");
             jQuickEventListener = new JQuickEventsListener();
-            for(EventPriority priority : EventPriority.values())
+            for(EventPriority priority : EventPriority.values()) {
                 quickEventHandlers.put(priority,
                         new RegisteredListener(jQuickEventListener, (listener, event) -> jQuickEventListener.onEvent(event, priority), priority, this, false));
+                new JSender(Bukkit.getConsoleSender()).sendMessage("&eRegistered &3&lJQuickEvent &bhandler&e for &b" + priority.name() + "&e.");
+            }
 
             try {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&eInitializing &aBuilt-IN &3NBTAPI"));
                 new NBTItem(new JItemStack(JMaterial.getRegistryMaterials().find(JMaterial.MaterialEnum.DIAMOND_BLOCK)).buildItemStack());
+                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&eInitialized &aBuilt-IN &3NBTAPI"));
             } catch(Exception ex) {
                 ex.printStackTrace();
-                System.out.println("Error occurred while loading nbtapi.");
+                new JSender(Bukkit.getConsoleSender()).sendMessage("&c&lError occurred while loading nbtapi.");
             }
+
             Bukkit.getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+
+            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&eFinished &bloading &3&lJadAPI &efor &aenabling&e!"));
         } catch(Exception ex) {
             ex.printStackTrace();
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eCould &cnot &b&lload&e!"));
@@ -180,7 +174,10 @@ public class JadAPI extends JavaPlugin {
     @Override
     public void onEnable() {
         try {
+            new JSender(Bukkit.getConsoleSender()).sendMessage("&3&lJadAPI &7>>");
+            new JSender(Bukkit.getConsoleSender()).sendMessage("&eStarting up &blast steps&e!");
             this.jPlugin.register(true);
+
 
             getCommand("JadAPI").setExecutor(new JadAPICommand());
             getServer().getPluginManager().registerEvents(new PlayerDamageListener(), this);
@@ -189,13 +186,17 @@ public class JadAPI extends JavaPlugin {
             getServer().getPluginManager().registerEvents(new PlayerQuitListener(), this);
             getServer().getPluginManager().registerEvents(new PluginDisableListener(), this);
 
+            new JSender(Bukkit.getConsoleSender()).sendMessage("&eInitialized All &3required listeners&e!");
+
             headsUpdater = new SkinsStorageUpdater().runTaskTimerAsynchronously(this, 600, 600);
             eventHandlersUpdater = new EventHandlersUpdater().runTaskTimer(this, 0, 5);
             new RemovalTimer().runTaskTimerAsynchronously(this, 1, 1);
 
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eInitiating &3&lLabyMod &bListeners&e!"));
+            new JSender(Bukkit.getConsoleSender()).sendMessage("&eInitialized All &3required tasks&e!");
 
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eDetecting &3&lJadAPI &bDependent Plugins&e...."));
+            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&eInitializing &3&lLabyMod &bListeners&e!"));
+
+            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&eDetecting &3&lJadAPI &bDependent Plugins&e...."));
             Bukkit.getScheduler().runTaskLater(JadAPI.getInstance(), () -> {
                 for (Plugin plugin : Bukkit.getPluginManager().getPlugins()) {
                     List<String> depend = plugin.getDescription().getDepend();
@@ -205,19 +206,6 @@ public class JadAPI extends JavaPlugin {
                     }
                 }
             }, 0);
-
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eDetecting &3&lOther &bplugins&e..."));
-            if(denyHibernatePlugin) {
-                if(getServer().getPluginManager().getPlugin("Hibernate") != null) {
-                    JavaPlugin plugin = (JavaPlugin) getServer().getPluginManager().getPlugin("Hibernate");
-                    Bukkit.getScheduler().runTaskLater(JadAPI.getInstance(), () -> {
-                        getServer().getScheduler().cancelTasks(plugin);
-                        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eTask finished&e!"));
-                    }, 20*5);
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lBungo!!!!"));
-                }
-            }
-
         } catch(Exception ex) {
             ex.printStackTrace();
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eCould &cnot &b&lenable&e!"));
@@ -236,7 +224,7 @@ public class JadAPI extends JavaPlugin {
 
         Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &cDisabling plugins which require &3&lJadAPI&e!"));
         try {
-            for(JadAPIPlugin plugin : (List<JadAPIPlugin>) JReflection.getFieldObject(JadAPIPlugin.class, "PLUGINS", null))
+            for(JadAPIPlugin plugin : (List<JadAPIPlugin>) JReflection.getFieldObjectByName(JadAPIPlugin.class, "PLUGINS", null))
                 this.getServer().getPluginManager().disablePlugin(plugin.getJavaPlugin());
         } catch(Exception ex) {
             if(this.getDebug().doMiscDebug()) {

@@ -18,6 +18,7 @@ import org.bukkit.ChatColor;
 public class IChatBaseComponent implements NMSObject, NMSBuildable, NMSParsable, NMSCopyable {
 
     public static final Class<?> iChatBaseComponentClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.chat" : "server." + JReflection.getNMSVersion()) + ".IChatBaseComponent");
+    public static final Class<?> iChatBaseMutableComponentClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.chat" : "server." + JReflection.getNMSVersion()) + ".IChatMutableComponent");
     public static final Class<?> chatSerializerClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.chat" : "server." + JReflection.getNMSVersion()) + ".IChatBaseComponent$ChatSerializer");
     public static final String defaultSimpleFormat = "{\"text\":\"" + "%text%" + "\"}";
 
@@ -31,6 +32,7 @@ public class IChatBaseComponent implements NMSObject, NMSBuildable, NMSParsable,
     public String getMessage() {
         return message;
     }
+
     public void setMessage(String message) {
         this.message = ChatColor.translateAlternateColorCodes('&', message);
     }
@@ -38,6 +40,7 @@ public class IChatBaseComponent implements NMSObject, NMSBuildable, NMSParsable,
     public boolean isJsonMode() {
         return jsonMode;
     }
+
     public void setJsonMode(boolean jsonMode) {
         this.jsonMode = jsonMode;
     }
@@ -45,14 +48,17 @@ public class IChatBaseComponent implements NMSObject, NMSBuildable, NMSParsable,
     public String getJsonMessage() {
         return jsonMessage;
     }
+
     public void setJsonMessage(String jsonMessage) {
         this.jsonMessage = ChatColor.translateAlternateColorCodes('&', jsonMessage);
     }
 
-    public IChatBaseComponent() { }
+    public IChatBaseComponent() {
+    }
+
     public IChatBaseComponent(String message, boolean jsonMode, String jsonMessage) {
         this.jsonMode = jsonMode;
-        if(jsonMode)
+        if (jsonMode)
             this.jsonMessage = ChatColor.translateAlternateColorCodes('&', jsonMessage);
         else
             this.message = ChatColor.translateAlternateColorCodes('&', message);
@@ -60,16 +66,17 @@ public class IChatBaseComponent implements NMSObject, NMSBuildable, NMSParsable,
 
     @Override
     public Object build() {
-        return JReflection.executeUnspecificMethod(chatSerializerClass, new Class[] { String.class }, null, iChatBaseComponentClass, jsonMode ? jsonMessage : defaultSimpleFormat.replace("%text%", message));
+        Class<?> clazz = JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_16) ? iChatBaseMutableComponentClass : iChatBaseComponentClass;
+        return JReflection.executeMethod(chatSerializerClass, new Class[]{String.class}, null, clazz, (i) -> 0, jsonMode ? jsonMessage : defaultSimpleFormat.replace("%text%", message));
     }
 
     @Override
     public void parse(Object object) {
-        if(object == null) return;
-        if(!canParse(object)) throw new NMSException("Cannot parse this object.");
+        if (object == null) return;
+        if (!canParse(object)) throw new NMSException("Cannot parse this object.");
 
-        this.message = JReflection.executeUnspecificMethod(iChatBaseComponentClass, new Class[] { }, object, String.class);
-        this.jsonMessage = JReflection.executeUnspecificMethod(chatSerializerClass, new Class[] { iChatBaseComponentClass }, null, String.class, object);
+        this.message = JReflection.executeMethod(iChatBaseComponentClass, new Class[]{}, object, String.class, (i) -> 0);
+        this.jsonMessage = JReflection.executeMethod(chatSerializerClass, new Class[]{iChatBaseComponentClass}, null, String.class, (i) -> 0, object);
     }
 
     @Override
@@ -78,8 +85,12 @@ public class IChatBaseComponent implements NMSObject, NMSBuildable, NMSParsable,
     }
 
     @Override
-    public Class<?> getParsingClass() { return iChatBaseComponentClass; }
+    public Class<?> getParsingClass() {
+        return iChatBaseComponentClass;
+    }
 
     @Override
-    public NMSObject copy() { return new IChatBaseComponent(this.message, this.jsonMode, this.jsonMessage); }
+    public NMSObject copy() {
+        return new IChatBaseComponent(this.message, this.jsonMode, this.jsonMessage);
+    }
 }

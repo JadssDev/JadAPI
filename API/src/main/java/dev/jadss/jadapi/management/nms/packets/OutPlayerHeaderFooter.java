@@ -45,10 +45,10 @@ public class OutPlayerHeaderFooter extends DefinedPacket {
             throw new NMSException("The packet specified is not parsable by this class.");
 
         this.headerComponent = new IChatBaseComponent();
-        this.headerComponent.parse(JReflection.getUnspecificFieldObject(playerHeaderFooterPacketClass, IChatBaseComponent.iChatBaseComponentClass, 0, packet));
+        this.headerComponent.parse(JReflection.getFieldObject(playerHeaderFooterPacketClass, IChatBaseComponent.iChatBaseComponentClass, packet, (i) -> 0));
 
         this.footerComponent = new IChatBaseComponent();
-        this.footerComponent.parse(JReflection.getUnspecificFieldObject(playerHeaderFooterPacketClass, IChatBaseComponent.iChatBaseComponentClass, 1, packet));
+        this.footerComponent.parse(JReflection.getFieldObject(playerHeaderFooterPacketClass, IChatBaseComponent.iChatBaseComponentClass, packet, (i) -> 1));
     }
 
     @Override
@@ -57,8 +57,8 @@ public class OutPlayerHeaderFooter extends DefinedPacket {
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_16)) {
             packet = JReflection.executeConstructor(playerHeaderFooterPacketClass, new Class[]{});
 
-            JReflection.setUnspecificField(playerHeaderFooterPacketClass, IChatBaseComponent.iChatBaseComponentClass, 0, packet, this.headerComponent.build());
-            JReflection.setUnspecificField(playerHeaderFooterPacketClass, IChatBaseComponent.iChatBaseComponentClass, 1, packet, this.footerComponent.build());
+            JReflection.setFieldObject(playerHeaderFooterPacketClass, IChatBaseComponent.iChatBaseComponentClass, packet, this.headerComponent.build(), (i) -> 0);
+            JReflection.setFieldObject(playerHeaderFooterPacketClass, IChatBaseComponent.iChatBaseComponentClass, packet, this.footerComponent.build(), (i) -> 1);
         } else {
             packet = JReflection.executeConstructor(playerHeaderFooterPacketClass, new Class[]{IChatBaseComponent.iChatBaseComponentClass, IChatBaseComponent.iChatBaseComponentClass}, this.headerComponent.build(), this.footerComponent.build());
         }

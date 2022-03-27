@@ -38,22 +38,22 @@ public class OutBlockChangePacket extends DefinedPacket {
             throw new NMSException("The packet specified is not parsable by this class.");
 
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
-            int x = JReflection.getUnspecificFieldObject(blockChangePacketClass, int.class, 0, packet);
-            int y = JReflection.getUnspecificFieldObject(blockChangePacketClass, int.class, 1, packet);
-            int z = JReflection.getUnspecificFieldObject(blockChangePacketClass, int.class, 2, packet);
+            int x = JReflection.getFieldObject(blockChangePacketClass, int.class, packet, (i) -> 0);
+            int y = JReflection.getFieldObject(blockChangePacketClass, int.class, packet, (i) -> 1);
+            int z = JReflection.getFieldObject(blockChangePacketClass, int.class, packet, (i) -> 2);
 
             this.blockPosition = new BlockPosition(x, y, z);
         } else {
             this.blockPosition = new BlockPosition();
-            this.blockPosition.parse(JReflection.getUnspecificFieldObject(blockChangePacketClass, BlockPosition.blockPositionClass, packet));
+            this.blockPosition.parse(JReflection.getFieldObject(blockChangePacketClass, BlockPosition.blockPositionClass, packet));
         }
 
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
-            Block block = new Block(JReflection.getUnspecificFieldObject(blockChangePacketClass, Block.blockClass, 0, packet), JReflection.getUnspecificFieldObject(blockChangePacketClass, int.class, Integer.MAX_VALUE, packet).byteValue());
+            Block block = new Block(JReflection.getFieldObject(blockChangePacketClass, Block.blockClass, packet), JReflection.getFieldObject(blockChangePacketClass, int.class, packet, (i) -> i).byteValue());
             this.blockData = new IBlockData(block);
         } else {
             this.blockData = new IBlockData();
-            this.blockData.parse(JReflection.getUnspecificFieldObject(blockChangePacketClass, IBlockData.blockDataClass, packet));
+            this.blockData.parse(JReflection.getFieldObject(blockChangePacketClass, IBlockData.blockDataClass, packet));
         }
     }
 
@@ -65,18 +65,18 @@ public class OutBlockChangePacket extends DefinedPacket {
             packet = JReflection.executeConstructor(getParsingClass(), new Class[]{});
 
             if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
-                JReflection.setUnspecificField(blockChangePacketClass, int.class, 0, packet, blockPosition.getX());
-                JReflection.setUnspecificField(blockChangePacketClass, int.class, 1, packet, blockPosition.getY());
-                JReflection.setUnspecificField(blockChangePacketClass, int.class, 2, packet, blockPosition.getZ());
+                JReflection.setFieldObject(blockChangePacketClass, int.class, packet, blockPosition.getX(), (i) -> 0);
+                JReflection.setFieldObject(blockChangePacketClass, int.class, packet, blockPosition.getY(), (i) -> 1);
+                JReflection.setFieldObject(blockChangePacketClass, int.class, packet, blockPosition.getZ(), (i) -> 2);
 
                 if (blockData.getBlock().isInvalid())
                     throw new IllegalStateException("The block specified is invalid! (byte == -1)");
 
-                JReflection.setUnspecificField(blockChangePacketClass, Block.blockClass, packet, blockData.getBlock());
-                JReflection.setUnspecificField(blockChangePacketClass, int.class, Integer.MAX_VALUE, packet, blockData.getBlock().getBlockData());
+                JReflection.setFieldObject(blockChangePacketClass, Block.blockClass, packet, blockData.getBlock());
+                JReflection.setFieldObject(blockChangePacketClass, int.class, packet, blockData.getBlock().getBlockData(), (i) -> i);
             } else {
-                JReflection.setUnspecificField(blockChangePacketClass, BlockPosition.blockPositionClass, packet, blockPosition.build());
-                JReflection.setUnspecificField(blockChangePacketClass, IBlockData.iBlockDataClass, packet, blockData.build());
+                JReflection.setFieldObject(blockChangePacketClass, BlockPosition.blockPositionClass, packet, blockPosition.build());
+                JReflection.setFieldObject(blockChangePacketClass, IBlockData.iBlockDataClass, packet, blockData.build());
             }
         }
 

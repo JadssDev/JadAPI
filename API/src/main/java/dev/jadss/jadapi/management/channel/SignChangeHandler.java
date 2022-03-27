@@ -27,7 +27,7 @@ public final class SignChangeHandler {
         if(JadAPI.getInstance().getSigns().containsKey(player.getPlayer().getUniqueId())) {
             JSignRegister register = JadAPI.getInstance().getSigns().get(player.getPlayer().getUniqueId());
             JadAPI.getInstance().getSigns().remove(player.getPlayer().getUniqueId());
-            Location location = JReflection.getUnspecificFieldObject(JSignRegister.class, Location.class, register);
+            Location location = JReflection.getFieldObject(JSignRegister.class, Location.class, register);
             BlockPosition blockPosition = new BlockPosition(location.getX(), location.getY(), location.getZ());
 
             player.sendPacket(new OutBlockChangePacket(NMS.createBlock(JMaterial.getRegistryMaterials().find(JMaterial.MaterialEnum.AIR)).createBlockData(), blockPosition).build());

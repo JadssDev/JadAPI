@@ -488,7 +488,7 @@ public final class JPlayer {
         final Class<?> playerConnectionClass = JReflection.getReflectionClass("net.minecraft.server." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network" : JReflection.getNMSVersion()) + ".PlayerConnection");
         final Class<?> entityPlayerClass = JReflection.getReflectionClass("net.minecraft.server." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "level" : JReflection.getNMSVersion()) + ".EntityPlayer");
 
-        Object playerConnection = JReflection.getUnspecificFieldObject(entityPlayerClass, playerConnectionClass,
+        Object playerConnection = JReflection.getFieldObject(entityPlayerClass, playerConnectionClass,
                 JReflection.executeMethod(JReflection.getReflectionClass("org.bukkit.craftbukkit." + JReflection.getNMSVersion() + ".entity.CraftPlayer"), "getHandle", this.player, new Class[]{}));
         if (playerConnection == null) {
             if (JadAPI.getInstance().getDebug().doMiscDebug()) {
@@ -497,7 +497,8 @@ public final class JPlayer {
             }
             return this;
         }
-        JReflection.executeMethod(playerConnectionClass, "sendPacket", playerConnection, new Class[]{packetClass}, packet);
+
+        JReflection.executeMethod(playerConnectionClass, new Class[] { NMS.packetClass }, playerConnection, null, (i) -> 0, packet);
         if (JadAPI.getInstance().getDebug().doMiscDebug())
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eSent a &3&lPacket &eto &b" + this.player.getName() + "&e. Type -> " + packet.getClass().getSimpleName() + "!"));
         return this;
@@ -706,7 +707,7 @@ public final class JPlayer {
         Object openSignEditor = new OutOpenSignEditor(position).build();
 
         //Before sending packets.
-        JReflection.setUnspecificField(JSignRegister.class, Location.class, register, location.clone());
+        JReflection.setFieldObject(JSignRegister.class, Location.class, register, location.clone());
         JadAPI.getInstance().getSigns().put(this.player.getUniqueId(), register);
 
         //Send update packets.

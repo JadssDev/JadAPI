@@ -6,7 +6,7 @@
 
     <groupId>dev.jadss</groupId>
     <artifactId>JadAPI</artifactId>
-    <version>1.22.5-JadLaxyDev</version>
+    <version>1.22.16-JadLaxyDev</version>
     <packaging>jar</packaging>
 
     <name>JadAPI</name>

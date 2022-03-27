@@ -12,12 +12,34 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Represents the instance of a plugin in the JadAPI.
+ */
 public abstract class JadAPIPlugin {
 
     private static final List<JadAPIPlugin> PLUGINS = new ArrayList<>();
 
+    /**
+     * Get the size of the amount of plugins registered to JadAPI.
+     * @return The amount of plugins registered to JadAPI.
+     */
+    public static int size() {
+        return PLUGINS.size();
+    }
+
+    /**
+     * Get a plugin instance by its JavaPlugin class.
+     * @param clazz The JavaPlugin class.
+     * @param <J> The JavaPlugin class.
+     * @return The plugin instance.
+     */
     public static <J extends JavaPlugin> JadAPIPlugin get(Class<J> clazz) {
-        for (JadAPIPlugin pl : new ArrayList<>(PLUGINS)) if (pl.getJavaPlugin().getClass().equals(clazz)) return pl;
+        for (JadAPIPlugin pl : new ArrayList<>(PLUGINS))
+            if (pl.getJavaPlugin() == null) {
+                PLUGINS.remove(pl);
+            } else if (pl.getJavaPlugin().getClass().equals(clazz)) {
+                return pl;
+            }
         return null;
     }
 
@@ -43,6 +65,10 @@ public abstract class JadAPIPlugin {
 
     public abstract JavaPlugin getJavaPlugin();
 
+    /**
+     * Register this plugin to JadAPI.
+     * @param register If true, register this plugin to JadAPI, if false, it will unregister it.
+     */
     public void register(boolean register) {
         if (!JadAPI.getInstance().isEnabled()) throw new JException(JException.Reason.JADAPI_NOT_ENABLED);
         if (this.getJavaPlugin() == null) throw new JException(JException.Reason.VALUE_IS_NULL);
@@ -77,6 +103,10 @@ public abstract class JadAPIPlugin {
         }
     }
 
+    /**
+     * Check if this instance is registered to JadAPI.
+     * @return True if this instance is registered to JadAPI, false otherwise.
+     */
     public boolean isRegistered() {
         return PLUGINS.contains(this);
     }

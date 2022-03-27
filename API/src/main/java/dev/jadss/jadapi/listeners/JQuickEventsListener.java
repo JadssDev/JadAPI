@@ -1,7 +1,6 @@
 package dev.jadss.jadapi.listeners;
 
 import dev.jadss.jadapi.JadAPI;
-import dev.jadss.jadapi.management.JConnection;
 import dev.jadss.jadapi.management.JQuickEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -20,12 +19,11 @@ public class JQuickEventsListener implements Listener {
 
     @EventHandler //Quite worthless but why not?
     public void onEvent(Event event, EventPriority priority) {
-        if(JConnection.isBlacklisted()) return;
         if(JadAPI.getInstance().getDebug().doEventsDebug() && priority == EventPriority.LOWEST)
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eAn &3&lEvent &ewas &b&lcalled &e-> &b" + event.getClass().getName() + " " + debugOptions(event)));
         if(priority == EventPriority.LOWEST) JadAPI.getInstance().getInformationManager().addEventCall(event.getClass().getSimpleName());
         for(JQuickEvent quickEvent : new ArrayList<>(JadAPI.getInstance().getInformationManager().getQuickEvents())) {
-            if ((isInstance(event, quickEvent.getEventType()) || isSuperClass(event.getClass(), quickEvent.getEventType())) && quickEvent.getPriority() == priority) {
+            if (quickEvent.getEventType().isAssignableFrom(event.getClass()) && quickEvent.getPriority() == priority) {
                 quickEvent.run((quickEvent.getEventType().cast(event)));
             }
         }
@@ -40,13 +38,5 @@ public class JQuickEventsListener implements Listener {
         } else if(event instanceof PlayerEvent) {
             return "(" + "player->" + ((PlayerEvent) event).getPlayer().getName() + ")";
         } else return "";
-    }
-
-    public boolean isInstance(Event event, Class<? extends Event> classy) {
-        if(event.getClass().equals(classy)) return true; else return false;
-    }
-
-    public boolean isSuperClass(Class<? extends Event> event, Class<? extends Event> quickEventClass) {
-        return quickEventClass.isAssignableFrom(event);
     }
 }

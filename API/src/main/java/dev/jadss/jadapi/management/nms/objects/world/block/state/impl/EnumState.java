@@ -21,7 +21,7 @@ public class EnumState<N extends NMSEnum> implements EnumBlockState<N> {
         this.nmsEnumClass = nmsEnumClass;
 
         if(StateType.isStatesSupported()) {
-            Object object = JReflection.executeUnspecificMethod(EnumBlockState.blockStateEnumClass, new Class[] { String.class, Class.class }, null, EnumBlockState.blockStateEnumClass, nmsName, nmsEnumClass);
+            Object object = JReflection.executeMethod(EnumBlockState.blockStateEnumClass, new Class[] { String.class, Class.class }, null, EnumBlockState.blockStateEnumClass, (i) -> 0, nmsName, nmsEnumClass);
             if(object != null)
                 this.blockState = new IBlockState(object);
             else

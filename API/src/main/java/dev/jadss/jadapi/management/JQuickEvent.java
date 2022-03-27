@@ -82,10 +82,14 @@ public class JQuickEvent {
             this.executions = this.executionsDefault;
             JadAPI.getInstance().getInformationManager().getQuickEvents().add(this);
             this.plugin.getQuickEvents().add(this);
+            if (JadAPI.getInstance().getDebug().doQuickEventsDebug())
+                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eRegistered a &3&lQuickEvent&e! &bEvent &e&m->&a " + this.eventType.getSimpleName() + "&e; &bRegisterer &e&m->&a " + this.plugin.getJavaPlugin().getName()));
         } else {
             this.executions = 0;
             JadAPI.getInstance().getInformationManager().getQuickEvents().remove(this);
             this.plugin.getQuickEvents().remove(this);
+            if (JadAPI.getInstance().getDebug().doQuickEventsDebug())
+                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eUnregistered a &3&lQuickEvent&e! &bEvent &e&m->&a " + this.eventType.getSimpleName() + "&e; &bRegisterer &e&m->&a " + this.plugin.getJavaPlugin().getName()));
         }
         return this;
     }

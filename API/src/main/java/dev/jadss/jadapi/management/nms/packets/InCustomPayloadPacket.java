@@ -53,16 +53,16 @@ public class InCustomPayloadPacket extends DefinedPacket {
             throw new NMSException("The packet specified is not parsable by this class.");
 
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13)) {
-            this.channel = JReflection.getUnspecificFieldObject(customPayloadPacketClass, Key.keyClass, Integer.MAX_VALUE, packet).toString();
+            this.channel = JReflection.getFieldObject(customPayloadPacketClass, Key.keyClass, packet, (i) -> i).toString();
             this.data = new PacketDataSerializer();
-            this.data.setPDS(JReflection.getUnspecificFieldObject(customPayloadPacketClass, PacketDataSerializer.packetDataSerializerClass, Integer.MAX_VALUE, packet));
+            this.data.setPDS(JReflection.getFieldObject(customPayloadPacketClass, PacketDataSerializer.packetDataSerializerClass, packet, (i) -> i));
         } else {
-            this.channel = JReflection.getUnspecificFieldObject(customPayloadPacketClass, String.class, packet);
+            this.channel = JReflection.getFieldObject(customPayloadPacketClass, String.class, packet);
 
             if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
-                this.data = NMS.newPacketDataSerializer(JReflection.getUnspecificFieldObject(customPayloadPacketClass, byte[].class, packet));
+                this.data = NMS.newPacketDataSerializer(JReflection.getFieldObject(customPayloadPacketClass, byte[].class, packet));
             } else {
-                this.data = new PacketDataSerializer(JReflection.getUnspecificFieldObject(customPayloadPacketClass, PacketDataSerializer.packetDataSerializerClass, packet));
+                this.data = new PacketDataSerializer(JReflection.getFieldObject(customPayloadPacketClass, PacketDataSerializer.packetDataSerializerClass, packet));
             }
         }
     }
@@ -72,17 +72,17 @@ public class InCustomPayloadPacket extends DefinedPacket {
         Object packet;
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
             packet = JReflection.executeConstructor(InCustomPayloadPacket.customPayloadPacketClass, new Class[]{});
-            JReflection.setUnspecificField(customPayloadPacketClass, String.class, Integer.MAX_VALUE, packet, this.channel);
-            JReflection.setUnspecificField(customPayloadPacketClass, int.class, Integer.MAX_VALUE, packet, this.data.getASByteBuf().readableBytes());
-            JReflection.setUnspecificField(customPayloadPacketClass, byte[].class, Integer.MAX_VALUE, packet, this.data.getASByteBuf().readBytes());
+            JReflection.setFieldObject(customPayloadPacketClass, String.class, packet, this.channel, (i) -> i);
+            JReflection.setFieldObject(customPayloadPacketClass, int.class, packet, this.data.getASByteBuf().readableBytes(), (i) -> i);
+            JReflection.setFieldObject(customPayloadPacketClass, byte[].class, packet, this.data.getASByteBuf().readBytes(), (i) -> i);
         } else if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_12)) {
             packet = JReflection.executeConstructor(InCustomPayloadPacket.customPayloadPacketClass, new Class[]{});
-            JReflection.setUnspecificField(customPayloadPacketClass, String.class, packet, this.channel);
-            JReflection.setUnspecificField(customPayloadPacketClass, PacketDataSerializer.packetDataSerializerClass, Integer.MAX_VALUE, packet, this.data.getPDS());
+            JReflection.setFieldObject(customPayloadPacketClass, String.class, packet, this.channel);
+            JReflection.setFieldObject(customPayloadPacketClass, PacketDataSerializer.packetDataSerializerClass, packet, this.data.getPDS(), (i) -> i);
         } else if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_16)) {
             packet = JReflection.executeConstructor(InCustomPayloadPacket.customPayloadPacketClass, new Class[]{});
-            JReflection.setUnspecificField(customPayloadPacketClass, Key.keyClass, Integer.MAX_VALUE, packet, this.channel);
-            JReflection.setUnspecificField(customPayloadPacketClass, PacketDataSerializer.packetDataSerializerClass, Integer.MAX_VALUE, packet, this.data.getPDS());
+            JReflection.setFieldObject(customPayloadPacketClass, Key.keyClass, packet, this.channel, (i) -> i);
+            JReflection.setFieldObject(customPayloadPacketClass, PacketDataSerializer.packetDataSerializerClass, packet, this.data.getPDS(), (i) -> i);
         } else if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_18)) {
             String keys[] = this.channel.split(":");
             String namespace = keys[0];

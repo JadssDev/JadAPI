@@ -40,7 +40,7 @@ public class InLoginStart extends DefinedPacket {
             throw new NMSException("The packet specified is not parsable by this class.");
 
         this.gameProfile = new GameProfile();
-        this.gameProfile.parse(JReflection.getUnspecificFieldObject(loginStartPacketClass, this.gameProfile.getParsingClass(), packet));
+        this.gameProfile.parse(JReflection.getFieldObject(loginStartPacketClass, this.gameProfile.getParsingClass(), packet));
     }
 
     @Override

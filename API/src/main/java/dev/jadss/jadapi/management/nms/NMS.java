@@ -100,6 +100,7 @@ public final class NMS {
         return new Block(CraftUtils.getBlock(material), material.getMaterial(JMaterial.Type.BLOCK).getValue());
     }
 
+    public static final Class<?> packetClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.protocol" : "server." + JReflection.getNMSVersion()) + ".Packet");
     public static final Class<?> nbtTagCompoundClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "nbt" : "server." + JReflection.getNMSVersion()) + ".NBTTagCompound");
 
     //NBT getters
@@ -111,7 +112,7 @@ public final class NMS {
      * @return the NBT of the object!
      */
     public static ObjectPackage getNBTFromClass(Class<?> clazz, Object nmsHandle) {
-        return new ObjectPackage(JReflection.executeUnspecificMethod(nbtTagCompoundClass, new Class[]{nbtTagCompoundClass}, nmsHandle, nbtTagCompoundClass, JReflection.executeConstructor(nbtTagCompoundClass, new Class[]{})));
+        return new ObjectPackage(JReflection.executeMethod(clazz, new Class[]{nbtTagCompoundClass}, nmsHandle, null, (i) -> 0, JReflection.executeConstructor(nbtTagCompoundClass, new Class[]{})));
     }
 
     //Packet Data serializers.

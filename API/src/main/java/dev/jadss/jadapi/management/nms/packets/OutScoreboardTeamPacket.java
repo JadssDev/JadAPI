@@ -42,47 +42,47 @@ public class OutScoreboardTeamPacket extends DefinedPacket {
             packet = JReflection.executeConstructor(scoreboardTeamPacketClass, new Class[]{});
 
             //Name
-            JReflection.setUnspecificField(scoreboardTeamPacketClass, String.class, 0, packet, scoreboardTeam.getName());
+            JReflection.setFieldObject(scoreboardTeamPacketClass, String.class, packet, scoreboardTeam.getName(), (i) -> 0);
 
             //Name Set ((No cast or Mr. Exception))
-            Collection collection = JReflection.getUnspecificFieldObject(scoreboardTeamPacketClass, Collection.class, 0, packet);
+            Collection collection = JReflection.getFieldObject(scoreboardTeamPacketClass, Collection.class, packet);
             collection.clear();
             collection.addAll(scoreboardTeam.getPlayerNameSet());
 
             //Display name, prefix and suffix.
             if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_12)) {
                 //Strings
-                JReflection.setUnspecificField(scoreboardTeamPacketClass, String.class, 1, packet, scoreboardTeam.getDisplayName().getMessage());
-                JReflection.setUnspecificField(scoreboardTeamPacketClass, String.class, 2, packet, scoreboardTeam.getPrefix().getMessage());
-                JReflection.setUnspecificField(scoreboardTeamPacketClass, String.class, 3, packet, scoreboardTeam.getSuffix().getMessage());
+                JReflection.setFieldObject(scoreboardTeamPacketClass, String.class, packet, scoreboardTeam.getDisplayName().getMessage(), (i) -> 1);
+                JReflection.setFieldObject(scoreboardTeamPacketClass, String.class, packet, scoreboardTeam.getPrefix().getMessage(), (i) -> 2);
+                JReflection.setFieldObject(scoreboardTeamPacketClass, String.class, packet, scoreboardTeam.getSuffix().getMessage(), (i) -> 3);
             } else {
                 //IChatBaseComponents
-                JReflection.setUnspecificField(scoreboardTeamPacketClass, IChatBaseComponent.iChatBaseComponentClass, 0, packet, scoreboardTeam.getDisplayName().build());
-                JReflection.setUnspecificField(scoreboardTeamPacketClass, IChatBaseComponent.iChatBaseComponentClass, 1, packet, scoreboardTeam.getPrefix().build());
-                JReflection.setUnspecificField(scoreboardTeamPacketClass, IChatBaseComponent.iChatBaseComponentClass, 2, packet, scoreboardTeam.getSuffix().build());
+                JReflection.setFieldObject(scoreboardTeamPacketClass, IChatBaseComponent.iChatBaseComponentClass, packet, scoreboardTeam.getDisplayName().build(), (i) -> 0);
+                JReflection.setFieldObject(scoreboardTeamPacketClass, IChatBaseComponent.iChatBaseComponentClass, packet, scoreboardTeam.getPrefix().build(), (i) -> 1);
+                JReflection.setFieldObject(scoreboardTeamPacketClass, IChatBaseComponent.iChatBaseComponentClass, packet, scoreboardTeam.getSuffix().build(), (i) -> 2);
             }
 
             //NameTagVisibility && EnumChatFormat
             if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_8)) {
                 boolean isNewer = JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13);
-                JReflection.setUnspecificField(scoreboardTeamPacketClass, String.class, (isNewer ? 1 : 4), packet, scoreboardTeam.getNameTagVisibility().getNetworkId());
-                JReflection.setUnspecificField(scoreboardTeamPacketClass, (isNewer ? EnumChatFormat.enumChatFormat : int.class), 0, packet, (isNewer ? scoreboardTeam.getColor().getNMSObject() : scoreboardTeam.getColor().getNetworkInt()));
+                JReflection.setFieldObject(scoreboardTeamPacketClass, String.class, packet, scoreboardTeam.getNameTagVisibility().getNetworkId(), (i) -> isNewer ? 1 : 4);
+                JReflection.setFieldObject(scoreboardTeamPacketClass, (isNewer ? EnumChatFormat.enumChatFormat : int.class), packet, (isNewer ? scoreboardTeam.getColor().getNMSObject() : scoreboardTeam.getColor().getNetworkInt()), (i) -> 0);
             }
 
             //CollisionRule
             if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_9)) {
-                JReflection.setUnspecificField(scoreboardTeamPacketClass, String.class, (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13) ? 2 : 5), packet, scoreboardTeam.getTeamPush().getNetworkId());
+                JReflection.setFieldObject(scoreboardTeamPacketClass, String.class, packet, scoreboardTeam.getTeamPush().getNetworkId(), (i) -> JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13) ? 2 : 5);
             }
 
             //Action
-            JReflection.setUnspecificField(scoreboardTeamPacketClass, int.class, (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7) || JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13) ? 0 : 1), packet, action.getByte());
+            JReflection.setFieldObject(scoreboardTeamPacketClass, int.class, packet, action.getByte(), (i) -> JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7) || JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13) ? 0 : 1);
 
             //Flags (Friendly fire and see friendly invisibles)
-            JReflection.setUnspecificField(scoreboardTeamPacketClass, int.class, Integer.MAX_VALUE, packet, scoreboardTeam.getFlags());
+            JReflection.setFieldObject(scoreboardTeamPacketClass, int.class, packet, scoreboardTeam.getFlags(), (i) -> i);
         } else { //>1.17
             ScoreboardMetaClass scoreboardMetaClass = new ScoreboardMetaClass(scoreboardTeam);
 
-            packet = JReflection.executeConstructor(scoreboardTeamPacketClass, new Class[]{String.class, int.class, Optional.class, Collection.class}, scoreboardTeam.getName(), action.getByte(), (action.doAttachMeta() ? scoreboardMetaClass.build() : false), new ArrayList<>(scoreboardTeam.getPlayerNameSet()));
+            packet = JReflection.executeConstructor(scoreboardTeamPacketClass, new Class[]{String.class, int.class, Optional.class, Collection.class}, scoreboardTeam.getName(), action.getByte(), (action.doAttachMeta() ? Optional.of(scoreboardMetaClass.build()) : Optional.empty()), new ArrayList<>(scoreboardTeam.getPlayerNameSet()));
         }
 
         return packet;
@@ -97,56 +97,56 @@ public class OutScoreboardTeamPacket extends DefinedPacket {
 
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_16)) {
             //Name
-            this.scoreboardTeam.setName(JReflection.getUnspecificFieldObject(scoreboardTeamPacketClass, String.class, 0, packet));
+            this.scoreboardTeam.setName(JReflection.getFieldObject(scoreboardTeamPacketClass, String.class, packet));
 
             //Name Set ((No cast or Mr. Exception))
-            Collection collection = JReflection.getUnspecificFieldObject(scoreboardTeamPacketClass, Collection.class, 0, packet);
+            Collection collection = JReflection.getFieldObject(scoreboardTeamPacketClass, Collection.class, packet);
             HashSet<String> list = new HashSet<>(collection);
             this.scoreboardTeam.setPlayerNameSet(list);
 
             //Display name, prefix and suffix.
             if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_12)) {
                 //Strings
-                this.scoreboardTeam.setDisplayName(new IChatBaseComponent(JReflection.getUnspecificFieldObject(scoreboardTeamPacketClass, String.class, 1, packet), false, ""));
-                this.scoreboardTeam.setPrefix(new IChatBaseComponent(JReflection.getUnspecificFieldObject(scoreboardTeamPacketClass, String.class, 2, packet), false, ""));
-                this.scoreboardTeam.setSuffix(new IChatBaseComponent(JReflection.getUnspecificFieldObject(scoreboardTeamPacketClass, String.class, 3, packet), false, ""));
+                this.scoreboardTeam.setDisplayName(new IChatBaseComponent(JReflection.getFieldObject(scoreboardTeamPacketClass, String.class, packet, (i) -> 1), false, ""));
+                this.scoreboardTeam.setPrefix(new IChatBaseComponent(JReflection.getFieldObject(scoreboardTeamPacketClass, String.class, packet, (i) -> 2), false, ""));
+                this.scoreboardTeam.setSuffix(new IChatBaseComponent(JReflection.getFieldObject(scoreboardTeamPacketClass, String.class, packet, (i) -> 3), false, ""));
             } else {
                 //IChatBaseComponents
                 this.scoreboardTeam.setDisplayName(new IChatBaseComponent());
-                this.scoreboardTeam.getDisplayName().parse(JReflection.getUnspecificFieldObject(scoreboardTeamPacketClass, IChatBaseComponent.iChatBaseComponentClass, 0, packet));
+                this.scoreboardTeam.getDisplayName().parse(JReflection.getFieldObject(scoreboardTeamPacketClass, IChatBaseComponent.iChatBaseComponentClass, packet));
 
                 this.scoreboardTeam.setPrefix(new IChatBaseComponent());
-                this.scoreboardTeam.getPrefix().parse(JReflection.getUnspecificFieldObject(scoreboardTeamPacketClass, IChatBaseComponent.iChatBaseComponentClass, 1, packet));
+                this.scoreboardTeam.getPrefix().parse(JReflection.getFieldObject(scoreboardTeamPacketClass, IChatBaseComponent.iChatBaseComponentClass, packet, (i) -> 1));
 
                 this.scoreboardTeam.setSuffix(new IChatBaseComponent());
-                this.scoreboardTeam.getSuffix().parse(JReflection.getUnspecificFieldObject(scoreboardTeamPacketClass, IChatBaseComponent.iChatBaseComponentClass, 2, packet));
+                this.scoreboardTeam.getSuffix().parse(JReflection.getFieldObject(scoreboardTeamPacketClass, IChatBaseComponent.iChatBaseComponentClass, packet, (i) -> 2));
             }
 
             //NameTagVisibility && EnumChatFormat
             if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_8)) {
                 boolean isNewer = JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13);
-                this.scoreboardTeam.setNameTagVisibility(EnumNameTagVisibility.getByNetworkId(JReflection.getUnspecificFieldObject(scoreboardTeamPacketClass, String.class, (isNewer ? 1 : 4), packet)));
+                this.scoreboardTeam.setNameTagVisibility(EnumNameTagVisibility.getByNetworkId(JReflection.getFieldObject(scoreboardTeamPacketClass, String.class, packet, (i) -> isNewer ? 1 : 4)));
 
                 if (isNewer)
-                    this.scoreboardTeam.setColor(NMSEnum.getEnum(EnumChatFormat.class, (Enum<?>) JReflection.getUnspecificFieldObject(scoreboardTeamPacketClass, EnumChatFormat.enumChatFormat, 0, packet)));
+                    this.scoreboardTeam.setColor(NMSEnum.getEnum(EnumChatFormat.class, JReflection.getFieldObject(scoreboardTeamPacketClass, EnumChatFormat.enumChatFormat, packet)));
                 else
-                    this.scoreboardTeam.setColor(EnumChatFormat.getByNetworkInt(JReflection.getUnspecificFieldObject(scoreboardTeamPacketClass, int.class, 0, packet)));
+                    this.scoreboardTeam.setColor(EnumChatFormat.getByNetworkInt(JReflection.getFieldObject(scoreboardTeamPacketClass, int.class, packet, (i) -> 0)));
             }
 
             //CollisionRule
             if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_9)) {
-                this.scoreboardTeam.setTeamPush(EnumTeamPush.getByNetworkId(JReflection.getUnspecificFieldObject(scoreboardTeamPacketClass, String.class, (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13) ? 2 : 5), packet)));
+                this.scoreboardTeam.setTeamPush(EnumTeamPush.getByNetworkId(JReflection.getFieldObject(scoreboardTeamPacketClass, String.class, packet, (i) -> JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13) ? 2 : 5)));
             }
 
             //Action
-            this.action = TeamAction.getByByte(JReflection.getUnspecificFieldObject(scoreboardTeamPacketClass, int.class, (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7) || JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13) ? 0 : 1), packet));
+            this.action = TeamAction.getByByte(JReflection.getFieldObject(scoreboardTeamPacketClass, int.class, packet, (i) -> JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7) || JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13) ? 0 : 1));
 
             //Flags (Friendly fire and see friendly invisibles)
-            this.scoreboardTeam.parseFlags(JReflection.getUnspecificFieldObject(scoreboardTeamPacketClass, int.class, Integer.MAX_VALUE, packet));
+            this.scoreboardTeam.parseFlags(JReflection.getFieldObject(scoreboardTeamPacketClass, int.class, packet, (i) -> i));
         } else { //>1.17
-            this.action = TeamAction.getByByte(JReflection.getUnspecificFieldObject(scoreboardTeamPacketClass, int.class, Integer.MAX_VALUE, packet));
+            this.action = TeamAction.getByByte(JReflection.getFieldObject(scoreboardTeamPacketClass, int.class, packet, (i) -> i));
 
-            Optional<?> option = JReflection.getUnspecificFieldObject(scoreboardTeamPacketClass, Optional.class, packet);
+            Optional<?> option = JReflection.getFieldObject(scoreboardTeamPacketClass, Optional.class, packet);
             if (option != null && option.isPresent()) {
                 ScoreboardMetaClass scoreboardInfoParser = new ScoreboardMetaClass();
                 scoreboardInfoParser.parse(option.get());
@@ -155,9 +155,9 @@ public class OutScoreboardTeamPacket extends DefinedPacket {
                 this.scoreboardTeam = new ScoreboardTeam();
             }
 
-            this.scoreboardTeam.setName(JReflection.getUnspecificFieldObject(scoreboardTeamPacketClass, String.class, packet));
+            this.scoreboardTeam.setName(JReflection.getFieldObject(scoreboardTeamPacketClass, String.class, packet));
 
-            this.scoreboardTeam.setPlayerNameSet(new HashSet<>(JReflection.getUnspecificFieldObject(scoreboardTeamPacketClass, Collection.class, packet)));
+            this.scoreboardTeam.setPlayerNameSet(new HashSet<>(JReflection.getFieldObject(scoreboardTeamPacketClass, Collection.class, packet)));
         }
     }
 
@@ -241,22 +241,22 @@ public class OutScoreboardTeamPacket extends DefinedPacket {
             team = new ScoreboardTeam();
 
             team.setDisplayName(new IChatBaseComponent());
-            team.getDisplayName().parse(JReflection.getUnspecificFieldObject(scoreboardTeamInfoPacketClass, IChatBaseComponent.iChatBaseComponentClass, 0, object));
+            team.getDisplayName().parse(JReflection.getFieldObject(scoreboardTeamInfoPacketClass, IChatBaseComponent.iChatBaseComponentClass, object, (i) -> 0));
 
             team.setPrefix(new IChatBaseComponent());
-            team.getPrefix().parse(JReflection.getUnspecificFieldObject(scoreboardTeamInfoPacketClass, IChatBaseComponent.iChatBaseComponentClass, 1, object));
+            team.getPrefix().parse(JReflection.getFieldObject(scoreboardTeamInfoPacketClass, IChatBaseComponent.iChatBaseComponentClass, object, (i) -> 1));
 
             team.setSuffix(new IChatBaseComponent());
-            team.getSuffix().parse(JReflection.getUnspecificFieldObject(scoreboardTeamInfoPacketClass, IChatBaseComponent.iChatBaseComponentClass, 2, object));
+            team.getSuffix().parse(JReflection.getFieldObject(scoreboardTeamInfoPacketClass, IChatBaseComponent.iChatBaseComponentClass, object, (i) -> 2));
 
-            team.setColor(NMSEnum.getEnum(EnumChatFormat.class, (Enum<?>) JReflection.getUnspecificFieldObject(scoreboardTeamInfoPacketClass, EnumChatFormat.enumChatFormat, object)));
+            team.setColor(NMSEnum.getEnum(EnumChatFormat.class, JReflection.getFieldObject(scoreboardTeamInfoPacketClass, EnumChatFormat.enumChatFormat, object)));
 
-            team.parseFlags(JReflection.getUnspecificFieldObject(scoreboardTeamInfoPacketClass, int.class, object));
+            team.parseFlags(JReflection.getFieldObject(scoreboardTeamInfoPacketClass, int.class, object));
 
-            team.setNameTagVisibility(EnumNameTagVisibility.getByNetworkId(JReflection.getUnspecificFieldObject(scoreboardTeamInfoPacketClass, String.class, 0, object)));
+            team.setNameTagVisibility(EnumNameTagVisibility.getByNetworkId(JReflection.getFieldObject(scoreboardTeamInfoPacketClass, String.class, object, (i) -> 0)));
             team.setDeathMessageVisibility(EnumNameTagVisibility.ALWAYS);
 
-            team.setTeamPush(EnumTeamPush.getByNetworkId(JReflection.getUnspecificFieldObject(scoreboardTeamInfoPacketClass, String.class, 1, object)));
+            team.setTeamPush(EnumTeamPush.getByNetworkId(JReflection.getFieldObject(scoreboardTeamInfoPacketClass, String.class, object, (i) -> 1)));
         }
 
         @Override

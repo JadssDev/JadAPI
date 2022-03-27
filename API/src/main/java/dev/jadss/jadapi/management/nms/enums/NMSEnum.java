@@ -25,18 +25,19 @@ public interface NMSEnum extends NMSObject {
     /**
      * Get an enum from NMS to a {@link NMSEnum}!
      * @param enumClass the {@link NMSEnum} class!
-     * @param enumValue the NMS enum value!
+     * @param objectEnum the NMS enum value!
      * @param <A> the type of the enum!
      * @return the enum in JadAPI form!
      */
-    static <A extends NMSEnum> A getEnum(Class<A> enumClass, Enum<?> enumValue) {
-        if(enumValue == null) return null;
+    static <A extends NMSEnum> A getEnum(Class<A> enumClass, Object objectEnum) {
+        if(objectEnum == null) return null;
 
         if(Arrays.stream(enumClass.getDeclaredMethods()).anyMatch(m -> m.getName().equals("customParse") && m.getReturnType().equals(enumClass))) {
-            return (A) JReflection.executeMethodByName(enumClass, "customParse", null, enumValue);
+            return (A) JReflection.executeMethodByName(enumClass, "customParse", null, objectEnum);
         } else {
-            return enumClass.getEnumConstants()[enumValue.ordinal()];
+            if (objectEnum instanceof Enum)
+                return enumClass.getEnumConstants()[((Enum<?>) objectEnum).ordinal()];
         }
-
+        return null;
     }
 }

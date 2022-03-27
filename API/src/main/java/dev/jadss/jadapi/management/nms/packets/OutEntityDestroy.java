@@ -28,12 +28,12 @@ public class OutEntityDestroy extends DefinedPacket {
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17)) {
             try {
                 Object obj = entityDestroyPacketClass.getFields()[0].get(packet);
-                this.entityIds = JReflection.getUnspecificFieldObject(obj.getClass(), int[].class, obj);
+                this.entityIds = JReflection.getFieldObject(obj.getClass(), int[].class, obj);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
         } else {
-            this.entityIds = JReflection.getUnspecificFieldObject(entityDestroyPacketClass, int[].class, packet);
+            this.entityIds = JReflection.getFieldObject(entityDestroyPacketClass, int[].class, packet);
         }
     }
 
@@ -43,7 +43,7 @@ public class OutEntityDestroy extends DefinedPacket {
             return JReflection.executeConstructor(entityDestroyPacketClass, new Class[]{int[].class}, entityIds);
         } else {
             Object packet = JReflection.executeConstructor(entityDestroyPacketClass, new Class[]{});
-            JReflection.setUnspecificField(entityDestroyPacketClass, int[].class, packet, entityIds);
+            JReflection.setFieldObject(entityDestroyPacketClass, int[].class, packet, entityIds);
             return packet;
         }
     }

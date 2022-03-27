@@ -20,7 +20,7 @@ public enum EnumTeamPush implements NMSEnum {
     }
 
     public String getNetworkId() {
-        return JReflection.getUnspecificFieldObject(enumTeamPushClass, String.class, getNMSObject());
+        return JReflection.getFieldObject(enumTeamPushClass, String.class, getNMSObject());
     }
 
     public static EnumTeamPush getByNetworkId(String id) {

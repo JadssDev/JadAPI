@@ -56,7 +56,7 @@ public enum EnumChatFormat implements NMSEnum {
     }
 
     public int getNetworkInt() {
-        return JReflection.getUnspecificFieldObject(enumChatFormat, int.class, getNMSObject());
+        return JReflection.getFieldObject(enumChatFormat, int.class, getNMSObject());
     }
 
     public static EnumChatFormat getByNetworkInt(int id) {

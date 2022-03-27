@@ -55,9 +55,9 @@ public class OutUpdateHealth extends DefinedPacket {
         if (!canParse(packet))
             throw new NMSException("The packet specified is not parsable by this class.");
 
-        this.health = JReflection.getUnspecificFieldObject(updateHealthPacketClass, float.class, 0, packet);
-        this.food = JReflection.getUnspecificFieldObject(updateHealthPacketClass, int.class, packet);
-        this.saturation = JReflection.getUnspecificFieldObject(updateHealthPacketClass, float.class, 1, packet);
+        this.health = JReflection.getFieldObject(updateHealthPacketClass, float.class, packet, (i) -> 0);
+        this.food = JReflection.getFieldObject(updateHealthPacketClass, int.class, packet);
+        this.saturation = JReflection.getFieldObject(updateHealthPacketClass, float.class, packet, (i) -> 1);
     }
 
     @Override

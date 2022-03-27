@@ -38,9 +38,9 @@ public class Block implements NMSObject, NMSManipulable, SimpleBlock {
             throw new NMSException("Block is invalid");
 
         if(JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13)) {
-            return JReflection.executeUnspecificMethod(blockClass, new Class[] {}, block, IBlockData.iBlockDataClass);
+            return JReflection.executeMethod(blockClass, new Class[] {}, block, IBlockData.iBlockDataClass, (i) -> 0);
         } else {
-            return JReflection.executeUnspecificMethod(blockClass, new Class[] { int.class }, block, IBlockData.iBlockDataClass, data);
+            return JReflection.executeMethod(blockClass, new Class[] { int.class }, block, IBlockData.iBlockDataClass, (i) -> 0, data);
         }
     }
 
@@ -48,7 +48,7 @@ public class Block implements NMSObject, NMSManipulable, SimpleBlock {
         if(JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13) || JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
             return 0;
         } else {
-            return JReflection.executeUnspecificMethod(Block.blockClass, new Class[] { IBlockData.iBlockDataClass }, this.block, int.class, nmsBlockData).byteValue();
+            return JReflection.executeMethod(Block.blockClass, new Class[] { IBlockData.iBlockDataClass }, this.block, int.class, (i) -> 0, nmsBlockData).byteValue();
         }
     }
 

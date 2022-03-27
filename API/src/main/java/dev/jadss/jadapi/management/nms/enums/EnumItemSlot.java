@@ -31,7 +31,7 @@ public enum EnumItemSlot implements NMSEnum {
     public Object getNMSObject() {
         if(JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_8))
             throw new NMSException("EnumItemSlot is not available in versions below 1.8");
-        return JReflection.executeUnspecificMethod(enumItemSlotClass, new Class[] { String.class }, null, enumItemSlotClass, name);
+        return JReflection.executeMethod(enumItemSlotClass, new Class[] { String.class }, null, enumItemSlotClass, (i) -> 0, name);
     }
 
     @Override

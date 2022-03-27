@@ -7,13 +7,16 @@ import dev.jadss.jadapi.management.nms.interfaces.NMSManipulable;
 import dev.jadss.jadapi.management.nms.interfaces.NMSObject;
 import dev.jadss.jadapi.management.nms.objects.chat.IChatBaseComponent;
 import dev.jadss.jadapi.utils.JReflection;
+import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.v1_8_R3.entity.CraftArmorStand;
+import org.bukkit.entity.ArmorStand;
 
 import java.util.UUID;
 
 public abstract class Entity implements NMSObject, NMSManipulable {
 
     public static final Class<?> entityClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.entity" : "server." + JReflection.getNMSVersion()) + ".Entity");
-    public static final Class<?> dataWatcherClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.syncher" : "server." + JReflection.getNMSVersion() + ".DataWatcher"));
+    public static final Class<?> dataWatcherClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.syncher" : "server." + JReflection.getNMSVersion()) + ".DataWatcher");
 
     //todo:
     //Cool ideas maybe:
@@ -33,20 +36,28 @@ public abstract class Entity implements NMSObject, NMSManipulable {
 
     //Custom methods.
 
-    public int getId() { return (int) JReflection.executeMethod(entityClass, "getId", this.entity, new Class[] {}); }
+    public int getId() {
+        if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_17)) {
+            return (int) JReflection.executeMethod(entityClass, "getId", this.entity, new Class[] {});
+        } else { // No way of using some type of genius to get it except use the actual method name! Unfortunate.
+            return (int) JReflection.executeMethod(entityClass, "ae", this.entity, new Class[] {});
+        }
+    }
 
-    public Object getDataWatcher() { return JReflection.getUnspecificFieldObject(entityClass, dataWatcherClass, this.entity); }
+    public Object getDataWatcher() {
+        return JReflection.getFieldObject(entityClass, dataWatcherClass, this.entity);
+    }
 
     public IChatBaseComponent getCustomName() {
         if(JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) throw new NMSException("This method is not available on 1.7");
 
         IChatBaseComponent component = new IChatBaseComponent();
         if(JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_12)) {
-            component.setMessage(JReflection.executeUnspecificIndexMethod(entityClass, new Class[] {}, this.entity, String.class, Integer.MAX_VALUE));
+            component.setMessage(JReflection.executeMethod(entityClass, new Class[] {}, this.entity, String.class, (i) -> i));
             component.setJsonMessage(IChatBaseComponent.defaultSimpleFormat.replace("%text%", component.getMessage()));
             component.setJsonMode(true);
         } else {
-            component.parse(JReflection.executeUnspecificIndexMethod(entityClass, new Class[] {}, this.entity, IChatBaseComponent.iChatBaseComponentClass, Integer.MAX_VALUE));
+            component.parse(JReflection.executeMethod(entityClass, new Class[] {}, this.entity, IChatBaseComponent.iChatBaseComponentClass, (i) -> i));
         }
         return component;
     }
@@ -55,9 +66,9 @@ public abstract class Entity implements NMSObject, NMSManipulable {
         if(JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) throw new NMSException("This method is not available on 1.7");
 
         if(JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_12)) {
-            JReflection.executeUnspecificIndexMethod(entityClass, new Class[] { String.class }, this.entity, null, Integer.MAX_VALUE, component.getMessage());
+            JReflection.executeMethod(entityClass, new Class[] { String.class }, this.entity, null, (i) -> i, component.getMessage());
         } else {
-            JReflection.executeUnspecificIndexMethod(entityClass, new Class[] { IChatBaseComponent.iChatBaseComponentClass }, this.entity, null, Integer.MAX_VALUE, component.build());
+            JReflection.executeMethod(entityClass, new Class[] { IChatBaseComponent.iChatBaseComponentClass }, this.entity, null, (i) -> i, component.build());
         }
     }
 
@@ -140,7 +151,7 @@ public abstract class Entity implements NMSObject, NMSManipulable {
      * @param value the value to set the flag to.
      */
     public void setFlagged(int flag, boolean value) {
-        JReflection.executeUnspecificMethod(entityClass, new Class[] { int.class, boolean.class }, this.entity, null, flag, value);
+        JReflection.executeMethod(entityClass, new Class[] { int.class, boolean.class }, this.entity, null, (i) -> 0, flag, value);
     }
 
     public UUID getUniqueID() { return (UUID) JReflection.executeMethod(entityClass, "getUniqueID", this.entity, new Class[] {}); }

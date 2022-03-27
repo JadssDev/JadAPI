@@ -14,11 +14,17 @@ public class PluginDisableListener implements Listener {
 
     @EventHandler
     public void onDisable(PluginDisableEvent e) {
-        if(JadAPIPlugin.get((Class<JavaPlugin>) e.getPlugin().getClass()) != null) {
-            JadAPIPlugin plugin = JadAPIPlugin.get((Class<JavaPlugin>) e.getPlugin().getClass());
-            for(JQuickEvent jEvent : new ArrayList<>(plugin.getQuickEvents())) jEvent.register(false);
-            for(JPacketHook jHook : new ArrayList<>(plugin.getPacketHooks())) jHook.register(false);
-            plugin.register(false);
-        }
+        if (!(e.getPlugin() instanceof JavaPlugin))
+            return;
+
+        JavaPlugin plugin = (JavaPlugin) e.getPlugin();
+        JadAPIPlugin jPluginInstance = JadAPIPlugin.get(plugin.getClass());
+
+        if (jPluginInstance == null)
+            return;
+
+        jPluginInstance.getQuickEvents().forEach(q -> q.register(false));
+        jPluginInstance.getPacketHooks().forEach(h -> h.register(false));
+        jPluginInstance.register(false);
     }
 }

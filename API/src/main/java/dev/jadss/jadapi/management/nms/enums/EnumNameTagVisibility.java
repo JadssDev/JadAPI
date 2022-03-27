@@ -20,7 +20,7 @@ public enum EnumNameTagVisibility implements NMSEnum {
     }
 
     public String getNetworkId() {
-        return JReflection.getUnspecificFieldObject(enumNameTagVisibilityClass, String.class, getNMSObject());
+        return JReflection.getFieldObject(enumNameTagVisibilityClass, String.class, getNMSObject());
     }
 
     public static EnumNameTagVisibility getByNetworkId(String id) {

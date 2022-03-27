@@ -50,7 +50,7 @@ public class TileEntitySign extends TileEntity {
         Class<?> clazz = isNewer ? Array.newInstance(IChatBaseComponent.iChatBaseComponentClass, 0).getClass() : String[].class;
 
         return Arrays
-                .stream(((Object[]) JReflection.getUnspecificFieldObject(tileEntitySignClass, clazz, tileEntity)))
+                .stream(((Object[]) JReflection.getFieldObject(tileEntitySignClass, clazz, tileEntity)))
                 .map(object -> {
                     if (isNewer) {
                         IChatBaseComponent component = new IChatBaseComponent();
@@ -66,7 +66,7 @@ public class TileEntitySign extends TileEntity {
     public void setLines(IChatBaseComponent[] lines) {
         boolean isNewer = JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_8);
         Class<?> clazz = isNewer ? Array.newInstance(IChatBaseComponent.iChatBaseComponentClass, 0).getClass() : String[].class;
-        Object[] array = (Object[]) JReflection.getUnspecificFieldObject(tileEntitySignClass, clazz, tileEntity);
+        Object[] array = (Object[]) JReflection.getFieldObject(tileEntitySignClass, clazz, tileEntity);
         assert array != null && array.length == 4;
         if (isNewer) {
             for (int i = 0; i < array.length; i++)
@@ -84,16 +84,16 @@ public class TileEntitySign extends TileEntity {
     //Custom methods.
 
     public void setEditable(boolean editable) {
-        JReflection.setUnspecificField(tileEntitySignClass, boolean.class, tileEntity, editable);
+        JReflection.setFieldObject(tileEntitySignClass, boolean.class, tileEntity, editable);
     }
 
     public boolean isEditable() {
-        return JReflection.getUnspecificFieldObject(tileEntitySignClass, boolean.class, tileEntity);
+        return JReflection.getFieldObject(tileEntitySignClass, boolean.class, tileEntity);
     }
 
     public void setEditingHuman(EntityPlayer player) {
         boolean newer = JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17);
-        JReflection.setUnspecificField(tileEntitySignClass, (newer ? UUID.class : EntityPlayer.entityHumanClass), tileEntity, (newer ? player.getBukkitEntity().getUniqueId() : player.getHandle()));
+        JReflection.setFieldObject(tileEntitySignClass, (newer ? UUID.class : EntityPlayer.entityHumanClass), tileEntity, (newer ? player.getBukkitEntity().getUniqueId() : player.getHandle()));
     }
 
     @BukkitAsUtility
@@ -101,9 +101,9 @@ public class TileEntitySign extends TileEntity {
         boolean newer = JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17);
         Object object;
         if (newer)
-            object = JReflection.getUnspecificFieldObject(tileEntitySignClass, UUID.class, tileEntity);
+            object = JReflection.getFieldObject(tileEntitySignClass, UUID.class, tileEntity);
         else
-            object = JReflection.getUnspecificFieldObject(tileEntitySignClass, EntityPlayer.entityHumanClass, tileEntity);
+            object = JReflection.getFieldObject(tileEntitySignClass, EntityPlayer.entityHumanClass, tileEntity);
 
         if (newer) {
             Entity entity = Bukkit.getServer().getEntity((UUID) object);

@@ -1,32 +1,32 @@
 package dev.jadss.jadapi.management.channel.newer;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
-import io.netty.channel.socket.SocketChannel;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 
 import java.lang.reflect.Method;
 
 @SuppressWarnings("all")
-public class JChannelInit extends ChannelInitializer<SocketChannel> {
+public class JChannelInitializer extends ChannelInitializer<Channel> {
 
-    ChannelInitializer<SocketChannel> channelInitializer = null;
+    private ChannelInitializer<Channel> channelInitializer = null;
 
-    public JChannelInit(Object oldSchool) {
-        this.channelInitializer = (ChannelInitializer<SocketChannel>) oldSchool;
+    public JChannelInitializer(Object oldSchool) {
+        this.channelInitializer = (ChannelInitializer<Channel>) oldSchool;
     }
 
     @Override
-    protected void initChannel(SocketChannel socketChannel) throws Exception {
-        initOldChannel(socketChannel);
+    protected void initChannel(Channel channel) throws Exception {
+        initOldChannel(channel);
 
-        if (socketChannel.pipeline().get("JadAPIChannel") == null)
-            socketChannel.pipeline().addBefore("packet_handler", "GlobalJadAPIHandler", new JChannelHandler(0, null));
+        if (channel.pipeline().get("JadAPIChannel") == null)
+            channel.pipeline().addBefore("packet_handler", "GlobalJadAPIHandler", new JChannelHandler(0, null));
         else
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eAlready &3&lhooked &einto &b&lpackets&e!?"));
     }
 
-    public void initOldChannel(SocketChannel channel) throws Exception {
+    public void initOldChannel(Channel channel) throws Exception {
         Method method = null;
         for (Method m : channelInitializer.getClass().getDeclaredMethods())
             if (m.getName().equals("initChannel")) method = m;

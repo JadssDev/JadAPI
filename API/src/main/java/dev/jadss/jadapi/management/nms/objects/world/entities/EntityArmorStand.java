@@ -25,7 +25,7 @@ public final class EntityArmorStand extends EntityLiving {
 
     @Override
     public void setInvisible(boolean invisible) {
-        JReflection.setUnspecificField(armorStandClass, boolean.class, (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? Integer.MAX_VALUE : 0), this.entity, invisible);
+        JReflection.setFieldObject(armorStandClass, boolean.class, this.entity, invisible, (i) -> JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_14) ? i : 0);
         super.setInvisible(invisible);
     }
 

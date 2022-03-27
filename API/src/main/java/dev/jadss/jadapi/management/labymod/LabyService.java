@@ -69,7 +69,6 @@ public class LabyService {
         String json = data.readString();
         JsonObject jsonObject = (JsonObject) new JsonParser().parse(json);
 
-        System.out.println("Key -> " + key);
         if(key.equalsIgnoreCase("info")) {
             InfoPacket packet = new InfoPacket();
             packet.parse(jsonObject);

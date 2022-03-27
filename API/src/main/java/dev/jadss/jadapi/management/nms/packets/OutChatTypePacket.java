@@ -125,51 +125,51 @@ public class OutChatTypePacket extends MultipleDefinedPacket {
 
         if (getChatPacket().equals(packet.getClass())) {
             this.component = new IChatBaseComponent();
-            this.component.parse(JReflection.getUnspecificFieldObject(getChatPacket(), IChatBaseComponent.iChatBaseComponentClass, packet));
+            this.component.parse(JReflection.getFieldObject(getChatPacket(), IChatBaseComponent.iChatBaseComponentClass, packet));
 
             if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_16)) {
-                this.sender = JReflection.getUnspecificFieldObject(getChatPacket(), UUID.class, packet);
+                this.sender = JReflection.getFieldObject(getChatPacket(), UUID.class, packet);
             } else this.sender = new UUID(0L, 0L);
 
             if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
                 this.type = ChatMessageType.CHAT;
             } else if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_11)) {
-                this.type = ChatMessageType.customParse(JReflection.getUnspecificFieldObject(getChatPacket(), byte.class, packet));
+                this.type = ChatMessageType.customParse(JReflection.getFieldObject(getChatPacket(), byte.class, packet));
             } else if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_18)) {
-                this.type = NMSEnum.getEnum(ChatMessageType.class, (Enum<?>) JReflection.getUnspecificFieldObject(getChatPacket(), ChatMessageType.chatMessageTypeEnumClass, packet));
+                this.type = NMSEnum.getEnum(ChatMessageType.class, (Enum<?>) JReflection.getFieldObject(getChatPacket(), ChatMessageType.chatMessageTypeEnumClass, packet));
             }
         } else if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17)) {
             //new Title packets.
             if (getClientboundActionBarPacket().equals(packet)) {
                 this.type = ChatMessageType.ACTION_BAR;
                 this.component = new IChatBaseComponent();
-                this.component.parse(JReflection.getUnspecificFieldObject(getClientboundActionBarPacket(), IChatBaseComponent.iChatBaseComponentClass, packet));
+                this.component.parse(JReflection.getFieldObject(getClientboundActionBarPacket(), IChatBaseComponent.iChatBaseComponentClass, packet));
             } else if (getClientboundTitlePacket().equals(packet)) {
                 this.type = TitleMessageType.TITLE;
                 this.component = new IChatBaseComponent();
-                this.component.parse(JReflection.getUnspecificFieldObject(getClientboundTitlePacket(), IChatBaseComponent.iChatBaseComponentClass, packet));
+                this.component.parse(JReflection.getFieldObject(getClientboundTitlePacket(), IChatBaseComponent.iChatBaseComponentClass, packet));
             } else if (getClientboundSubtitlePacket().equals(packet)) {
                 this.type = TitleMessageType.SUBTITLE;
                 this.component = new IChatBaseComponent();
-                this.component.parse(JReflection.getUnspecificFieldObject(getClientboundSubtitlePacket(), IChatBaseComponent.iChatBaseComponentClass, packet));
+                this.component.parse(JReflection.getFieldObject(getClientboundSubtitlePacket(), IChatBaseComponent.iChatBaseComponentClass, packet));
             } else if (getClientboundTitleAnimationPacket().equals(packet)) {
                 this.type = TitleMessageType.TIMINGS;
                 this.component = new IChatBaseComponent("", false, "");
-                this.fadeIn = JReflection.getUnspecificFieldObject(getClientboundTitleAnimationPacket(), int.class, 0, packet);
-                this.stay = JReflection.getUnspecificFieldObject(getClientboundTitleAnimationPacket(), int.class, 1, packet);
-                this.fadeOut = JReflection.getUnspecificFieldObject(getClientboundTitleAnimationPacket(), int.class, 2, packet);
+                this.fadeIn = JReflection.getFieldObject(getClientboundTitleAnimationPacket(), int.class, packet, (i) -> 0);
+                this.stay = JReflection.getFieldObject(getClientboundTitleAnimationPacket(), int.class,  packet, (i) -> 1);
+                this.fadeOut = JReflection.getFieldObject(getClientboundTitleAnimationPacket(), int.class,  packet, (i) -> 2);
             }
         } else {
             //old Title packets.
             this.component = new IChatBaseComponent();
-            this.component.parse(JReflection.getUnspecificFieldObject(getTitlePacket(), IChatBaseComponent.iChatBaseComponentClass, packet));
+            this.component.parse(JReflection.getFieldObject(getTitlePacket(), IChatBaseComponent.iChatBaseComponentClass, packet));
 
             //Type
-            this.type = NMSEnum.getEnum(TitleMessageType.class, (Enum<?>) JReflection.getUnspecificFieldObject(getTitlePacket(), TitleMessageType.titleMessageTypeEnumClass, packet));
+            this.type = NMSEnum.getEnum(TitleMessageType.class, JReflection.getFieldObject(getTitlePacket(), TitleMessageType.titleMessageTypeEnumClass, packet));
 
-            this.fadeIn = JReflection.getUnspecificFieldObject(getTitlePacket(), int.class, 0, packet);
-            this.stay = JReflection.getUnspecificFieldObject(getTitlePacket(), int.class, 1, packet);
-            this.fadeOut = JReflection.getUnspecificFieldObject(getTitlePacket(), int.class, 2, packet);
+            this.fadeIn = JReflection.getFieldObject(getTitlePacket(), int.class, packet, (i) -> 0);
+            this.stay = JReflection.getFieldObject(getTitlePacket(), int.class, packet, (i) -> 1);
+            this.fadeOut = JReflection.getFieldObject(getTitlePacket(), int.class, packet, (i) -> 2);
         }
     }
 
@@ -181,26 +181,26 @@ public class OutChatTypePacket extends MultipleDefinedPacket {
                 throw new NMSException("Titles are not supported in 1.7");
             if (type == TitleMessageType.TITLE || type == TitleMessageType.SUBTITLE || type == TitleMessageType.TIMINGS || type == TitleMessageType.RESET || type == TitleMessageType.CLEAR) {
                 packet = JReflection.executeConstructor(getTitlePacket(), new Class[]{});
-                JReflection.setUnspecificField(getTitlePacket(), TitleMessageType.titleMessageTypeEnumClass, packet, type.getNMSObject());
+                JReflection.setFieldObject(getTitlePacket(), TitleMessageType.titleMessageTypeEnumClass, packet, type.getNMSObject());
 
                 if (type == TitleMessageType.TITLE || type == TitleMessageType.SUBTITLE) {
-                    JReflection.setUnspecificField(getTitlePacket(), IChatBaseComponent.iChatBaseComponentClass, packet, component.build());
+                    JReflection.setFieldObject(getTitlePacket(), IChatBaseComponent.iChatBaseComponentClass, packet, component.build());
                 } else if (type == TitleMessageType.TIMINGS) {
-                    JReflection.setUnspecificField(getTitlePacket(), int.class, 0, packet, fadeIn);
-                    JReflection.setUnspecificField(getTitlePacket(), int.class, 1, packet, stay);
-                    JReflection.setUnspecificField(getTitlePacket(), int.class, 2, packet, fadeOut);
+                    JReflection.setFieldObject(getTitlePacket(), int.class, packet, fadeIn, (i) -> 0);
+                    JReflection.setFieldObject(getTitlePacket(), int.class, packet, stay, (i) -> 1);
+                    JReflection.setFieldObject(getTitlePacket(), int.class, packet, fadeOut, (i) -> 2);
                 }
             } else {
                 packet = JReflection.executeConstructor(getChatPacket(), new Class[]{});
-                JReflection.setUnspecificField(getChatPacket(), IChatBaseComponent.iChatBaseComponentClass, packet, this.component.build());
+                JReflection.setFieldObject(getChatPacket(), IChatBaseComponent.iChatBaseComponentClass, packet, this.component.build());
 
                 if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
                     //IDk why but this boolean is not needed, but it is set by default, so we just set it to true anyway, everything should work just fine!
-                    JReflection.setUnspecificField(getChatPacket(), boolean.class, packet, true);
+                    JReflection.setFieldObject(getChatPacket(), boolean.class, packet, true);
                 } else if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_11)) {
-                    JReflection.setUnspecificField(getChatPacket(), byte.class, packet, ((ChatMessageType) type).getByte());
+                    JReflection.setFieldObject(getChatPacket(), byte.class, packet, ((ChatMessageType) type).getByte());
                 } else {
-                    JReflection.setUnspecificField(getChatPacket(), ChatMessageType.chatMessageTypeEnumClass, packet, type.getNMSObject());
+                    JReflection.setFieldObject(getChatPacket(), ChatMessageType.chatMessageTypeEnumClass, packet, type.getNMSObject());
                 }
             }
         } else {
@@ -289,7 +289,7 @@ public class OutChatTypePacket extends MultipleDefinedPacket {
                 if (!e.getClass().equals(chatMessageTypeEnumClass))
                     throw new NMSException("The object is not a ChatMessageType enum from nms.");
 
-                return getByByte(JReflection.getUnspecificFieldObject(chatMessageTypeEnumClass, byte.class, e));
+                return getByByte(JReflection.getFieldObject(chatMessageTypeEnumClass, byte.class, e));
             } else {
                 return getByByte((byte) e);
             }

@@ -32,13 +32,13 @@ public class OutOpenSignEditor extends DefinedPacket {
             throw new NMSException("The packet specified is not parsable by this class.");
 
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
-            int x = JReflection.getUnspecificFieldObject(openSignEditorPacketClass, int.class, 0, packet);
-            int y = JReflection.getUnspecificFieldObject(openSignEditorPacketClass, int.class, 1, packet);
-            int z = JReflection.getUnspecificFieldObject(openSignEditorPacketClass, int.class, 2, packet);
+            int x = JReflection.getFieldObject(openSignEditorPacketClass, int.class, packet, (i) -> 0);
+            int y = JReflection.getFieldObject(openSignEditorPacketClass, int.class, packet, (i) -> 1);
+            int z = JReflection.getFieldObject(openSignEditorPacketClass, int.class, packet, (i) -> 2);
             this.position = new BlockPosition(x, y, z);
         } else {
             this.position = new BlockPosition();
-            this.position.parse(JReflection.getUnspecificFieldObject(openSignEditorPacketClass, BlockPosition.blockPositionClass, packet));
+            this.position.parse(JReflection.getFieldObject(openSignEditorPacketClass, BlockPosition.blockPositionClass, packet));
         }
     }
 

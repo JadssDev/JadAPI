@@ -47,7 +47,7 @@ public class OutEntityMetadata extends DefinedPacket {
 
     @Override
     public Object build() {
-        return JReflection.executeConstructor(entityMetadataPacketClass, new Class[]{int.class, dataWatcherPackage.getObject().getClass(), boolean.class}, entityID, dataWatcherPackage.getObject(), true);
+        return JReflection.executeConstructor(entityMetadataPacketClass, new Class[]{int.class, Entity.dataWatcherClass, boolean.class}, entityID, dataWatcherPackage.getObject(), true);
     }
 
     /**
@@ -62,7 +62,7 @@ public class OutEntityMetadata extends DefinedPacket {
         if (!canParse(packet))
             throw new NMSException("The packet specified is not parsable by this class.");
 
-        this.entityID = JReflection.getUnspecificFieldObject(entityMetadataPacketClass, int.class, packet);
+        this.entityID = JReflection.getFieldObject(entityMetadataPacketClass, int.class, packet);
     }
 
     @Override

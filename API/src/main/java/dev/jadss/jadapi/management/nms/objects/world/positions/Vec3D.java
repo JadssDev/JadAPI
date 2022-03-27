@@ -43,9 +43,9 @@ public class Vec3D implements NMSObject, NMSBuildable, NMSParsable, NMSCopyable 
         if(object == null) return;
         if(!canParse(object)) throw new NMSException("Cannot parse this object.");
 
-        this.x = JReflection.getUnspecificFieldObject(vec3DClass, double.class, 0, object);
-        this.y = JReflection.getUnspecificFieldObject(vec3DClass, double.class, 1, object);
-        this.z = JReflection.getUnspecificFieldObject(vec3DClass, double.class, 2, object);
+        this.x = JReflection.getFieldObject(vec3DClass, double.class, object, (i) -> 0);
+        this.y = JReflection.getFieldObject(vec3DClass, double.class, object, (i) -> 1);
+        this.z = JReflection.getFieldObject(vec3DClass, double.class, object, (i) -> 2);
     }
 
     @Override

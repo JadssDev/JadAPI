@@ -61,9 +61,9 @@ public class OutUpdateSign extends DefinedPacket {
             lines[i] = new IChatBaseComponent();
         if (JVersion.getServerVersion() == JVersion.v1_8) {
             this.position = new BlockPosition();
-            this.position.parse(JReflection.getUnspecificFieldObject(updateSignClass, BlockPosition.blockPositionClass, packet));
+            this.position.parse(JReflection.getFieldObject(updateSignClass, BlockPosition.blockPositionClass, packet));
 
-            Object[] lines = (Object[]) JReflection.getUnspecificFieldObject(updateSignClass, Array.newInstance(IChatBaseComponent.iChatBaseComponentClass, 0).getClass(), packet);
+            Object[] lines = (Object[]) JReflection.getFieldObject(updateSignClass, Array.newInstance(IChatBaseComponent.iChatBaseComponentClass, 0).getClass(), packet);
 
             try {
                 for (int i = 0; i < 4; i++)
@@ -75,12 +75,12 @@ public class OutUpdateSign extends DefinedPacket {
                 }
             }
         } else {
-            int x = JReflection.getUnspecificFieldObject(updateSignClass, int.class, 0, packet);
-            int y = JReflection.getUnspecificFieldObject(updateSignClass, int.class, 1, packet);
-            int z = JReflection.getUnspecificFieldObject(updateSignClass, int.class, 2, packet);
+            int x = JReflection.getFieldObject(updateSignClass, int.class, packet, (i) -> 0);
+            int y = JReflection.getFieldObject(updateSignClass, int.class, packet, (i) -> 1);
+            int z = JReflection.getFieldObject(updateSignClass, int.class, packet, (i) -> 2);
             this.position = new BlockPosition(x, y, z);
 
-            String[] lines = JReflection.getUnspecificFieldObject(updateSignClass, String[].class, packet);
+            String[] lines = JReflection.getFieldObject(updateSignClass, String[].class, packet);
 
             try {
                 for (int i = 0; i < 4; i++)

@@ -12,13 +12,8 @@ import dev.jadss.jadapi.interfaces.managing.JManagement;
 import dev.jadss.jadapi.interfaces.managing.JPacketHooker;
 import dev.jadss.jadapi.interfaces.managing.JRegisterer;
 import dev.jadss.jadapi.interfaces.other.PacketListener;
-import dev.jadss.jadapi.management.channel.legacy.JLegacyChannelHandler;
-import dev.jadss.jadapi.management.channel.legacy.JLegacyChannelInit;
-import dev.jadss.jadapi.management.channel.newer.JChannelHandler;
-import dev.jadss.jadapi.management.channel.newer.JChannelInit;
 import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.utils.JReflection;
-import io.netty.channel.ChannelPipeline;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.enchantments.Enchantment;
@@ -128,7 +123,14 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
                                 Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&b&m--------------------------------------"));
                                 Thread.dumpStack();
                                 packetHook.getProviderPlugin().register(false);
-                                JReflection.setUnspecificField(PacketEvent.class, CompletableFuture.class, packetEvent, new CompletableFuture<>());
+                                try {
+                                    Field field = PacketEvent.class.getDeclaredField("result");
+                                    field.setAccessible(true);
+                                    field.set(packetEvent, new CompletableFuture<>());
+                                } catch (NoSuchFieldException | IllegalAccessException ex) {
+                                    Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eError attempting to patch EventResult field!"));
+                                    ex.printStackTrace();
+                                }
                             }
                         }
                     }
@@ -136,7 +138,14 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
             }
         }
         EventResult result = new EventResult(packetEvent.getPacket(), packetEvent.hasBeenEdited(), packetEvent.isCancelled());
-        JReflection.getUnspecificFieldObject(PacketEvent.class, CompletableFuture.class, packetEvent).complete(result);
+        try {
+            Field field = PacketEvent.class.getDeclaredField("result");
+            field.setAccessible(true);
+            ((CompletableFuture<EventResult>) field.get(packetEvent)).complete(result);
+        } catch(NoSuchFieldException | IllegalAccessException ex) {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eError attempting to complete Event!"));
+            ex.printStackTrace();
+        }
 
         return result;
     }
@@ -146,7 +155,7 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
 
     //JManagement type of job.
     public void shutdown() {
-        JConnection.shuttingDown();
+        //todo...
     }
 
     public void addChannelLookup(String playerName, Object channel) {
@@ -181,7 +190,6 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
     private Class<?> legacyChannelPipelineClass = JReflection.getReflectionClass("net.minecraft.util.io.netty.channel.ChannelPipeline");
     private Class<?> legacyChannelFutureClass = JReflection.getReflectionClass("net.minecraft.util.io.netty.channel.ChannelFuture");
     private Class<?> legacyChannelInitializerClass = JReflection.getReflectionClass("net.minecraft.util.io.netty.channel.ChannelInitializer");
-    private Class<?> legacyChannelPropertyAccessClass = JReflection.getReflectionClass("net.minecraft.util.io.netty.channel.ChannelPropertyAccess");
 
     private Class<?> newerChannelClass = JReflection.getReflectionClass("io.netty.channel.Channel");
     private Class<?> newerChannelHandlerClass = JReflection.getReflectionClass("io.netty.channel.ChannelHandler");
@@ -189,53 +197,53 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
     private Class<?> newerChannelFutureClass = JReflection.getReflectionClass("io.netty.channel.ChannelFuture");
     private Class<?> newerChannelInitializerClass = JReflection.getReflectionClass("io.netty.channel.ChannelInitializer");
 
-    private boolean injectInternal(Player player, boolean logShit) {
-        if (logShit)
+    private boolean injectInternal(Player player, boolean log) {
+        if (log)
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &bInjecting &3&lChannel &eto &3" + player.getPlayer().getName() + "&e!"));
 
         Object channel = channelLookup.get(player.getName());
 
         if (channel == null) {
-            if (logShit)
+            if (log)
                 Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eCould not &bacquire &ecached &3&lChannel &efor &3" + player.getPlayer().getName() + "&e! Acquiring it now!"));
 
             Object entityPlayer = JReflection.executeMethod(JReflection.getReflectionClass("org.bukkit.craftbukkit." + JReflection.getNMSVersion() + ".entity.CraftPlayer"), "getHandle", player, new Class[]{});
             if (entityPlayer == null) return false;
-            Object playerConnection = JReflection.getUnspecificFieldObject(entityPlayer.getClass(), JReflection.getReflectionClass("net.minecraft.server." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network" : JReflection.getNMSVersion()) + ".PlayerConnection"), entityPlayer);
+            Object playerConnection = JReflection.getFieldObject(entityPlayer.getClass(), JReflection.getReflectionClass("net.minecraft.server." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network" : JReflection.getNMSVersion()) + ".PlayerConnection"), entityPlayer);
             if (playerConnection == null) return false;
-            Object networkManager = JReflection.getUnspecificFieldObject(playerConnection.getClass(), JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network" : "server." + JReflection.getNMSVersion()) + ".NetworkManager"), playerConnection);
+            Object networkManager = JReflection.getFieldObject(playerConnection.getClass(), JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network" : "server." + JReflection.getNMSVersion()) + ".NetworkManager"), playerConnection);
             if (networkManager == null) return false;
 
             if (isLegacy)
-                channel = JReflection.getUnspecificFieldObject(networkManager.getClass(), legacyChannelClass, networkManager);
+                channel = JReflection.getFieldObject(networkManager.getClass(), legacyChannelClass, networkManager);
             else
-                channel = JReflection.getUnspecificFieldObject(networkManager.getClass(), newerChannelClass, networkManager);
+                channel = JReflection.getFieldObject(networkManager.getClass(), newerChannelClass, networkManager);
 
             if (channel == null) {
-                if (logShit)
+                if (log)
                     Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eCould not &bacquire &ethe &3&lChannel&e..."));
                 return false;
             }
 
-            if (logShit)
+            if (log)
                 Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eSuccessfully acquired &3&lChannel&e."));
-        } else if (logShit) {
+        } else if (log) {
             channelLookup.remove(player.getName());
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eFound &bcached &3&lChannel&e!"));
         }
 
-        Object pipeline = JReflection.executeMethod((isLegacy ? legacyChannelPropertyAccessClass : newerChannelClass), "pipeline", channel, new Class[]{});
+        Object pipeline = JReflection.executeMethod((isLegacy ? legacyChannelClass : newerChannelClass), "pipeline", channel, new Class[]{});
         Class<?> pipelineClass = (isLegacy ? legacyChannelPipelineClass : newerChannelPipelineClass);
         if (JReflection.executeMethod(pipelineClass, "get", pipeline, new Class[]{String.class}, "JadAPI_Player_Handler") != null)
             return true;
 
         { //register. (String, String, ChannelHandler) ((Add Handler))
-            if (isLegacy) {
-                ChannelPipeline e;
-                JReflection.executeMethod(legacyChannelPipelineClass, "addBefore", pipeline, new Class[]{String.class, String.class, legacyChannelHandlerClass}, "packet_handler", "JadAPI_Player_Handler", new JLegacyChannelHandler(1, new JPlayer(player)));
-            } else {
-                JReflection.executeMethod(newerChannelPipelineClass, "addBefore", pipeline, new Class[]{String.class, String.class, newerChannelHandlerClass}, "packet_handler", "JadAPI_Player_Handler", new JChannelHandler(1, new JPlayer(player)));
-            }
+            JReflection.executeMethod(isLegacy ? legacyChannelPipelineClass : newerChannelPipelineClass, "addBefore", pipeline,
+                    new Class[]{String.class, String.class, isLegacy ? legacyChannelHandlerClass : newerChannelHandlerClass},
+                    "packet_handler", "JadAPI_Player_Handler",
+                    JReflection.executeConstructor(isLegacy ? JReflection.getReflectionClass("dev.jadss.jadapi.management.channel.legacy.JLegacyChannelHandler") : JReflection.getReflectionClass("dev.jadss.jadapi.management.channel.newer.JChannelHandler"),
+                            new Class[]{int.class, JPlayer.class}, new Object[]{1, new JPlayer(player)}));
+
         }
 
         return true;
@@ -258,8 +266,7 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
         Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&eInitializing &3&lManager&e! &b(CodeName: JPacketHooker, JInformationManager, JRegisterer, JManagement"));
 
         if (JadAPI.serverConnectionEnabled) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&eInitializing &3&lJadAPI Servers &aconnection&e!"));
-            new JConnection(true);
+            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&eInitializing &3&lJadAPI Servers &aconnection&e! (it doesn't connect, it's disabled)"));
         } else {
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&eConnection to &3&lServers &eis &c&ldisabled&e!"));
         }
@@ -302,11 +309,11 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
             instance.unregister();
             return;
         }
-        ((Map<String, Enchantment>) JReflection.getFieldObject(Enchantment.class, "byName", null)).remove(instance.getEnchantmentInformation().getName(), instance.asEnchantment());
+        ((Map<String, Enchantment>) JReflection.getFieldObjectByName(Enchantment.class, "byName", null)).remove(instance.getEnchantmentInformation().getName(), instance.asEnchantment());
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_12)) {
-            ((Map<Integer, Enchantment>) JReflection.getFieldObject(Enchantment.class, "byId", null)).remove(instance.getEnchantmentInformation().getId());
+            ((Map<Integer, Enchantment>) JReflection.getFieldObjectByName(Enchantment.class, "byId", null)).remove(instance.getEnchantmentInformation().getId());
         } else {
-            Map<?, Enchantment> map = (Map<?, Enchantment>) JReflection.getFieldObject(Enchantment.class, "byKey", null);
+            Map<?, Enchantment> map = (Map<?, Enchantment>) JReflection.getFieldObjectByName(Enchantment.class, "byKey", null);
             AtomicReference<Object> nameSpace = null;
             map.forEach((object, enchantment) -> {
                 if (enchantment.equals(instance.asEnchantment()))
@@ -320,6 +327,7 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
     private boolean registered = false;
     private boolean tryingToRegister = false;
 
+    @Override
     public void registerHandler() {
         if (tryingToRegister || registered) throw new JException(JException.Reason.ALREADY_REGISTERED);
 
@@ -330,92 +338,51 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
                     Object minecraftServer = NMS.getMinecraftServer();
                     if (minecraftServer == null) continue;
 
-                    Object serverConnection = JReflection.getUnspecificFieldObject(JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "server" : "server." + JReflection.getNMSVersion()) + ".MinecraftServer"),
+                    Object serverConnection = JReflection.getFieldObject(JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "server" : "server." + JReflection.getNMSVersion()) + ".MinecraftServer"),
                             JReflection.getReflectionClass("net.minecraft.server." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network" : JReflection.getNMSVersion()) + ".ServerConnection"), minecraftServer);
                     if (serverConnection == null) continue;
 
-                    List<Object> listObjects = (List<Object>) JReflection.getUnspecificFieldObject(serverConnection.getClass(), List.class, serverConnection);
+                    List<Object> listObjects = (List<Object>) JReflection.getFieldObject(serverConnection.getClass(), List.class, serverConnection);
                     if (listObjects == null) continue;
 
                     if (listObjects.size() == 0) continue;
 
                     Thread thread = new Thread(() -> {
-                        if (isLegacy) {
-                            for (Object channelFuture : listObjects) {
-                                try {
-                                    Object channel = JReflection.executeMethod(legacyChannelFutureClass, "channel", channelFuture, new Class[]{});
-                                    Object pipeline = JReflection.executeMethod(legacyChannelPropertyAccessClass, "pipeline", channel, new Class[]{});
-                                    for (String handlerName : (List<String>) JReflection.executeMethod(legacyChannelPipelineClass, "names", pipeline, new Class[]{})) {
-                                        Object bootstrapAcceptor;
-                                        Object handler = JReflection.executeMethod(legacyChannelPipelineClass, "get", pipeline, new Class[]{String.class}, handlerName);
-                                        if (handler == null) continue;
+                        for (Object channelFuture : listObjects) {
+                            try {
+                                Object channel = JReflection.executeMethod(isLegacy ? legacyChannelFutureClass : newerChannelFutureClass, "channel", channelFuture, new Class[]{});
+                                Object pipeline = JReflection.executeMethod(isLegacy ? legacyChannelClass : newerChannelClass, "pipeline", channel, new Class[]{});
+                                for (String handlerName : (List<String>) JReflection.executeMethod(isLegacy ? legacyChannelPipelineClass : newerChannelPipelineClass, "names", pipeline, new Class[]{})) {
+                                    Object bootstrapAcceptor;
+                                    Object handler = JReflection.executeMethod(isLegacy ? legacyChannelPipelineClass : newerChannelPipelineClass, "get", pipeline, new Class[]{String.class}, handlerName);
+                                    if (handler == null) continue;
 
-                                        System.out.println(handler.getClass().getDeclaredFields());
+                                    Field bootstrapAcceptorField = handler.getClass().getDeclaredField("childHandler");
+                                    bootstrapAcceptorField.setAccessible(true);
+                                    bootstrapAcceptorField.get(handler);
+                                    bootstrapAcceptor = handler;
 
-                                        Field bootstrapAcceptorField = handler.getClass().getDeclaredField("childHandler");
-                                        bootstrapAcceptorField.setAccessible(true);
-                                        bootstrapAcceptorField.get(handler);
-                                        bootstrapAcceptor = handler;
+                                    Object channelInitializer = JReflection.executeConstructor(
+                                            isLegacy ? JReflection.getReflectionClass("dev.jadss.jadapi.management.channel.legacy.JLegacyChannelInitializer") : JReflection.getReflectionClass("dev.jadss.jadapi.management.channel.newer.JChannelInitializer"),
+                                            new Class[]{Object.class}, bootstrapAcceptorField.get(bootstrapAcceptor));
 
-                                        Object channelInitializer = new JLegacyChannelInit(bootstrapAcceptorField.get(bootstrapAcceptor));
+                                    for (Player player : Bukkit.getOnlinePlayers())
+                                        player.kickPlayer(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &ePlease &breconnect&e."));
 
-                                        for (Player player : Bukkit.getOnlinePlayers())
-                                            player.kickPlayer(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &ePlease &breconnect&e."));
+                                    //Replace the old channel initializer with our own.
+                                    bootstrapAcceptorField.set(bootstrapAcceptor, channelInitializer);
 
-                                        //Replace the old channel initializer with our own.
-                                        bootstrapAcceptorField.set(bootstrapAcceptor, channelInitializer);
-
-                                        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &3&lJadAPI &ehas successfully &binjected &einto &b&lNetty&e!"));
-
-                                        this.registered = true;
-                                        this.tryingToRegister = false;
-                                        registerer.stop();
-                                    }
-                                } catch (Exception ex) {
-                                    ex.printStackTrace();
-                                    Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eCould not &bhook &einto the &3&lNetty channel&e, cannot analyze &3packets&e! &b&lSadge&e!"));
+                                    Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &3&lJadAPI &ehas successfully &binjected &einto &b&lNetty&e!"));
                                 }
-                            }
-                        } else {
-                            for (Object channelFuture : listObjects) {
-                                try {
-                                    Object channel = JReflection.executeMethod(newerChannelFutureClass, "channel", channelFuture, new Class[]{});
-                                    Object pipeline = JReflection.executeMethod(newerChannelClass, "pipeline", channel, new Class[]{});
-
-                                    for (String handlerName : (List<String>) JReflection.executeMethod(newerChannelPipelineClass, "names", pipeline, new Class[]{})) {
-                                        Object bootstrapAcceptor;
-                                        Object handler = JReflection.executeMethod(newerChannelPipelineClass, "get", pipeline, new Class[]{String.class}, handlerName);
-                                        if (handler == null) continue;
-
-                                        System.out.println(handler.getClass().getDeclaredFields());
-
-                                        Field bootstrapAcceptorField = handler.getClass().getDeclaredField("childHandler");
-                                        bootstrapAcceptorField.setAccessible(true);
-                                        bootstrapAcceptorField.get(handler);
-                                        bootstrapAcceptor = handler;
-
-                                        Object channelInitializer = new JChannelInit(bootstrapAcceptorField.get(bootstrapAcceptor));
-
-                                        for (Player player : Bukkit.getOnlinePlayers())
-                                            player.kickPlayer(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &ePlease &breconnect&e."));
-
-                                        //Replace the old channel initializer with our own.
-                                        bootstrapAcceptorField.set(bootstrapAcceptor, channelInitializer);
-
-                                        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &3&lJadAPI &ehas successfully &binjected &einto &b&lNetty&e!"));
-
-                                        this.registered = true;
-                                        this.tryingToRegister = false;
-                                        registerer.stop();
-                                    }
-                                } catch (Exception ex) {
-                                    ex.printStackTrace();
-                                    Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eCould not &bhook &einto the &3&lNetty channel&e, cannot analyze &3packets&e! &b&lSadge&e!"));
-                                }
+                                this.registered = true;
+                            } catch (Exception ex) {
+                                this.registered = false;
+                                ex.printStackTrace();
+                                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eCould not &bhook &einto the &3&lNetty channel&e, cannot analyze &3packets&e! &b&lSadge&e!"));
                             }
                         }
+                        this.tryingToRegister = false;
                     });
-
                     thread.run();
                     registerer.stop();
                 }
