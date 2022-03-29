@@ -11,6 +11,11 @@ depend: [ JadAPI ]
 ```
 After this, make sure you add JadAPI to your project.
 
+Make sure that you have this line in your plugin.yml to prevent "legacy plugins" from appearing to bukkit, these just make it impossible to compare Materials using JadAPI!
+```yaml
+api-version: 1.13
+```
+
 ## Using the API
 To use the api, you firstly need to create a JadAPIPlugin instance by extending it!
 ```java
