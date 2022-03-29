@@ -9,7 +9,6 @@ import dev.jadss.jadapi.management.nms.objects.world.entities.tile.TileEntity;
 import dev.jadss.jadapi.management.nms.objects.world.entities.tile.TileEntitySign;
 import dev.jadss.jadapi.management.nms.objects.world.positions.BlockPosition;
 import dev.jadss.jadapi.utils.JReflection;
-import net.minecraft.server.v1_16_R3.PacketPlayOutTileEntityData;
 
 public class OutTileEntityData extends DefinedPacket {
 
