@@ -14,6 +14,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
@@ -25,6 +26,8 @@ public class InfoCommand {
         if(sender instanceof Player) {
             JPlayer player = new JPlayer((Player) sender);
             JInventory inventory = new JInventory(3, "&3&lServer &b&lInformation").fill(new JItemStack(JMaterial.getRegistryMaterials().find("CYAN_STAINED_GLASS_PANE")).setDisplayName("&3"));
+
+            //TODO: change info command to be more reliable!
 
             long totalPacketsSentToPlayers = -1L;
             long totalPacketsReceivedByPlayers = -1L;
@@ -45,7 +48,7 @@ public class InfoCommand {
             eventsLore.add("");
             for(String s : JadAPI.getInstance().getInformationManager().getEventsCalled().keySet())
                 eventsLore.add(s + " -> " + JadAPI.getInstance().getInformationManager().getEventsCalled().get(s));
-            inventory.setItem(13-9, new JItemStack(JMaterial.getRegistryMaterials().find("CHEST")).setDisplayName("&3&lServer &bEvents")
+            inventory.setItem(13-9, new JItemStack(JMaterial.getRegistryMaterials().find(JMaterial.MaterialEnum.CHEST)).setDisplayName("&3&lServer &bEvents")
                     .setLore(eventsLore));
 
             List<String> lore = new ArrayList<>();
@@ -55,14 +58,7 @@ public class InfoCommand {
 
             JSkin skin = JSkin.getSkin(sender.getName());
 
-            inventory.setItem(13+9, (skin != null ? new JHead(skin.getTextureBase64()).buildHead() : new JItemStack(JMaterial.getRegistryMaterials().find("PLAYER_HEAD"))).setDisplayName("&bAbout &3&lYou").setLore(lore));
-
-            String ID1 = JQuickEvent.generateID();
-            String ID2 = JQuickEvent.generateID();
-
-            new JQuickEvent(JadAPI.getInstance().getJadPlugin(), InventoryClickEvent.class, e -> {
-                if(e.getWhoClicked().getUniqueId().equals(((Player) sender).getUniqueId())) e.setCancelled(true);
-            }, EventPriority.NORMAL, -1, -1, ID1).register(true);
+            inventory.setItem(13+9, (skin != null ? new JHead(skin.getTextureBase64()).buildHead() : new JItemStack(JMaterial.getRegistryMaterials().find(JMaterial.MaterialEnum.PLAYER_HEAD))).setDisplayName("&bAbout &3&lYou").setLore(lore));
 
             BukkitTask task = Bukkit.getScheduler().runTaskTimer(JadAPI.getInstance(), () -> {
                 long packetsSent = -1L;
@@ -98,15 +94,29 @@ public class InfoCommand {
                 inventory.setItem(13+9, (skin_v2 != null ? new JHead(skin_v2.getTextureBase64()).buildHead() : new JItemStack(JMaterial.getRegistryMaterials().find("PLAYER_HEAD"))).setDisplayName("&bAbout &3&lYou").setLore(lore));
             }, 5L, 5L);
 
-            new JQuickEvent(JadAPI.getInstance().getJadPlugin(), InventoryCloseEvent.class, e -> {
-                if(e.getPlayer().getUniqueId().equals(((Player) sender).getUniqueId())) {
-                    JQuickEvent.getQuickEvent(ID1).register(false);
-                    JQuickEvent.getQuickEvent(ID2).register(false);
-                    task.cancel();
-                }
-            }, EventPriority.NORMAL, -1, -1, ID2).register(true);
+            String ID1 = JQuickEvent.generateID();
+            String ID2 = JQuickEvent.generateID();
+            String ID3 = JQuickEvent.generateID();
 
             new JPlayer((Player) sender).openInventory(inventory);
+
+            new JQuickEvent<>(JadAPI.getInstance().getJadPlugin(), InventoryClickEvent.class, EventPriority.NORMAL, event -> {
+                event.setCancelled(true);
+            }, -1, -1, e -> e.getWhoClicked().getUniqueId().equals(player.getPlayer().getUniqueId()), ID1).register(true);
+
+            new JQuickEvent<>(JadAPI.getInstance().getJadPlugin(), InventoryCloseEvent.class, EventPriority.NORMAL, event -> {
+                JQuickEvent.getQuickEvent(ID1).register(false);
+                JQuickEvent.getQuickEvent(ID2).register(false);
+                JQuickEvent.getQuickEvent(ID3).register(false);
+                task.cancel();
+            }, -1, -1, e -> e.getPlayer().getUniqueId().equals(player.getPlayer().getUniqueId()), ID2).register(true);
+
+            new JQuickEvent<>(JadAPI.getInstance().getJadPlugin(), PlayerQuitEvent.class, EventPriority.LOWEST, event -> {
+                JQuickEvent.getQuickEvent(ID1).register(false);
+                JQuickEvent.getQuickEvent(ID2).register(false);
+                JQuickEvent.getQuickEvent(ID3).register(false);
+                task.cancel();
+            }, -1, -1, e -> e.getPlayer().getUniqueId().equals(player.getPlayer().getUniqueId()), ID3).register(true);
         }
     }
 }
