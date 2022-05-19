@@ -19,6 +19,7 @@
     <properties>
         <java.version>1.8</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <delombok.output>e</delombok.output>
     </properties>
     <url>jadss.ml</url>
 
@@ -122,26 +123,20 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.spigotmc</groupId>
-            <artifactId>spigot</artifactId>
-            <version>1.17-R0.1-SNAPSHOT</version>
-            <scope>provided</scope>
-            <classifier>remapped-mojang</classifier>
-        </dependency>
-        <dependency>
 <!--            Main Spigot version-->
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
             <version>1.12.2-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
+
 <!--        Compatibility spigot versions -->
         <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>legacy-netty-spigot</artifactId>
             <version>1.7.10-R0.1-SNAPSHOT</version>
             <scope>system</scope>
-<!--            You'll have to change this to a 1.7, because of packet listeners compatibility.-->
+<!--            You'll have to change this to a 1.7 jar, because of packet listeners compatibility.-->
             <systemPath>Z:\Desktop\Development\Spigot Development\Minecraft versions\1.7.10\1.7.10.jar</systemPath>
         </dependency>
         <dependency>
@@ -149,30 +144,36 @@
             <artifactId>new-netty-spigot</artifactId>
             <version>1.8.8-R0.1-SNAPSHOT</version>
             <scope>system</scope>
-            <!--            You'll have to change this to a 1.7, because of packet listeners compatibility.-->
+            <!--            You'll have to change this to a 1.8 jar, because of packet listeners compatibility.-->
             <systemPath>Z:\Desktop\Development\Spigot Development\Minecraft versions\1.8.8\1.8.8.jar</systemPath>
         </dependency>
+<!--        END of Compatibility Spigot Versions-->
+
+
+<!--        Dependencies-->
         <dependency>
             <groupId>de.tr7zw</groupId>
             <artifactId>item-nbt-api</artifactId>
             <version>2.9.2</version>
         </dependency>
+
+<!--        Questionable if GSON should be removed, but I think yes since it is already included in Minecraft jar itself (1.8+), for now it is just commented here.-->
+<!--        <dependency>-->
+<!--            <groupId>com.google.code.gson</groupId>-->
+<!--            <artifactId>gson</artifactId>-->
+<!--            <version>2.9.0</version>-->
+<!--            <scope>compile</scope>-->
+<!--        </dependency>-->
         <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.8.7</version>
-            <scope>compile</scope>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-json-org</artifactId>
+            <version>2.13.2</version>
         </dependency>
+
         <dependency>
             <groupId>us.myles</groupId>
             <artifactId>viaversion</artifactId>
             <version>4.0.0-21w16a</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>1.18.20</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

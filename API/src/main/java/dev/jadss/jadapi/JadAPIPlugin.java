@@ -43,24 +43,25 @@ public abstract class JadAPIPlugin {
         return null;
     }
 
-    private final List<JQuickEvent> quickEvents = new ArrayList<>();
-    public List<JQuickEvent> getQuickEvents() {
-        return quickEvents;
-    }
-
+    private final List<JQuickEvent<?>> quickEvents = new ArrayList<>();
     private final List<JPacketHook> packetHooks = new ArrayList<>();
-    public List<JPacketHook> getPacketHooks() {
-        return packetHooks;
-    }
-
     private final List<EnchantmentInstance> enchantments = new ArrayList<>();
-    public List<EnchantmentInstance> getEnchantments() {
-        return enchantments;
+    private final List<JShapedCraft> crafts = new ArrayList<>();
+
+    public List<JQuickEvent<?>> getQuickEvents() {
+        return this.quickEvents;
     }
 
-    private final List<JShapedCraft> crafts = new ArrayList<>();
+    public List<JPacketHook> getPacketHooks() {
+        return this.packetHooks;
+    }
+
+    public List<EnchantmentInstance> getEnchantments() {
+        return this.enchantments;
+    }
+
     public List<JShapedCraft> getCrafts() {
-        return crafts;
+        return this.crafts;
     }
 
     public abstract JavaPlugin getJavaPlugin();

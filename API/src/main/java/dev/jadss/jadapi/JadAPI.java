@@ -16,6 +16,7 @@ import dev.jadss.jadapi.interfaces.managing.JPacketHooker;
 import dev.jadss.jadapi.interfaces.managing.JRegisterer;
 import dev.jadss.jadapi.listeners.*;
 import dev.jadss.jadapi.management.JManager;
+import dev.jadss.jadapi.management.JQuickEvent;
 import dev.jadss.jadapi.management.labymod.LabyService;
 import dev.jadss.jadapi.tasks.EventHandlersUpdater;
 import dev.jadss.jadapi.tasks.RemovalTimer;
@@ -27,11 +28,13 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryInteractEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredListener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -63,7 +66,7 @@ public class JadAPI extends JavaPlugin {
     private BukkitTask eventHandlersUpdater;
 
     private EventHandlersUpdater handlersUpdater;
-    private JQuickEventsListener jQuickEventListener;
+    private JadEventHandler jQuickEventListener;
     private final HashMap<EventPriority, RegisteredListener> quickEventHandlers = new HashMap<>();
 
     private DebugOptions debug;
@@ -76,7 +79,6 @@ public class JadAPI extends JavaPlugin {
     private LabyService labyService;
     private JManager managerInstance;
 
-    public boolean isViaVersionPresent() { return this.getServer().getPluginManager().getPlugin("ViaVersion") != null; }
 
     public JadAPI() throws IOException {
         //Prevent sneaky pants.
@@ -115,20 +117,28 @@ public class JadAPI extends JavaPlugin {
 
         new JSender(Bukkit.getConsoleSender()).sendMessage("&aInitializing &3&lDebug Options&e!");
         this.debug = new DebugOptions();
-//        this.debug.setReflectionDebug(true);
+        this.debug.setReflectionDebug(true);
 
         new JSender(Bukkit.getConsoleSender()).sendMessage("&aInitializing &3&lMain Worker Manager&e!");
         managerInstance = new JManager();
         labyService = new LabyService();
 
         new JSender(Bukkit.getConsoleSender()).sendMessage("&fIf any errors occurr doing this initialization they are for debugging purposes and are not a problem.");
-//        this.debug.setReflectionDebug(false);
 
 
         new JSender(Bukkit.getConsoleSender()).sendMessage("&aProcessing &3&L" + Material.values().length + " &eMaterials... &bPlease wait&e..");
         JMaterial.getRegistryMaterials();
         try { Thread.sleep(2500); } catch(Exception ignored) { }
-        new JSender(Bukkit.getConsoleSender()).sendMessage("&3&lMaterials &bProcessed&e!");
+
+        int total = 0;
+        Class<? extends Event>[] importantEvents = new Class[] {PlayerJoinEvent.class, PlayerLoginEvent.class, PlayerQuitListener.class, InventoryClickEvent.class, PlayerCommandPreprocessEvent.class, };
+
+        for(Class<? extends Event> clazz : importantEvents) {
+            boolean loaded = JQuickEvent.loadHandlerList(clazz);
+            total++;
+        }
+
+        new JSender(Bukkit.getConsoleSender()).sendMessage("&3&lImportant Events &bProcessed&e! (Total -> " + total + " )");
 
         new JSender(Bukkit.getConsoleSender()).sendMessage("&ePatching &b&lEnchantments&e...");
         JReflection.setFieldObjectByName(Enchantment.class, "acceptingNew", null, true);
@@ -145,7 +155,7 @@ public class JadAPI extends JavaPlugin {
             new JSender(Bukkit.getConsoleSender()).sendMessage("&eSetting up to &a&lenable&e...");
 
             new JSender(Bukkit.getConsoleSender()).sendMessage("&eCreating &3&lJQuickEvent &bhandlers&e.");
-            jQuickEventListener = new JQuickEventsListener();
+            jQuickEventListener = new JadEventHandler();
             for(EventPriority priority : EventPriority.values()) {
                 quickEventHandlers.put(priority,
                         new RegisteredListener(jQuickEventListener, (listener, event) -> jQuickEventListener.onEvent(event, priority), priority, this, false));
@@ -189,7 +199,7 @@ public class JadAPI extends JavaPlugin {
             new JSender(Bukkit.getConsoleSender()).sendMessage("&eInitialized All &3required listeners&e!");
 
             headsUpdater = new SkinsStorageUpdater().runTaskTimerAsynchronously(this, 600, 600);
-            eventHandlersUpdater = new EventHandlersUpdater().runTaskTimer(this, 0, 5);
+            eventHandlersUpdater = new EventHandlersUpdater().runTaskTimerAsynchronously(this, 1, 1);
             new RemovalTimer().runTaskTimerAsynchronously(this, 1, 1);
 
             new JSender(Bukkit.getConsoleSender()).sendMessage("&eInitialized All &3required tasks&e!");
