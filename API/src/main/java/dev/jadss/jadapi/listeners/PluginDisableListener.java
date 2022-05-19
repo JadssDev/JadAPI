@@ -1,8 +1,6 @@
 package dev.jadss.jadapi.listeners;
 
 import dev.jadss.jadapi.JadAPIPlugin;
-import dev.jadss.jadapi.management.JPacketHook;
-import dev.jadss.jadapi.management.JQuickEvent;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.PluginDisableEvent;
@@ -23,8 +21,8 @@ public class PluginDisableListener implements Listener {
         if (jPluginInstance == null)
             return;
 
-        jPluginInstance.getQuickEvents().forEach(q -> q.register(false));
-        jPluginInstance.getPacketHooks().forEach(h -> h.register(false));
+        new ArrayList<>(jPluginInstance.getQuickEvents()).forEach(q -> q.register(false));
+        new ArrayList<>(jPluginInstance.getPacketHooks()).forEach(h -> h.register(false));
         jPluginInstance.register(false);
     }
 }
