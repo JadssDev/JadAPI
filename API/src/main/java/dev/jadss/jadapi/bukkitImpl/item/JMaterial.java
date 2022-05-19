@@ -13,9 +13,11 @@ public final class JMaterial implements Copyable<JMaterial> {
 
     private static final JMaterialRegistry registry;
 
-    public static final MaterialEnum[] VALUES = MaterialEnum.values();
+    public static JMaterialRegistry getRegistryMaterials() {
+        return registry;
+    }
 
-    public static JMaterialRegistry getRegistryMaterials() { return registry; }
+    public static final MaterialEnum[] VALUES = MaterialEnum.values();
 
     private final MaterialEnum material;
     private final List<MaterialContainer> materials;
@@ -28,18 +30,12 @@ public final class JMaterial implements Copyable<JMaterial> {
     }
 
     public Map.Entry<Material, Byte> getMaterial(Type type, CustomType... customTypes) {
-//        System.out.println("Getting material " + this.material.name().toLowerCase() + " with type " + type + " and custom types " + Arrays.toString(customTypes));
 
         for (MaterialContainer container : materials) {
-//            System.out.println("Evaluating " + container.getMaterial() + " with type " + container.getType() + ".");
-//            System.out.println(((container.type == Type.BOTH && type != Type.NONE)) + "||" + (container.type == type));
             if ((container.type == Type.BOTH && type != Type.NONE) || container.type == type) {
-//                System.out.println("Found a match");
                 return new AbstractMap.SimpleEntry<>(container.getMaterial(), container.getData());
             }
         }
-
-//        System.out.println("Could not find match!");
         return null;
     }
 
@@ -71,7 +67,7 @@ public final class JMaterial implements Copyable<JMaterial> {
     //LISTING
 
     public enum MaterialEnum {
-        //<editor-fold desc="Bukkit materials, click to crash Intellij Idea" defaultstate="collapsed">
+        //<editor-fold desc="Material List for cross-compatibility! Click to crash IDE (always works, not actually..)" defaultstate="collapsed">
         AIR(Type.BOTH, new MaterialInfo[] {  }),
         STONE(Type.BOTH, new MaterialInfo[] {  }),
         GRANITE(Type.BOTH, new MaterialInfo[] {  }),
