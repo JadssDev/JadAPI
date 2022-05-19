@@ -1,5 +1,6 @@
 package dev.jadss.jadapi.management.nms.objects.world.block.state;
 
+import dev.jadss.jadapi.annotations.ForChange;
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
 import dev.jadss.jadapi.management.nms.enums.*;
 import dev.jadss.jadapi.utils.JReflection;
@@ -8,6 +9,8 @@ import dev.jadss.jadapi.utils.JReflection;
  * Represents a list with all the Block states Minecraft has!
  * <p>I used this page here with some consulting in NMS: <b>https://minecraft.fandom.com/wiki/Block_states</b></p>
  */
+@ForChange(isMajor = false, expectedVersionForChange = "1.23.1", reason = "Make it so for each of the states specified, they have annotation " +
+        "specifying the version they are available in &/or making it so it shows which blocks it is applicable to.")
 public class StateList {
 
     //MISSING BLOCK STATES:
