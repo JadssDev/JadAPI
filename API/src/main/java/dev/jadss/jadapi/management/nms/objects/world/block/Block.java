@@ -16,14 +16,14 @@ public class Block implements NMSObject, NMSManipulable, SimpleBlock {
     private final byte data;
 
     public Block(Object block) {
-        if(blockClass.isAssignableFrom(block.getClass())) {
+        if (blockClass.isAssignableFrom(block.getClass())) {
             this.block = block;
             this.data = -1;
         } else throw new NMSException("Block is not a valid Block");
     }
 
     public Block(Object block, byte data) {
-        if(blockClass.isAssignableFrom(block.getClass())) {
+        if (blockClass.isAssignableFrom(block.getClass())) {
             this.block = block;
             this.data = data;
         } else throw new NMSException("Block is not a valid Block");
@@ -34,21 +34,21 @@ public class Block implements NMSObject, NMSManipulable, SimpleBlock {
     }
 
     public Object getNMSBlockData() {
-        if(isInvalid())
+        if (isInvalid())
             throw new NMSException("Block is invalid");
 
-        if(JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13)) {
-            return JReflection.executeMethod(blockClass, new Class[] {}, block, IBlockData.iBlockDataClass, (i) -> 0);
-        } else {
-            return JReflection.executeMethod(blockClass, new Class[] { int.class }, block, IBlockData.iBlockDataClass, (i) -> 0, data);
+        if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13)) {
+            return JReflection.executeMethod(blockClass, new Class[]{}, block, IBlockData.iBlockDataClass, (i) -> 0);
+        } else { //Note: \/ this uses IBlockData toLegacyData(int); method
+            return JReflection.executeMethod(blockClass, new Class[]{int.class}, block, IBlockData.iBlockDataClass, (i) -> 0, data);
         }
     }
 
     public byte toLegacyData(Object nmsBlockData) {
-        if(JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13) || JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
+        if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13) || JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
             return 0;
         } else {
-            return JReflection.executeMethod(Block.blockClass, new Class[] { IBlockData.iBlockDataClass }, this.block, int.class, (i) -> 0, nmsBlockData).byteValue();
+            return JReflection.executeMethod(Block.blockClass, new Class[]{IBlockData.iBlockDataClass}, this.block, int.class, (i) -> 0, nmsBlockData).byteValue();
         }
     }
 
@@ -61,10 +61,10 @@ public class Block implements NMSObject, NMSManipulable, SimpleBlock {
     }
 
     public JMaterial getMaterial() {
-        if(this.isInvalid())
+        if (this.isInvalid())
             return JMaterial.getRegistryMaterials().find(CraftUtils.getMaterial(this.block));
         else
-            return JMaterial.getRegistryMaterials().find(CraftUtils.getMaterial(this.block), (byte) this.data);
+            return JMaterial.getRegistryMaterials().find(CraftUtils.getMaterial(this.block), this.data);
     }
 
     public boolean isInvalid() {

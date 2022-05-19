@@ -103,7 +103,6 @@ public class IBlockData implements NMSObject, NMSParsable, NMSBuildable, NMSCopy
 
         //Apply block states...
         for(Map.Entry<StateType<?>, Object> entry : blockStates.entrySet()) {
-            System.out.println(entry.getKey().getNMSObject().toString() + " -> " + entry.getValue());
             if(JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_16)) {
                 blockData = JReflection.executeMethod(iBlockDataHolderClass, new Class[] { IBlockState.iBlockStateClass, Comparable.class }, blockData, IBlockData.iBlockDataClass, (i) -> 0, entry.getKey().getNMSObject(), entry.getValue());
             } else {
@@ -127,8 +126,18 @@ public class IBlockData implements NMSObject, NMSParsable, NMSBuildable, NMSCopy
     }
 
     @Override
-    public List<StateType<?>> getStates() {
+    public Map<StateType<?>, Object> getStates() {
+        return new HashMap<>(blockStates);
+    }
+
+    @Override
+    public List<StateType<?>> getSetStates() {
         return new ArrayList<>(blockStates.keySet());
+    }
+
+    @Override
+    public <R> R getState(StateType<R> stateType) {
+        return (R) blockStates.get(stateType);
     }
 
     @Override
