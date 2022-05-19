@@ -56,28 +56,27 @@ public interface JInformationManager {
 
     /**
      * Get the QuickEvents we have registered so far.
-     * @return A {@link List} with the QuickEvents.
+     * @return A Freshly created {@link List} with the QuickEvents.
      */
-    List<JQuickEvent> getQuickEvents();
+    List<JQuickEvent<?>> getQuickEvents();
 
     /**
      * Get the PacketHooks we have registered so far.
-     * @return A {@link List} with the PacketHooks.
+     * @return A freshly created {@link List} with the PacketHooks.
      */
     List<JPacketHook> getPacketHooks();
 
     /**
      * Get the Holograms created.
-     * @return A {@link List} with Holograms.
+     * @return A freshly created {@link List} with Holograms.
      */
     List<JHologram> getHolograms();
-
 
 
     //A lil big brain ones.
 
     /**
-     * Get the Packets hooks registered ( contains NPCS AND Holograms, since these do require some packets to work on <b>Right-click</b>)
+     * Get the Packets hooks registered (contains the Holograms created)
      * @return A {@link List} with PacketListeners!
      */
     List<PacketListener<?>> getPacketListeners();
