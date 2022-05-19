@@ -274,20 +274,6 @@ public final class JScoreboard implements Copyable<JScoreboard> {
         return this.lines;
     }
 
-
-    /**
-     * Show the scoreboard to a player
-     *
-     * @param player the JPlayer object.
-     * @deprecated use the updateScoreboard method in JPlayer object.
-     */
-    @Deprecated
-    @ForRemoval(willBeRemoved = true, expectedVersionForRemoval = "1.23", reason = "deprecated method replaced by a better one.")
-    public void showScoreboard(JPlayer player) {
-        if (player == null) throw new JException(JException.Reason.PLAYER_IS_NULL);
-        player.updateScoreboard(this);
-    }
-
     public JScoreboard copy() {
         JScoreboard board = new JScoreboard(this.title, this.lines);
         for (Placeholder placeholder : this.placeholders)
