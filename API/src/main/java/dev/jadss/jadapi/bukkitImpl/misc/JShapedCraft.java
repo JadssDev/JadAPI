@@ -27,8 +27,8 @@ public class JShapedCraft {
 
     /**
      * Create a ShapedCraft!
-     *
-     * @param plugin The plugin that is registering this craft
+     * @param plugin The plugin that is registering this craft.
+     * @param recipeName the name of the recipe!
      */
     public JShapedCraft(JadAPIPlugin plugin, String recipeName) {
         this.plugin = plugin;
@@ -73,8 +73,9 @@ public class JShapedCraft {
      * @return itself.
      */
     public JShapedCraft setShape(String row1, String row2, String row3) {
-        if (row1.length() != 3 || row2.length() != 3 || row3.length() != 3)
+        if (row1.length() != 3 || row2.length() != 3 || row3.length() != 3) {
             throw new IllegalArgumentException("The shape must be 3 lenght for each row of the crafting table.!");
+        }
         this.shape = new String[]{row1, row2, row3};
         return this;
     }
