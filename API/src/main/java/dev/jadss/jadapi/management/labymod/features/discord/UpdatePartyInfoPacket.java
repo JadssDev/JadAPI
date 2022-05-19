@@ -1,6 +1,5 @@
-package dev.jadss.jadapi.management.labymod.features;
+package dev.jadss.jadapi.management.labymod.features.discord;
 
-import com.google.gson.JsonObject;
 import dev.jadss.jadapi.management.labymod.LabyModPacket;
 
 import java.util.UUID;
@@ -8,12 +7,18 @@ import java.util.UUID;
 /**
  * Update the <b>Party Info Status</b> of LabyMod.
  */
+@LabyModPacket.SentWhen(value = LabyModPacket.SentType.WHENEVER)
+@LabyModPacket.WikiPage(value = "https://docs.labymod.net/pages/server/labymod/discord_rich_presence")
 public class UpdatePartyInfoPacket extends LabyModPacket {
 
-    public boolean hasParty;
-    public UUID partyId;
-    public int party_size;
-    public int party_max;
+    public final boolean hasParty;
+    public final UUID partyId;
+    public final int party_size;
+    public final int party_max;
+
+    public UpdatePartyInfoPacket() {
+        this(false, null, 0, 0);
+    }
 
     public UpdatePartyInfoPacket(boolean hasParty, UUID partyId, int party_size, int party_max) {
         this.hasParty = hasParty;
@@ -24,20 +29,11 @@ public class UpdatePartyInfoPacket extends LabyModPacket {
 
     @Override
     public String getMessageKey() {
-        return "discord_rpc";
+        return "DISCORD_RPC";
     }
 
-    @Override
-    public void parse(JsonObject object) {
-        this.hasParty = object.get("hasParty").getAsBoolean();
-        this.partyId = UUID.fromString(object.get("partyId").getAsString());
-        this.party_size = object.get("party_size").getAsInt();
-        this.party_max = object.get("party_max").getAsInt();
-    }
-
-    @Override
-    public String buildString() {
-        return g.toJson(this);
+    public UpdatePartyInfoPacket parse(String json) {
+        return internalParse(json, UpdatePartyInfoPacket.class);
     }
 
     @Override

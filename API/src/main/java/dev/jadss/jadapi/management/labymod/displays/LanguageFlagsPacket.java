@@ -1,10 +1,9 @@
 package dev.jadss.jadapi.management.labymod.displays;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
+import com.sun.org.apache.bcel.internal.generic.LNEG;
+import dev.jadss.jadapi.interfaces.Copyable;
 import dev.jadss.jadapi.management.labymod.LabyModPacket;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -12,6 +11,8 @@ import java.util.UUID;
 /**
  * Show a flag of a player at <b>Tablist</b>.
  */
+@LabyModPacket.SentWhen(value = LabyModPacket.SentType.WHENEVER)
+@LabyModPacket.WikiPage(value = "https://docs.labymod.net/pages/server/displays/tablist")
 public class LanguageFlagsPacket extends LabyModPacket {
 
     public User[] users;
@@ -24,21 +25,10 @@ public class LanguageFlagsPacket extends LabyModPacket {
     }
 
     @Override
-    public String getMessageKey() { return "language_flag"; }
+    public String getMessageKey() { return "LANGUAGE_FLAG"; }
 
-    @Override
-    public void parse(JsonObject object) {
-        JsonArray array = object.get("users").getAsJsonArray();
-
-        List<User> list = new ArrayList<>();
-        array.forEach(element -> list.add(new User(UUID.fromString(element.getAsJsonObject().get("uuid").getAsString()), element.getAsJsonObject().get("code").getAsString())));
-
-        this.users = list.toArray(new User[0]);
-    }
-
-    @Override
-    public String buildString() {
-        return g.toJson(this);
+    public LanguageFlagsPacket parse(String json) {
+        return internalParse(json, LanguageFlagsPacket.class);
     }
 
     @Override
@@ -49,13 +39,18 @@ public class LanguageFlagsPacket extends LabyModPacket {
     /**
      * Represents a User at Tablist.
      */
-    public static class User {
-        public UUID uuid;
-        public String code;
+    public static class User implements Copyable<User> {
+        public final UUID uuid;
+        public final String code;
 
         public User(UUID uuid, String code) {
             this.uuid = uuid;
             this.code = code;
+        }
+
+        @Override
+        public User copy() {
+            return new User(this.uuid, this.code);
         }
     }
 }

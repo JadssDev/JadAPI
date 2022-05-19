@@ -1,31 +1,26 @@
 package dev.jadss.jadapi.management.labymod.protocol;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import dev.jadss.jadapi.interfaces.Copyable;
 import dev.jadss.jadapi.management.labymod.LabyModPacket;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 
 /**
- * Detecting a <b>LabyMod User</b> and know which protocols are enabled at the player's client.
+ * Sent by a <b>LabyMod User</b> for the server to know which protocols are enabled at the client.
  */
+@LabyModPacket.SentWhen(value = LabyModPacket.SentType.JOIN)
+@LabyModPacket.WikiPage(value = "https://docs.labymod.net/pages/server/protocol/onjoin")
 public class InfoPacket extends LabyModPacket {
 
-    public String version;
-    public ChunkCachingProtocol ccp;
-    public ShadowProtocol shadow;
-    public Addon[] addons;
-    public Mod[] mods;
+    public final String version;
+    public final ChunkCachingProtocol ccp;
+    public final ShadowProtocol shadow;
+    public final Addon[] addons;
+    public final Mod[] mods;
 
-    public InfoPacket() { }
-
-    @Override
-    public String getMessageKey() {
-        return "info";
+    public InfoPacket() {
+        this(null, null, null, null, null);
     }
 
     public InfoPacket(String version, ChunkCachingProtocol ccp, ShadowProtocol shadow, Addon[] addons, Mod[] mods) {
@@ -37,38 +32,12 @@ public class InfoPacket extends LabyModPacket {
     }
 
     @Override
-    public void parse(JsonObject object) {
-        //Version
-        this.version = object.get("version").getAsString();
-
-        //ChunkCachingProtocol
-        JsonObject chunkCachingObject = object.get("ccp").getAsJsonObject();
-        this.ccp = new ChunkCachingProtocol(chunkCachingObject.get("enabled").getAsBoolean(), chunkCachingObject.get("version").getAsInt());
-
-        //ShadowProtocol
-        JsonObject shadowObject = object.get("shadow").getAsJsonObject();
-        this.shadow = new ShadowProtocol(shadowObject.get("enabled").getAsBoolean(), shadowObject.get("version").getAsInt());
-
-        //Addons
-        JsonArray addonsObject = object.get("addons").getAsJsonArray();
-        List<Addon> addons = new ArrayList<>();
-        addonsObject.forEach(addon -> {
-            addons.add(new Addon(UUID.fromString(addon.getAsJsonObject().get("uuid").getAsString()), addon.getAsJsonObject().get("name").getAsString()));
-        });
-        this.addons = addons.toArray(new Addon[0]);
-
-        //Mods
-        JsonArray modsObject = object.get("mods").getAsJsonArray();
-        List<Mod> mods = new ArrayList<>();
-        modsObject.forEach(mod -> {
-            mods.add(new Mod(mod.getAsJsonObject().get("hash").getAsString(), mod.getAsJsonObject().get("name").getAsString()));
-        });
-        this.mods = mods.toArray(new Mod[0]);
+    public String getMessageKey() {
+        return "INFO";
     }
 
-    @Override
-    public String buildString() {
-        return g.toJson(this);
+    public static InfoPacket parse(String jsonString) {
+        return internalParse(jsonString, InfoPacket.class);
     }
 
     @Override
@@ -76,9 +45,13 @@ public class InfoPacket extends LabyModPacket {
         return new InfoPacket(this.version, this.ccp.copy(), this.shadow.copy(), Arrays.asList(this.addons).toArray(new Addon[0]), Arrays.asList(this.mods).toArray(new Mod[0]));
     }
 
-    public class ChunkCachingProtocol implements Copyable<ChunkCachingProtocol> {
-        public boolean enabled;
-        public int version;
+    public static class ChunkCachingProtocol implements Copyable<ChunkCachingProtocol> {
+        public final boolean enabled;
+        public final int version;
+
+        public ChunkCachingProtocol() {
+            this(false, 0);
+        }
 
         public ChunkCachingProtocol(boolean enabled, int version) {
             this.enabled = enabled;
@@ -91,9 +64,13 @@ public class InfoPacket extends LabyModPacket {
         }
     }
 
-    public class ShadowProtocol implements Copyable<ShadowProtocol> {
-        public boolean enabled;
-        public int version;
+    public static class ShadowProtocol implements Copyable<ShadowProtocol> {
+        public final boolean enabled;
+        public final int version;
+
+        public ShadowProtocol() {
+            this(false, 0);
+        }
 
         public ShadowProtocol(boolean enabled, int version) {
             this.enabled = enabled;
@@ -106,23 +83,42 @@ public class InfoPacket extends LabyModPacket {
         }
     }
 
-    public class Addon {
-        public UUID uuid;
-        public String name;
+    public static class Addon implements Copyable<Addon> {
+        public final UUID uuid;
+        public final String name;
+
+        public Addon() {
+            this(null, null);
+        }
 
         public Addon(UUID uuid, String name) {
             this.uuid = uuid;
             this.name = name;
         }
+
+        @Override
+        public Addon copy() {
+            return new Addon(this.uuid, this.name);
+        }
     }
 
-    public class Mod {
-        public String hash;
-        public String name;
+    public static class Mod implements Copyable<Mod>{
+
+        public final String hash;
+        public final String name;
+
+        public Mod() {
+            this(null, null);
+        }
 
         public Mod(String hash, String name) {
             this.hash = hash;
             this.name = name;
+        }
+
+        @Override
+        public Mod copy() {
+            return new Mod(this.hash, this.name);
         }
     }
 }

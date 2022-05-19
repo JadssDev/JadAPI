@@ -1,68 +1,98 @@
 package dev.jadss.jadapi.management.labymod.displays;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import dev.jadss.jadapi.management.labymod.LabyModPacket;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
- * Shows a little image and amount of xyz for every single of the Economies in the top right corner.
+ * Makes it possible to display the economy or a number in the upper right corner of the screen in the LabyMod client.
  */
+@LabyModPacket.SentWhen(value = LabyModPacket.SentType.WHENEVER)
+@LabyModPacket.WikiPage(value = "https://docs.labymod.net/pages/server/displays/economy")
 public class EconomyPacket extends LabyModPacket {
 
-    public Map<String, Cash> economies;
+    /**
+     * This map is unmodifiable, do not attempt to do so! Doing so will result in a {@link UnsupportedOperationException}.
+     */
+    public final Map<String, EconomyType> map;
 
-    public EconomyPacket(Map<String, Cash> map) {
-        this.economies = map;
+    public EconomyPacket() { //Note: cannot use this(null), due to NPE.
+        this.map = null;
+    }
+
+    public EconomyPacket(Map<String, EconomyType> map) {
+        this.map = Collections.unmodifiableMap(map);
     }
 
     @Override
     public String getMessageKey() {
-        return "economy";
-    }
-
-    @Override
-    public void parse(JsonObject object) {
-        Set<Map.Entry<String, JsonElement>> entries = object.entrySet();
-
-        Map<String, Cash> map = new HashMap<>();
-        entries.forEach((entry) -> {
-            JsonObject cashObject = entry.getValue().getAsJsonObject();
-            Cash cash = new Cash(cashObject.get("visible").getAsBoolean(), cashObject.get("balance").getAsInt(), cashObject.get("icon").getAsString(), null);
-            JsonObject decimalObject = entry.getValue().getAsJsonObject().get("decimal").getAsJsonObject();
-            cash.decimal = new Cash.Decimal(decimalObject.get("format").getAsString(), decimalObject.get("divisor").getAsInt());
-            map.put(entry.getKey(), cash);
-        });
-        this.economies = map;
+        return "ECONOMY";
     }
 
     @Override
     public String buildString() {
-        return g.toJson(economies);
+        try {
+            return MAPPER.writeValueAsString(map);
+        } catch (Exception e) {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eCouldn't build the JSON String for the LabyModPacket!"));
+            e.printStackTrace();
+            return "{}"; //Compatibility.
+        }
+    }
+
+    public static EconomyPacket parse(String json) {
+        try {
+            Map<String, EconomyType> parsedMap = new HashMap<>();
+
+            Map<String, Map<String, Object>> map = MAPPER.readValue(json, Map.class);
+            for (String key : map.keySet()) {
+                Map<String, Object> decimalMap = (Map<String, Object>) map.get(key).get("decimal");
+
+                parsedMap.put(key, new EconomyType((boolean) map.get(key).get("visible"), (int) map.get(key).get("balance"), (String) map.get(key).get("icon"),
+                        (decimalMap != null ? new EconomyType.Decimal((String) decimalMap.get("format"), (int) decimalMap.get("divisor")) : null)));
+            }
+
+            return new EconomyPacket(parsedMap);
+        } catch(Exception e) {
+            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eCouldn't parse the JSON String for the LabyModPacket!"));
+            e.printStackTrace();
+            return new EconomyPacket(new HashMap<>());
+        }
     }
 
     @Override
     public LabyModPacket copy() {
-        return new EconomyPacket(new HashMap<>(economies));
+        return new EconomyPacket(Collections.unmodifiableMap(new HashMap<>(this.map)));
     }
 
     /**
      * Represents an economy.
      */
-    public static class Cash {
+    public static class EconomyType {
 
-        public boolean visible;
-        public int balance;
+        public final boolean visible;
+        public final int balance;
+
         /**
          * Url to image.
          */
-        public String icon;
-        public Decimal decimal;
+        public final String icon;
 
-        public Cash(boolean visible, int balance, String iconURL, Decimal decimal) {
+        public final Decimal decimal;
+
+        public EconomyType() {
+            this(false, 0, null, null);
+        }
+
+        public EconomyType(boolean visible, int balance, String iconURL) {
+            this(visible, balance, iconURL, null);
+        }
+
+        public EconomyType(boolean visible, int balance, String iconURL, Decimal decimal) {
             this.visible = visible;
             this.balance = balance;
             this.icon = iconURL;
@@ -70,14 +100,19 @@ public class EconomyPacket extends LabyModPacket {
         }
 
         public static class Decimal {
+
             /**
              * Format - ##.## (example)
              */
-            public String format;
+            public final String format;
             /**
              * Devisor - 5000/100 = 50.00
              */
-            public int divisor;
+            public final int divisor;
+
+            public Decimal() {
+                this(null, 0);
+            }
 
             public Decimal(String format, int divisor) {
                 this.format = format;

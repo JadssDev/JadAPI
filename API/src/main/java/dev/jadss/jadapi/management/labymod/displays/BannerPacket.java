@@ -1,14 +1,19 @@
 package dev.jadss.jadapi.management.labymod.displays;
 
-import com.google.gson.JsonObject;
 import dev.jadss.jadapi.management.labymod.LabyModPacket;
 
 /**
  * Shows a banner in top of the <b>Tablist</b>.
  */
+@LabyModPacket.SentWhen(value = LabyModPacket.SentType.WHENEVER)
+@LabyModPacket.WikiPage(value = "https://docs.labymod.net/pages/server/displays/tablist")
 public class BannerPacket extends LabyModPacket {
 
-    public String url;
+    public final String url;
+
+    public BannerPacket() {
+        this(null);
+    }
 
     public BannerPacket(String url) {
         this.url = url;
@@ -16,17 +21,11 @@ public class BannerPacket extends LabyModPacket {
 
     @Override
     public String getMessageKey() {
-        return "server_banner";
+        return "SERVER_BANNER";
     }
 
-    @Override
-    public void parse(JsonObject object) {
-        this.url = object.get("url").getAsString();
-    }
-
-    @Override
-    public String buildString() {
-        return g.toJson(this);
+    public static BannerPacket parse(String json) {
+        return internalParse(json, BannerPacket.class);
     }
 
     @Override

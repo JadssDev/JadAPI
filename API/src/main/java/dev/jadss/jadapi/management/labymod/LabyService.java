@@ -1,12 +1,10 @@
 package dev.jadss.jadapi.management.labymod;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import dev.jadss.jadapi.JadAPI;
 import dev.jadss.jadapi.bukkitImpl.entities.JPlayer;
 import dev.jadss.jadapi.exceptions.JException;
 import dev.jadss.jadapi.management.JQuickEvent;
-import dev.jadss.jadapi.management.labymod.features.DiscordUseSecretPacket;
+import dev.jadss.jadapi.management.labymod.features.discord.UseDiscordSecretPacket;
 import dev.jadss.jadapi.management.labymod.protocol.InfoPacket;
 import dev.jadss.jadapi.management.nms.objects.network.PacketDataSerializer;
 import dev.jadss.jadapi.management.nms.packets.InCustomPayloadPacket;
@@ -25,27 +23,29 @@ public class LabyService {
 
     private final List<LabyModListener> listeners = new ArrayList<>();
     private final List<LabyUser> users = new ArrayList<>();
-    private final List<LabyModPacket> classes = new ArrayList<>();
-    private JQuickEvent userRemover;
+    private JQuickEvent<PlayerQuitEvent> userRemover;
 
     private static boolean instantiated = false;
 
     public LabyService() {
-        if(instantiated) throw new JException(JException.Reason.NOT_AVAILABLE);
-        instantiated = true;
+        if (instantiated) {
+            throw new JException(JException.Reason.NOT_AVAILABLE);
+        }
 
-        classes.add(new DiscordUseSecretPacket(null, null));
-        classes.add(new InfoPacket(null, null, null, null, null));
+        instantiated = true;
     }
 
 
     /**
      * Send a {@link LabyModPacket} to the specified Player!
+     *
      * @param player The player to send the {@link LabyModPacket} to.
      * @param packet The packet, may not be null!
      */
     public void sendPacket(JPlayer player, LabyModPacket packet) {
-        if(packet == null) throw new JException(JException.Reason.NOT_A_PACKET);
+        if (packet == null) {
+            throw new JException(JException.Reason.NOT_A_PACKET);
+        }
 
         player.sendPacket(packet.buildOutgoingPacket().build());
     }
@@ -53,44 +53,55 @@ public class LabyService {
     /**
      * Called to handle a packet Payload.
      * <p>Note: Please do not use this, the <b>JadAPI</b> already automatically does this.</p>
-     * @param player the Player who sent this packet.
+     *
+     * @param player  the Player who sent this packet.
      * @param payload the payload.
      */
     public void handle(JPlayer player, InCustomPayloadPacket payload) {
-        if(userRemover == null)
-            userRemover = new JQuickEvent(JadAPI.getInstance().getJadPlugin(), PlayerQuitEvent.class, e ->
-                    users.removeIf(user -> user.getPlayer().getPlayer().getUniqueId().equals(e.getPlayer().getUniqueId())),
-            EventPriority.MONITOR, -1, -1, JQuickEvent.generateID()).register(true);
+        if (userRemover == null) {
+            userRemover = new JQuickEvent<>(JadAPI.getInstance().getJadPlugin(), PlayerQuitEvent.class, EventPriority.MONITOR, event -> {
+                users.remove(getUser(new JPlayer(event.getPlayer())));
+            }, -1, -1, e -> isUser(player), JQuickEvent.generateID()).register(true);
+        }
 
-        if(!payload.getChannel().equalsIgnoreCase("labymod3:main")) return;
+        if (!payload.getChannel().equalsIgnoreCase("labymod3:main")) {
+            return;
+        }
 
         PacketDataSerializer data = payload.getData();
         String key = data.readString();
         String json = data.readString();
-        JsonObject jsonObject = (JsonObject) new JsonParser().parse(json);
 
-        if(key.equalsIgnoreCase("info")) {
-            InfoPacket packet = new InfoPacket();
-            packet.parse(jsonObject);
-            createUser(player, packet);
+        if (key.equalsIgnoreCase("INFO")) {
+            InfoPacket packet = InfoPacket.parse(json);
+            //Check if already user.
+            if (isUser(player)) {
+                player.getPlayer().getPlayer().kickPlayer(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &cInvalid State on &a&lLabyMod&e! &cPlease restart your client!"));
+                return;
+            }
+            users.add(new LabyUser(player, packet));
+        } else if (key.equalsIgnoreCase("DISCORD_RPC")) {
+            UseDiscordSecretPacket packet = UseDiscordSecretPacket.parse(json);
+            //Check if not a user.
+            if (!isUser(player)) {
+                player.getPlayer().getPlayer().kickPlayer(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &cInvalid State on &a&lLabyMod&e! &cPlease restart your client!"));
+                return;
+            }
+
+            callListeners(getUser(player), packet);
         } else {
-            LabyModPacket parser = classes.stream().filter(packet -> packet.getMessageKey().equalsIgnoreCase(key)).findFirst().orElse(null);
-            if(parser == null) return;
-            parser = parser.copy();
-            parser.parse(jsonObject);
-
-            getUser(player).addPacket(parser.copy());
-            callListeners(player, parser);
+            player.getPlayer().kickPlayer(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &cInvalid State on &a&lLabyMod&e! Please &brejoin &ethe &aserver&e!"));
         }
     }
 
-    private void callListeners(JPlayer player, LabyModPacket packet) {
-        for(LabyModListener listener : new ArrayList<>(listeners)) {
+    private void callListeners(LabyUser user, LabyModPacket packet) {
+        for (LabyModListener listener : new ArrayList<>(listeners)) {
             try {
-                if(listener.getOwner() != null && listener.getOwner().isRegistered()) {
-                    listener.handlePacket(player, packet);
+                if (listener.getOwner() != null && listener.getOwner().isRegistered()) {
+                    listener.handlePacket(user, packet);
+                    listener.handlePacket(user.getPlayer(), packet);
                 } else listeners.remove(listener);
-            } catch(Exception ex) {
+            } catch (Exception ex) {
                 Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',
                         "&3&lJadAPI &7>> &eThis &3&lerror &eis &c&lNOT &efrom &3&lJadAPI&e. &b&l" + listener.getOwner().getJavaPlugin().getName() + " &ecaused this while trying to handle a &3&lLabyModPacket&e!"));
                 Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&b&m--------------------------------------"));
@@ -102,26 +113,40 @@ public class LabyService {
 
     /**
      * Register a <b>Listener</b> to <b>{@link LabyService}</b>.
+     *
      * @param listener the Listener to register
      * @see LabyModListener
      */
     public void registerListener(LabyModListener listener) {
-        if(listener.getOwner() != null && listener.getOwner().isRegistered())
+        if (listener.getOwner() != null && listener.getOwner().isRegistered())
             this.listeners.add(listener);
     }
 
+    private void createUser(JPlayer player, InfoPacket packet) {
+        users.add(new LabyUser(player, packet));
+    }
+
     /**
-     * Create a User information using the player and a {@link InfoPacket}
-     * @param player the Player in specific.
-     * @param packet the Packet.
+     * Checks if a Player has a {@link LabyUser} instance!
+     *
+     * @param player the Player to check.
+     * @return true if the Player has a {@link LabyUser} instance.
      */
-    public void createUser(JPlayer player, InfoPacket packet) { users.add(new LabyUser(player, packet)); }
+    public boolean isUser(JPlayer player) {
+        return users.stream()
+                .anyMatch(user -> user.getPlayer().equals(player));
+    }
 
     /**
      * Get a user using the JPlayer instnace.
+     *
      * @param player the Player in specific.
      * @return the LabyUser if any was found.
      */
-    public LabyUser getUser(JPlayer player) { return users.stream().filter(user -> user.getPlayer().equals(player)).findFirst().orElse(null); }
+    public LabyUser getUser(JPlayer player) {
+        return users.stream()
+                .filter(user -> user.getPlayer().equals(player))
+                .findFirst().orElse(null);
+    }
 
 }

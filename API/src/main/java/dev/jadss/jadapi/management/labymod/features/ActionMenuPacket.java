@@ -1,60 +1,56 @@
 package dev.jadss.jadapi.management.labymod.features;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import dev.jadss.jadapi.management.labymod.LabyModPacket;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
  * When clicking middle mouse wheel, it will bring a <b>menu</b>, this menu can be <b>configured here</b>.
  */
+@LabyModPacket.SentWhen(value = LabyModPacket.SentType.WHENEVER)
+@LabyModPacket.WikiPage(value = "https://docs.labymod.net/pages/server/labymod/action_menu")
 public class ActionMenuPacket extends LabyModPacket {
 
-    public MenuAction[] actions;
+    public final MenuAction[] actions;
 
-    public ActionMenuPacket(MenuAction[] actions) { this.actions = actions; }
-    public ActionMenuPacket(List<MenuAction> actions) { this.actions = actions.toArray(new MenuAction[0]); }
-
-    @Override
-    public String getMessageKey() {
-        return "user_menu_actions";
+    public ActionMenuPacket() {
+        this((MenuAction[]) null);
     }
 
-    @Override
-    public void parse(JsonObject obj) {
-        JsonArray object = obj.getAsJsonArray();
-        List<MenuAction> actions = new ArrayList<>();
-        object.forEach(entry -> actions.add(new MenuAction(entry.getAsJsonObject().get("displayName").getAsString(), EnumActionType.valueOf(entry.getAsJsonObject().get("type").getAsString()), entry.getAsJsonObject().get("value").getAsString())));
+    public ActionMenuPacket(MenuAction[] actions) {
+        this.actions = actions;
+    }
+
+    public ActionMenuPacket(List<MenuAction> actions) {
         this.actions = actions.toArray(new MenuAction[0]);
     }
 
     @Override
-    public String buildString() {
-        return g.toJson(actions);
+    public String getMessageKey() {
+        return "USER_MENU_ACTIONS";
+    }
+
+    public static ActionMenuPacket parse(String json) {
+        return internalParse(json, ActionMenuPacket.class);
     }
 
     @Override
     public LabyModPacket copy() {
-        return new ActionMenuPacket(Arrays.asList(actions));
+        return new ActionMenuPacket(actions.clone()); //Sometimes instead of clone, it should be "clown()" for me - Jadss
     }
 
     /**
      * Represents a button at the menu.
      */
     public static class MenuAction {
-        public String displayName;
-        public String type;
-        public String value;
+        public final String displayName;
+        public final String type;
+        public final String value;
 
-        /**
-         * Create a MenuAction!
-         * @param displayName The display name on the Menu!
-         * @param type What it should do.
-         * @param value What command, {name} - placeholder.
-         */
+        public MenuAction() {
+            this(null, null, null);
+        }
+
         public MenuAction(String displayName, EnumActionType type, String value) {
             this.displayName = displayName;
             this.type = type.name();

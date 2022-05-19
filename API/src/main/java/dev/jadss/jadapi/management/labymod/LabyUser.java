@@ -22,6 +22,7 @@ public class LabyUser {
 
     /**
      * Add a packet into the list of packets sent by this player!
+     *
      * @param packet the Packet in specific!
      */
     public void addPacket(LabyModPacket packet) {
@@ -30,19 +31,28 @@ public class LabyUser {
 
     /**
      * Get the player who is responsible for this object.
+     *
      * @return the Player as a {@link JPlayer}!
      */
-    public JPlayer getPlayer() { return player; }
+    public JPlayer getPlayer() {
+        return this.player;
+    }
 
     /**
      * Get the {@link InfoPacket} initial that was used to create this object!
+     *
      * @return the InfoPacket!
      */
-    public InfoPacket getInfo() { return info; }
+    public InfoPacket getInfo() {
+        return this.info;
+    }
 
     /**
      * Get the packets they have sent the entire time.
+     *
      * @return A {@link List} with all the packets!
      */
-    public List<LabyModPacket> getPacketsSent() { return new ArrayList<>(packetsSent); }
+    public List<LabyModPacket> getPacketsSent() {
+        return new ArrayList<>(this.packetsSent);
+    }
 }
