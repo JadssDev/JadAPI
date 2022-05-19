@@ -35,7 +35,7 @@ public final class SignChangeHandler {
             Consumer<String[]> consumer = register.getConsumer();
 
             try {
-                runConsumer(consumer, Arrays.stream(packet.getLines())
+                consumer.accept(Arrays.stream(packet.getLines())
                         .map(IChatBaseComponent::getMessage)
                         .toArray(String[]::new));
             } catch(Exception ex) {
@@ -49,9 +49,5 @@ public final class SignChangeHandler {
         } else {
             return false;
         }
-    }
-
-    private static void runConsumer(Consumer<String[]> consumer, String[] lines) throws Exception {
-        consumer.accept(lines);
     }
 }

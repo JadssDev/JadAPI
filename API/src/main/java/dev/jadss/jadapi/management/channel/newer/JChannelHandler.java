@@ -47,7 +47,8 @@ public class JChannelHandler extends ChannelDuplexHandler {
             JadAPI.getInstance().getInformationManager().getPacketsSentToPlayers().put(this.player.getPlayer().getUniqueId(), 1L + JadAPI.getInstance().getInformationManager().getPacketsSentToPlayers().getOrDefault(this.player.getPlayer().getUniqueId(), 0L));
         }
 
-        if (!JadAPI.getInstance().isEnabled()) return;
+        if (!JadAPI.getInstance().isEnabled())
+            return;
 
         EventResult result;
         try {
@@ -121,24 +122,26 @@ public class JChannelHandler extends ChannelDuplexHandler {
 
                 JadAPI.getInstance().getManagement().addChannelLookup(loginStartParser.getGameProfile().getName(), channelHandlerContext.channel());
 
-                new JQuickEvent(JadAPI.getInstance().getJadPlugin(), PlayerLoginEvent.class, loginEvent -> {
+                JadAPI.getInstance().getPacketHooker().callPacketHooks(handshakeParser.build(), null, false, false);
+                EventResult result = JadAPI.getInstance().getPacketHooker().callPacketHooks(loginStartParser.build(), null, false, true);
+                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &3&lPackets &ecalls &bfinished&e!"));
+
+                new JQuickEvent<>(JadAPI.getInstance().getJadPlugin(), PlayerLoginEvent.class, EventPriority.MONITOR, loginEvent -> {
                     JPlayer player = new JPlayer(loginEvent.getPlayer());
 
-                    if (player.getPlayer().getName().equalsIgnoreCase(loginStartParser.getGameProfile().getName())) {
-                        int updatedVersion = handshakeParser.getProtocol();
-                        if (JadAPI.getInstance().isViaVersionPresent())
-                            updatedVersion = Via.getAPI().getPlayerVersion(player.getPlayer().getUniqueId());
-                        handshakeParser.setProtocol(updatedVersion);
+                    int updatedVersion = handshakeParser.getProtocol();
+                    if (Bukkit.getPluginManager().isPluginEnabled("ViaVersion"))
+                        updatedVersion = Via.getAPI().getPlayerVersion(player.getPlayer().getUniqueId());
+                    handshakeParser.setProtocol(updatedVersion);
 
-                        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eFound &3" + player.getPlayer().getName() + " &eon &b&lLogin&e! Protocol &a&m->&b&l " + handshakeParser.getProtocol()));
-                        player.setValue("version", handshakeParser.getProtocol());
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eFound &3" + player.getPlayer().getName() + " &eon &b&lLogin&e! Protocol &a&m->&b&l " + handshakeParser.getProtocol()));
+                    player.setValue("version", handshakeParser.getProtocol());
 
-                        JadAPI.getInstance().getPacketHooker().callPacketHooks(handshakeParser.build(), player, false, false);
-                        JadAPI.getInstance().getPacketHooker().callPacketHooks(loginStartParser.build(), player, false, false);
-                    }
+                    JadAPI.getInstance().getPacketHooker().callPacketHooks(handshakeParser.build(), player, false, false);
+                    JadAPI.getInstance().getPacketHooker().callPacketHooks(loginStartParser.build(), player, false, false);
 
                     JadAPI.getInstance().getManagement().injectPlayer(player);
-                }, EventPriority.MONITOR, 60, -1, JQuickEvent.generateID()).register(true);
+                }, 60, -1, e -> e.getPlayer().getName().equalsIgnoreCase(loginStartParser.getGameProfile().getName()), JQuickEvent.generateID()).register(true);
             }
 
             return new EventResult(packet, false, false);
