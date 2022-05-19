@@ -1,5 +1,6 @@
 package dev.jadss.jadapi.management.nms.objects.other;
 
+import dev.jadss.jadapi.annotations.ForChange;
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
 import dev.jadss.jadapi.management.nms.NMSException;
 import dev.jadss.jadapi.management.nms.interfaces.NMSBuildable;
@@ -10,6 +11,7 @@ import dev.jadss.jadapi.utils.JReflection;
 
 import java.util.UUID;
 
+@ForChange(isMajor = true, expectedVersionForChange = "1.23.1", reason = "This is outdated and needs to be redone to support more thingies.")
 public class GameProfile implements NMSObject, NMSBuildable, NMSParsable, NMSCopyable {
 
     public static final Class<?> gameProfileClass = (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_8) ? com.mojang.authlib.GameProfile.class : net.minecraft.util.com.mojang.authlib.GameProfile.class);
