@@ -8,9 +8,6 @@ import org.bukkit.Location;
 
 import java.util.function.Consumer;
 
-
-//todo review this code to rework JPlayer#openSign(JSignRegister)
-
 /**
  * Represents a sign registered, this is, a registerer that is used on signs that JadAPI are used, for example, to search a specific term in a menu!
  */
