@@ -13,7 +13,6 @@ public class IBlockState implements NMSObject, NMSManipulable {
     private final Object handle;
 
     public IBlockState(Object handle) {
-        System.out.println(handle);
         if(!iBlockStateClass.isAssignableFrom(handle.getClass()))
             throw new NMSException("The given handle is not an IBlockState!");
         this.handle = handle;
