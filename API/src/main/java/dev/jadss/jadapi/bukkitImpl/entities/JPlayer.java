@@ -1,6 +1,7 @@
 package dev.jadss.jadapi.bukkitImpl.entities;
 
 import dev.jadss.jadapi.JadAPI;
+import dev.jadss.jadapi.annotations.ForChange;
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
 import dev.jadss.jadapi.bukkitImpl.item.JInventory;
 import dev.jadss.jadapi.bukkitImpl.item.JMaterial;
@@ -207,46 +208,49 @@ public final class JPlayer {
      * @deprecated Doesn't work! Need fixing.
      */
     @Deprecated
+    @ForChange(isMajor = true, expectedVersionForChange = "1.23.1", reason = "Currently this is broken due to FML v2, but FML v1 Also has to be fixed... sooooooo! shit!")
     public JPlayer requestModList() {
         if (1 == 1) return this;
 
-        if (this.getValue("requestedMods") instanceof Boolean)
-            throw new JException(JException.Reason.NOT_AVAILABLE);
+        //Todo: Make this work!
 
-        boolean updated = this.getPlayerVersion().isNewerOrEqual(JVersion.v1_13);
-        String channel = (updated ? "fml:handshake" : "FML|HS");
-
-        Bukkit.getScheduler().runTaskLater(JadAPI.getInstance(), () -> {
-            if (updated) {
-
-            } else {
-                this.sendPacket(new OutCustomPayloadPacket(channel, new byte[]{-2, 0, 0, 0, 0}).build()); //Reset Handshake.
-
-                this.sendPacket(new OutCustomPayloadPacket(channel, new byte[]{0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}).build()); //ServerHello packet.
-                Bukkit.getScheduler().runTaskLater(JadAPI.getInstance(), () -> {
-                    System.out.println("ok.");
-                    this.sendPacket(new OutCustomPayloadPacket(channel, new byte[]{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}).build()); //ModList
-                    Bukkit.getScheduler().runTaskLater(JadAPI.getInstance(), () -> {
-                        System.out.println("ok v2");
-                        this.sendPacket(new OutCustomPayloadPacket(channel, new byte[]{3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}).build()); //REGISTRY DATA.
-
-                        //Aknewledgements!
-                        Bukkit.getScheduler().runTaskLater(JadAPI.getInstance(), () -> {
-                            System.out.println("ok v3");
-                            this.sendPacket(new OutCustomPayloadPacket(channel, new byte[]{-1, 2}).build()); //WAITING CACKNELEDGEMENT
-
-                            Bukkit.getScheduler().runTaskLater(JadAPI.getInstance(), () -> {
-                                System.out.println("ok v4");
-                                this.sendPacket(new OutCustomPayloadPacket(channel, new byte[]{-1, 3}).build()); //COMPLETE
-                            }, 20L);
-
-                        }, 20L);
-
-                    }, 20L);
-
-                }, 20L);
-            }
-        }, 20L);
+//        if (this.getValue("requestedMods") instanceof Boolean)
+//            throw new JException(JException.Reason.NOT_AVAILABLE);
+//
+//        boolean updated = this.getPlayerVersion().isNewerOrEqual(JVersion.v1_13);
+//        String channel = (updated ? "fml:handshake" : "FML|HS");
+//
+//        Bukkit.getScheduler().runTaskLater(JadAPI.getInstance(), () -> {
+//            if (updated) {
+//
+//            } else {
+//                this.sendPacket(new OutCustomPayloadPacket(channel, new byte[]{-2, 0, 0, 0, 0}).build()); //Reset Handshake.
+//
+//                this.sendPacket(new OutCustomPayloadPacket(channel, new byte[]{0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}).build()); //ServerHello packet.
+//                Bukkit.getScheduler().runTaskLater(JadAPI.getInstance(), () -> {
+//                    System.out.println("ok.");
+//                    this.sendPacket(new OutCustomPayloadPacket(channel, new byte[]{2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}).build()); //ModList
+//                    Bukkit.getScheduler().runTaskLater(JadAPI.getInstance(), () -> {
+//                        System.out.println("ok v2");
+//                        this.sendPacket(new OutCustomPayloadPacket(channel, new byte[]{3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}).build()); //REGISTRY DATA.
+//
+//                        //Aknewledgements!
+//                        Bukkit.getScheduler().runTaskLater(JadAPI.getInstance(), () -> {
+//                            System.out.println("ok v3");
+//                            this.sendPacket(new OutCustomPayloadPacket(channel, new byte[]{-1, 2}).build()); //WAITING CACKNELEDGEMENT
+//
+//                            Bukkit.getScheduler().runTaskLater(JadAPI.getInstance(), () -> {
+//                                System.out.println("ok v4");
+//                                this.sendPacket(new OutCustomPayloadPacket(channel, new byte[]{-1, 3}).build()); //COMPLETE
+//                            }, 20L);
+//
+//                        }, 20L);
+//
+//                    }, 20L);
+//
+//                }, 20L);
+//            }
+//        }, 20L);
 
         this.setValue("requestedMods", true);
         return this;
@@ -717,8 +721,8 @@ public final class JPlayer {
             this.sendPacket(updateSign);
             Bukkit.getScheduler().runTaskLater(JadAPI.getInstance(), () -> {
                 this.sendPacket(openSignEditor);
-            }, 10L);
-        }, 5L);
+            }, 5L);
+        }, 15L);
 
         return this;
     }
@@ -1013,26 +1017,36 @@ public final class JPlayer {
         return;
     }
 
+    @Override
+    public int hashCode() {
+        return player.hashCode();
+    }
+
     /**
-     * Checks if the JPLayer Object is equals to another using the "UUID" of the player.
-     *
-     * @param object The other JPlayer.
-     * @return if it is equals.
+     * Checks if this Player Object is equals to another Object
+     * <p><b>This Object can be compared against {@link JPlayer}, {@link OfflinePlayer} and {@link UUID} objects!</b></p>
+     * @param object The object to compare against.
+     * @return If the comparation is equals, ig.
      */
     @Override
     public boolean equals(Object object) {
-        if (object instanceof JPlayer)
+        if (object instanceof JPlayer) {
             return ((JPlayer) object).getPlayer().getUniqueId().equals(this.getPlayer().getUniqueId());
-        else if (object instanceof UUID) return this.getPlayer().getUniqueId().equals(object);
-        else return super.equals(object);
+        } else if (object instanceof OfflinePlayer) {
+            return ((OfflinePlayer) object).getPlayer().getUniqueId().equals(this.getPlayer().getUniqueId());
+        } else if (object instanceof UUID) {
+            return object.equals(this.getPlayer().getUniqueId());
+        } else {
+            //don't know..
+            return super.equals(object);
+        }
     }
 
     //Statics.
 
     /**
-     * Get all the players in the server
-     *
-     * @return List with all players.
+     * Get all the players currently joined on thsi Spigot!
+     * @return A list of all the players in this spigot server!
      */
     public static List<JPlayer> getJPlayers() {
         List<JPlayer> players = new ArrayList<>();
