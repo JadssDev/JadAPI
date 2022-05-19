@@ -1,6 +1,7 @@
 package dev.jadss.jadapi.utils;
 
 import dev.jadss.jadapi.JadAPI;
+import dev.jadss.jadapi.annotations.ForRemoval;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 
@@ -88,11 +89,13 @@ public class JReflection {
 
     public static Object executeMethod(Class<?> cls, String methodName, Object executeOn, Class<?>[] parametersType, Object... inputParameters) {
         Method m;
+
         if (isDebugEnabled()) {
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eExecuting method " + methodName + " in " + cls.getSimpleName() + "."));
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&bParameters &e&m->&a " + Arrays.toString(parametersType)));
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&bParameters Inputted &e&m->&a " + Arrays.toString(inputParameters)));
         }
+
         try {
             m = cls.getDeclaredMethod(methodName, parametersType);
             m.setAccessible(true);
@@ -118,7 +121,7 @@ public class JReflection {
     //With IndexGetter && without Name
 
     public static <A> A executeMethod(Class<?> cls, Class<?>[] parameters, Object executeOn, Class<A> returnType, IndexGetter index, Object... inputParameters) {
-        List<Method> methods = Arrays.stream(cls.getDeclaredMethods()).collect(Collectors.toCollection(ArrayList::new));
+        List<Method> methods = new ArrayList<>(Arrays.asList(cls.getDeclaredMethods()));
 
         if (isDebugEnabled()) {
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eExecuting method in " + cls.getSimpleName() + "."));
@@ -126,15 +129,14 @@ public class JReflection {
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&bParameters Inputted &e&m->&a " + Arrays.toString(inputParameters)));
         }
 
-        methods = methods.stream()
-                .filter(method -> (method.getReturnType().equals(returnType) || method.getReturnType().getSimpleName().equalsIgnoreCase("void") && returnType == null) && Arrays.equals(method.getParameterTypes(), parameters))
-                .collect(Collectors.toCollection(ArrayList::new));
+        methods.removeIf(method -> !((method.getReturnType().equals(returnType) || method.getReturnType().getSimpleName().equalsIgnoreCase("void") && returnType == null)
+                && Arrays.equals(method.getParameterTypes(), parameters)));
 
         if (isDebugEnabled()) {
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eFound &a" + methods.size() + " &emethods that match the parameters."));
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &3Method &eList: "));
-            for (Method method : methods) {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "-> " + method.getName()));
+            for (int i = 0; i < methods.size(); i++) {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "-> " + methods.get(i).getName()));
             }
         }
 
@@ -184,22 +186,20 @@ public class JReflection {
     }
 
     public static void setFieldObject(Class<?> cls, Class<?> fieldType, Object executeObject, Object value, IndexGetter index) {
-        List<Field> fields = Arrays.stream(cls.getDeclaredFields()).collect(Collectors.toCollection(ArrayList::new));
+        List<Field> fields = new ArrayList<>(Arrays.asList(cls.getDeclaredFields()));
 
         if (isDebugEnabled()) {
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eSetting field of " + cls.getSimpleName() + "."));
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&bField Type &e&m->&a " + fieldType.getSimpleName()));
         }
 
-        fields = fields.stream()
-                .filter(f -> f.getType().equals(fieldType))
-                .collect(Collectors.toCollection(ArrayList::new));
+        fields.removeIf(f -> !f.getType().equals(fieldType));
 
         if (isDebugEnabled()) {
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eFound &a" + fields.size() + " &efields that match."));
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &3Field &eList: "));
-            for (Field field : fields) {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "-> " + field.getName()));
+            for (int i = 0; i < fields.size(); i++) {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "-> " + fields.get(i).getName()));
             }
         }
 
@@ -243,22 +243,20 @@ public class JReflection {
     }
 
     public static <A> A getFieldObject(Class<?> cls, Class<A> fieldType, Object executeObject, IndexGetter index) {
-        List<Field> fields = Arrays.stream(cls.getDeclaredFields()).collect(Collectors.toCollection(ArrayList::new));
+        List<Field> fields = new ArrayList<>(Arrays.asList(cls.getDeclaredFields()));
 
         if (isDebugEnabled()) {
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eGetting field of " + cls.getSimpleName() + "."));
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&bField Type &e&m->&a " + fieldType.getSimpleName()));
         }
 
-        fields = fields.stream()
-                .filter(f -> f.getType().equals(fieldType))
-                .collect(Collectors.toCollection(ArrayList::new));
+        fields.removeIf(f -> !f.getType().equals(fieldType));
 
         if (isDebugEnabled()) {
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eFound &a" + fields.size() + " &efields that match."));
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &3Field &eList: "));
-            for (Field field : fields) {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "-> " + field.getName()));
+            for (int i = 0; i < fields.size(); i++) {
+                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "-> " + fields.get(i).getName()));
             }
         }
 
@@ -291,6 +289,7 @@ public class JReflection {
     //OLD METHODS TO BE DONE!
 
     @Deprecated
+    @ForRemoval(willBeRemoved = true, expectedVersionForRemoval = "1.23.1", reason = "This method will be removed since a better alternative is available.")
     public static <A> A getUnspecificFieldObject(Class<?> classy, Class<A> fieldType, Object fieldObject) {
         try {
             List<Field> fields = new ArrayList<>(Arrays.asList(classy.getDeclaredFields()));
@@ -308,6 +307,7 @@ public class JReflection {
     }
 
     @Deprecated
+    @ForRemoval(willBeRemoved = true, expectedVersionForRemoval = "1.23.1", reason = "This method will be removed since a better alternative is available.")
     public static <A> A getUnspecificFieldObject(Class<?> classy, Class<A> fieldType, int fieldIndex, Object fieldObject) {
         try {
             List<Field> fields = new ArrayList<>(Arrays.asList(classy.getDeclaredFields()));
@@ -336,6 +336,7 @@ public class JReflection {
     }
 
     @Deprecated
+    @ForRemoval(willBeRemoved = true, expectedVersionForRemoval = "1.23.1", reason = "This method will be removed since a better alternative is available.")
     public static void setUnspecificField(Class<?> classy, Class<?> fieldType, Object fieldObject, Object fieldValue) {
         try {
             List<Field> fields = new ArrayList<>(Arrays.asList(classy.getDeclaredFields()));
@@ -352,6 +353,7 @@ public class JReflection {
     }
 
     @Deprecated
+    @ForRemoval(willBeRemoved = true, expectedVersionForRemoval = "1.23.1", reason = "This method will be removed since a better alternative is available.")
     public static void setUnspecificField(Class<?> classy, Class<?> fieldType, int fieldIndex, Object fieldObject, Object fieldValue) {
         try {
             List<Field> fields = new ArrayList<>(Arrays.asList(classy.getDeclaredFields()));
