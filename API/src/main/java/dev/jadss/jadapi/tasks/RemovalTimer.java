@@ -15,14 +15,14 @@ public class RemovalTimer extends BukkitRunnable {
     @Override
     public void run() {
         for (JQuickEvent quickEvent : new ArrayList<>(JadAPI.getInstance().getInformationManager().getQuickEvents())) {
-            if (quickEvent.ticksToUnregister == -1) continue;
-            if (quickEvent.ticksToUnregister <= 0) {
+            if (quickEvent.getTicksToUnregister() == -1) continue;
+            if (quickEvent.getTicksToUnregister() <= 0) {
                 quickEvent.register(false);
                 if (JadAPI.getInstance().getDebug().doQuickEventsDebug())
                     Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &cRemoved &ea &3&lQuickEvent&e of &a" + quickEvent.getProviderPlugin().getJavaPlugin().getName() + "&e!"));
                 return;
             }
-            quickEvent.ticksToUnregister--;
+            quickEvent.setTicksToUnregister(quickEvent.getTicksToUnregister()-1);
         }
 
         for (JPacketHook packetHook : new ArrayList<>(JadAPI.getInstance().getInformationManager().getPacketHooks())) {
