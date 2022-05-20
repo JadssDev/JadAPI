@@ -4,6 +4,9 @@ import dev.jadss.jadapi.annotations.ForChange;
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
 import dev.jadss.jadapi.management.nms.enums.*;
 import dev.jadss.jadapi.utils.JReflection;
+import org.bukkit.Bukkit;
+
+import java.util.List;
 
 /**
  * Represents a list with all the Block states Minecraft has!
@@ -151,7 +154,7 @@ public class StateList {
     /**
      * You know what this is...
      */
-    public static final BooleanBlockState HOPPED_ENABLED;
+    public static final BooleanBlockState HOPPER_ENABLED;
 
     /**
      * Represents if a jukebox has a record.
@@ -416,7 +419,7 @@ public class StateList {
 
         FLUID_LEVEL = IntegerBlockState.createInstance("level", 0, 15);
 
-        HOPPED_ENABLED = BooleanBlockState.createInstance("enabled", true);
+        HOPPER_ENABLED = BooleanBlockState.createInstance("enabled", true);
 
         JUKEBOX_HAS_RECORD = BooleanBlockState.createInstance("has_record", false);
 
@@ -493,10 +496,12 @@ public class StateList {
 
 
     public static StateType<?> getStateTypeByName(String typeName) {
-        return JReflection.getObjectFields(StateType.class, null).stream()
-                .filter(obj -> obj instanceof StateType).map(obj -> ((StateType<?>) obj))
-                .filter(s -> s.getStateId().equalsIgnoreCase(typeName))
-                .findFirst().orElse(null);
+        return JReflection.getObjectFields(StateList.class, null)
+                .stream()
+                .filter(obj -> obj instanceof StateType) //checker for the specific type
+                .map(obj -> ((StateType<?>) obj)) //caster
+                .filter(state -> state.getStateId().equalsIgnoreCase(typeName)) //final checker to check names
+                .findFirst().orElse(null); //FINISHHHH!
     }
 
     private StateList() {}

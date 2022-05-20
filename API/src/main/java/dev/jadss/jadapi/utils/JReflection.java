@@ -9,6 +9,7 @@ import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class JReflection {
@@ -459,11 +460,14 @@ public class JReflection {
                         field.setAccessible(true);
                         return field.get(object);
                     } catch (Exception ex) {
-                        if (JadAPI.getInstance().getDebug().doReflectionDebug()) ex.printStackTrace();
+                        if (JadAPI.getInstance().getDebug().doReflectionDebug()) {
+                            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eCould not get &3field &eat &b" + cls.getName() + "&e."));
+                            ex.printStackTrace();
+                        }
                         return null;
                     }
                 })
-                .filter(obj -> obj != null)
+                .filter(Objects::nonNull)
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 

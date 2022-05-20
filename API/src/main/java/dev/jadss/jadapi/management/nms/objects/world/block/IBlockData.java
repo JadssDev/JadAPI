@@ -1,15 +1,20 @@
 package dev.jadss.jadapi.management.nms.objects.world.block;
 
+import dev.jadss.jadapi.JadAPI;
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
 import dev.jadss.jadapi.bukkitImpl.item.JMaterial;
 import dev.jadss.jadapi.management.nms.NMSException;
+import dev.jadss.jadapi.management.nms.enums.NMSEnum;
 import dev.jadss.jadapi.management.nms.interfaces.NMSBuildable;
 import dev.jadss.jadapi.management.nms.interfaces.NMSCopyable;
 import dev.jadss.jadapi.management.nms.interfaces.NMSObject;
 import dev.jadss.jadapi.management.nms.interfaces.NMSParsable;
+import dev.jadss.jadapi.management.nms.objects.world.block.state.EnumBlockState;
 import dev.jadss.jadapi.management.nms.objects.world.block.state.StateList;
 import dev.jadss.jadapi.management.nms.objects.world.block.state.StateType;
 import dev.jadss.jadapi.utils.JReflection;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -82,10 +87,27 @@ public class IBlockData implements NMSObject, NMSParsable, NMSBuildable, NMSCopy
         }
 
         Map<StateType<?>, Object> statesMap = new HashMap<>();
+        assert states != null; //cannot be null, else NMS explodes.
+        if (JadAPI.getInstance().getDebug().doMiscDebug())
+            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eAttempting to find " + states.size() + " states..."));
+
         for(Map.Entry<Object, Object> entry : states.entrySet()) {
-            StateType<?> stateType = StateList.getStateTypeByName(new IBlockState(entry.getKey()).getId());
-            if(stateType == null) continue;
-            statesMap.put(stateType, entry.getValue());
+            String id = new IBlockState(entry.getKey()).getId();
+            if (JadAPI.getInstance().getDebug().doMiscDebug())
+                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eAttempting to find &b&lstate &eby &aname &3" + id + "&e..."));
+            StateType<?> stateType = StateList.getStateTypeByName(id);
+
+            if(stateType == null) {
+                if (JadAPI.getInstance().getDebug().doMiscDebug())
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &c&lState &eby &aname &3" + id + "&e not found."));
+                continue;
+            }
+            if (stateType.getType() == StateType.Type.BOOLEAN || stateType.getType() == StateType.Type.INTEGER) {
+                //No parsing needed.
+                statesMap.put(stateType, entry.getValue());
+            } else if (stateType.getType() == StateType.Type.ENUM) {
+                statesMap.put(stateType, NMSEnum.getEnum(((EnumBlockState<? extends NMSEnum>) stateType).getParsedClass(), entry.getValue()));
+            }
         }
 
         this.blockStates = statesMap;

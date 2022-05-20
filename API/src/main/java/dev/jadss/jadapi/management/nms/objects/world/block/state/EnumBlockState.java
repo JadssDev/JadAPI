@@ -9,7 +9,7 @@ import dev.jadss.jadapi.utils.JReflection;
  * Represents an NMS BlockState which uses Enums!
  * @param <N> The NMS Enum type.
  */
-public interface EnumBlockState<N extends NMSEnum> extends StateType<Object> {
+public interface EnumBlockState<N extends NMSEnum> extends StateType<N> {
 
     public static final Class<?> blockStateEnumClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.level.block.state.properties" : "server." + JReflection.getNMSVersion()) + ".BlockStateEnum");
 
@@ -36,7 +36,6 @@ public interface EnumBlockState<N extends NMSEnum> extends StateType<Object> {
     static <A extends NMSEnum> EnumBlockState<A> createInstance(String nmsName, Class<A> cls, Class<?> nmsClass) {
         return new EnumState<>(nmsName, cls, nmsClass);
     }
-
 
     /**
      * Get the parsed enum of the {@link NMSEnum} in JadAPI!
