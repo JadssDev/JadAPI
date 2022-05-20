@@ -96,6 +96,9 @@ public class OutUpdateSign extends DefinedPacket {
 
     @Override
     public Object build() {
+        if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_9))
+            throw new NMSException("Unsupported in this version! Only available in 1.8 and below!");
+
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
             return JReflection.executeConstructor(updateSignClass,
                     new Class[]{int.class, int.class, int.class, String[].class},
