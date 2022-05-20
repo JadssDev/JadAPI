@@ -8,8 +8,9 @@ import dev.jadss.jadapi.management.nms.objects.other.ObjectPackage;
 import dev.jadss.jadapi.management.nms.objects.world.WorldServer;
 import dev.jadss.jadapi.management.nms.objects.world.block.Block;
 import dev.jadss.jadapi.management.nms.objects.world.entities.*;
-import dev.jadss.jadapi.management.nms.objects.world.entities.base.*;
 import dev.jadss.jadapi.management.nms.objects.world.entities.base.Entity;
+import dev.jadss.jadapi.management.nms.objects.world.entities.base.*;
+import dev.jadss.jadapi.management.nms.objects.world.entities.tile.TileEntity;
 import dev.jadss.jadapi.utils.JReflection;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -107,12 +108,25 @@ public final class NMS {
 
     /**
      * Gets the NBT of an object that can have NBT in NMS!
-     * @param clazz the class of the object!
      * @param nmsHandle the handle in nms
      * @return the NBT of the object!
      */
-    public static ObjectPackage getNBTFromClass(Class<?> clazz, Object nmsHandle) {
-        return new ObjectPackage(JReflection.executeMethod(clazz, new Class[]{nbtTagCompoundClass}, nmsHandle, null, (i) -> 0, JReflection.executeConstructor(nbtTagCompoundClass, new Class[]{})));
+    public static ObjectPackage getNBTFromClass(Object nmsHandle) {
+        Object nbt = JReflection.executeConstructor(nbtTagCompoundClass, new Class[] {});
+
+        JReflection.executeMethod(TileEntity.tileEntityClass, new Class[]{nbtTagCompoundClass}, nmsHandle,
+                (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_8) || JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_18) ? null : nbtTagCompoundClass),
+                (i) -> {
+                    if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_8)) {
+                        return i - 1;
+                    } else if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_17)) {
+                        return 0; //Ignored I because there's no point.
+                    } else {
+                        return 0; //Note: Apparently here it is 0, but it shouldn't and should be 1 instead, but since 0 is actually working, I had to keep it that way.
+                    }
+                }, nbt);
+
+        return new ObjectPackage(nbt);
     }
 
     //Packet Data serializers.
