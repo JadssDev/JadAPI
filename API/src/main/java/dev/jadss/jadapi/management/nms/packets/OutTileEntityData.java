@@ -7,6 +7,7 @@ import dev.jadss.jadapi.management.nms.interfaces.DefinedPacket;
 import dev.jadss.jadapi.management.nms.objects.other.ObjectPackage;
 import dev.jadss.jadapi.management.nms.objects.world.entities.tile.TileEntity;
 import dev.jadss.jadapi.management.nms.objects.world.entities.tile.TileEntitySign;
+import dev.jadss.jadapi.management.nms.objects.world.entities.types.TileEntityTypesInstance;
 import dev.jadss.jadapi.management.nms.objects.world.positions.BlockPosition;
 import dev.jadss.jadapi.utils.JReflection;
 
@@ -15,24 +16,45 @@ public class OutTileEntityData extends DefinedPacket {
     public static final Class<?> tileEntityDataPacketClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.protocol.game" : "server." + JReflection.getNMSVersion()) + ".PacketPlayOutTileEntityData");
 
     private BlockPosition blockPosition;
-    private int id;
     private ObjectPackage nbt;
+    //Old
+    private int id;
+    //New
+    private TileEntityTypesInstance type;
 
     public OutTileEntityData(TileEntity tileEntity, BlockPosition position) {
         this.blockPosition = position;
+
         if (tileEntity instanceof TileEntitySign) {
-            this.id = TileEntity.SIGN_TYPE;
-            this.nbt = NMS.getNBTFromClass(TileEntitySign.tileEntitySignClass, tileEntity.getHandle());
+            this.nbt = NMS.getNBTFromClass(tileEntity.getHandle());
+            if (this.isUpdateVersion()) {
+                this.type = tileEntity.getTileEntityType();
+            } else {
+                this.id = TileEntity.SIGN_TYPE;
+            }
         } else {
             throw new NMSException("Cannot find the ID of the this TileEntity!");
         }
     }
 
+    public OutTileEntityData(ObjectPackage nbtPackage, BlockPosition position, TileEntityTypesInstance type) {
+        if (this.isUpdateVersion())
+            throw new NMSException("You may not use the type to create this packet on <1.17");
+
+        this.nbt = nbtPackage;
+        this.blockPosition = position;
+        this.type = type;
+    }
+
     public OutTileEntityData(ObjectPackage nbtPackage, BlockPosition position, int typeId) {
+        if (!this.isUpdateVersion())
+            throw new NMSException("You may not use the typeId to create this packet on 1.18+");
+
         this.nbt = nbtPackage;
         this.blockPosition = position;
         this.id = typeId;
     }
+
 
     public BlockPosition getBlockPosition() {
         return blockPosition;
@@ -58,6 +80,18 @@ public class OutTileEntityData extends DefinedPacket {
         this.nbt = nbt;
     }
 
+    public TileEntityTypesInstance getType() {
+        return type;
+    }
+
+    public void setType(TileEntityTypesInstance type) {
+        this.type = type;
+    }
+
+    public boolean isUpdateVersion() {
+        return JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_18);
+    }
+
     @Override
     public void parse(Object packet) {
         if (packet == null)
@@ -78,7 +112,11 @@ public class OutTileEntityData extends DefinedPacket {
             int z = JReflection.getFieldObject(tileEntityDataPacketClass, int.class, packet, (i) -> 2);
             this.blockPosition = new BlockPosition(x, y, z);
 
-            this.id = JReflection.getFieldObject(tileEntityDataPacketClass, int.class, packet, (i) -> 3);
+            if (this.isUpdateVersion()) {
+                this.type = new TileEntityTypesInstance(JReflection.getFieldObject(tileEntityDataPacketClass, TileEntityTypesInstance.TILE_ENTITY_TYPE, packet, (i) -> i));
+            } else {
+                this.id = JReflection.getFieldObject(tileEntityDataPacketClass, int.class, packet, (i) -> i);
+            }
 
             this.nbt = new ObjectPackage(JReflection.getFieldObject(tileEntityDataPacketClass, NMS.nbtTagCompoundClass, packet));
         }
@@ -87,8 +125,8 @@ public class OutTileEntityData extends DefinedPacket {
     @Override
     public Object build() {
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_8)) {
-            if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_16)) {
-                throw new NMSException("This packet is not supported by this version of JADAPI.");
+            if (this.isUpdateVersion()) {
+                return JReflection.executeConstructor(tileEntityDataPacketClass, new Class[]{BlockPosition.blockPositionClass, TileEntityTypesInstance.TILE_ENTITY_TYPE, NMS.nbtTagCompoundClass}, blockPosition.build(), type.getHandle(), nbt.getObject());
             } else {
                 return JReflection.executeConstructor(tileEntityDataPacketClass, new Class[]{BlockPosition.blockPositionClass, int.class, NMS.nbtTagCompoundClass}, blockPosition.build(), id, nbt.getObject());
             }
@@ -109,6 +147,10 @@ public class OutTileEntityData extends DefinedPacket {
 
     @Override
     public DefinedPacket copy() {
-        return new OutTileEntityData(this.nbt, (BlockPosition) this.blockPosition.copy(), this.id);
+        if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_18)) {
+            return new OutTileEntityData(this.nbt, (BlockPosition) this.blockPosition.copy(), this.type);
+        } else {
+            return new OutTileEntityData(this.nbt, (BlockPosition) this.blockPosition.copy(), this.id);
+        }
     }
 }
