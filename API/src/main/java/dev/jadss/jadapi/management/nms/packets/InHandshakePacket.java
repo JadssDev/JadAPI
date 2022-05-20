@@ -8,7 +8,6 @@ import dev.jadss.jadapi.management.nms.enums.NMSEnum;
 import dev.jadss.jadapi.management.nms.interfaces.DefinedPacket;
 import dev.jadss.jadapi.management.nms.objects.network.PacketDataSerializer;
 import dev.jadss.jadapi.utils.JReflection;
-import net.minecraft.server.v1_8_R3.PacketHandshakingInSetProtocol;
 
 public class InHandshakePacket extends DefinedPacket {
 
