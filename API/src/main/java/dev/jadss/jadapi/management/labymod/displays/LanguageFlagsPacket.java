@@ -1,6 +1,5 @@
 package dev.jadss.jadapi.management.labymod.displays;
 
-import com.sun.org.apache.bcel.internal.generic.LNEG;
 import dev.jadss.jadapi.interfaces.Copyable;
 import dev.jadss.jadapi.management.labymod.LabyModPacket;
 

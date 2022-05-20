@@ -1,6 +1,5 @@
 package dev.jadss.jadapi.management.labymod.displays;
 
-import com.google.gson.JsonObject;
 import dev.jadss.jadapi.management.labymod.LabyModPacket;
 
 /**

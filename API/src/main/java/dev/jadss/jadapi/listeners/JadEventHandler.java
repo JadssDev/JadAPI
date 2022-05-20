@@ -13,8 +13,6 @@ import org.bukkit.event.block.BlockEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerEvent;
 
-import java.util.ArrayList;
-
 public class JadEventHandler implements Listener {
 
     @EventHandler //Quite worthless but why not?
