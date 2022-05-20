@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("all")
 public final class JManager implements JPacketHooker, JInformationManager, JRegisterer, JManagement {
@@ -36,7 +37,7 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
     private Map<UUID, Long> packetsSentToPlayers = new HashMap<>();
     private Map<UUID, Long> packetsReceivedByPlayers = new HashMap<>();
 
-    private List<JQuickEvent> quickEvents = new ArrayList<>();
+    private List<JQuickEvent<?>> quickEvents = new ArrayList<>();
     private List<JPacketHook> packetHooks = new ArrayList<>();
     private List<JHologram> holograms = new ArrayList<>();
 
@@ -46,16 +47,16 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
     //COLLECTIONS
 
     //InformationManager type of job.
-    public List<JQuickEvent> getQuickEvents() {
-        return quickEvents;
+    public List<JQuickEvent<?>> getQuickEvents() {
+        return new ArrayList<>(quickEvents);
     }
 
     public List<JPacketHook> getPacketHooks() {
-        return packetHooks;
+        return new ArrayList<>(packetHooks);
     }
 
     public List<JHologram> getHolograms() {
-        return holograms;
+        return new ArrayList<>(holograms);
     }
 
     public List<PacketListener<?>> getPacketListeners() {
@@ -104,12 +105,20 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
     //InformationManager finish.
 
 
+
+
+
+
+
+
+
+
     //PacketHooker type of job.
     public EventResult callPacketHooks(Object packet, JPlayer player, boolean cancellable, boolean editable) {
         PacketEvent packetEvent = new PacketEvent(!Bukkit.getServer().isPrimaryThread(), packet, player, cancellable, editable);
 
         for (JPacketHook packetHook : new ArrayList<>(this.getPacketHooks())) {
-            if (packetHook.hookEveryPacket() && (packetHook.getHookedPlayer() == null || packetHook.getHookedPlayer().equals(player))) {
+            if (packetHook.isHookingEveryPacket() && (packetHook.getHookedPlayer() == null || packetHook.getHookedPlayer().equals(player))) {
                 packetHook.run(packetEvent);
             } else {
                 for (Class<?> classy : packetHook.getHookedPackets()) {
@@ -253,6 +262,12 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
 
     //JManagement finish.
 
+
+
+
+
+
+
     //UTILS
     private Thread registerer = null;
     //UTILS
@@ -307,8 +322,8 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
     public void unregisterEnchantment(EnchantmentInstance instance) {
         if (instance.isRegistered()) {
             instance.unregister();
-            return;
         }
+
         ((Map<String, Enchantment>) JReflection.getFieldObjectByName(Enchantment.class, "byName", null)).remove(instance.getEnchantmentInformation().getName(), instance.asEnchantment());
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_12)) {
             ((Map<Integer, Enchantment>) JReflection.getFieldObjectByName(Enchantment.class, "byId", null)).remove(instance.getEnchantmentInformation().getId());
@@ -319,10 +334,61 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
                 if (enchantment.equals(instance.asEnchantment()))
                     nameSpace.set(object);
             });
-            if (nameSpace.get() == null) throw new JException(JException.Reason.SOMETHING_WENT_WRONG);
+            if (nameSpace.get() == null) {
+                throw new JException(JException.Reason.SOMETHING_WENT_WRONG);
+            }
             map.remove(nameSpace);
         }
     }
+
+    @Override
+    public JQuickEvent<?> registerQuickEvent(JQuickEvent<?> quickEvent) {
+        if (quickEvent.isRegistered())
+            return quickEvent;
+
+        this.quickEvents.add(quickEvent);
+        quickEvent.getRegisterer().getQuickEvents().add(quickEvent);
+
+        if (JadAPI.getInstance().getDebug().doQuickEventsDebug())
+            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eRegistered a &3&lQuickEvent&e! &bEvent &e&m->&a " + quickEvent.getEventType().getSimpleName() + "&e; &bRegisterer &e&m->&a " + quickEvent.getRegisterer().getJavaPlugin().getName()));
+
+        return quickEvent;
+    }
+
+    @Override
+    public void unregisterQuickEvent(JQuickEvent<?> quickEvent) {
+        this.quickEvents.remove(quickEvent);
+        quickEvent.getRegisterer().getQuickEvents().remove(quickEvent);
+
+        if (JadAPI.getInstance().getDebug().doQuickEventsDebug())
+            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eUnregistered a &3&lQuickEvent&e! &bEvent &e&m->&a " + quickEvent.getEventType().getSimpleName() + "&e; &bRegisterer &e&m->&a " + quickEvent.getRegisterer().getJavaPlugin().getName()));
+    }
+
+    @Override
+    public JPacketHook registerPacketHook(JPacketHook packetEvent) {
+        if (packetEvent.isRegistered())
+            return packetEvent;
+
+        this.packetHooks.add(packetEvent);
+        packetEvent.getRegisterer().getPacketHooks().add(packetEvent);
+
+        if (JadAPI.getInstance().getDebug().doPacketHooksDebug())
+            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eRegistered a &3&lPacketEvent&e! &bPackets &e&m->&a " + packetEvent.getHookedPackets().stream().map(c -> c.getSimpleName()).collect(Collectors.joining(", ")) + "&e; &bRegisterer &e&m->&a " + packetEvent.getRegisterer().getJavaPlugin().getName()));
+
+        return packetEvent;
+    }
+
+    @Override
+    public void unregisterPacketHook(JPacketHook packetEvent) {
+        this.packetHooks.remove(packetEvent);
+        packetEvent.getRegisterer().getPacketHooks().remove(packetEvent);
+
+        if (JadAPI.getInstance().getDebug().doPacketHooksDebug())
+            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eUnregistered a &3&lPacketEvent&e! &bPackets &e&m->&a " + packetEvent.getHookedPackets().stream().map(c -> c.getSimpleName()).collect(Collectors.joining(", ")) + "&e; &bRegisterer &e&m->&a " + packetEvent.getRegisterer().getJavaPlugin().getName()));
+    }
+
+
+    //Other.
 
     private boolean registered = false;
     private boolean tryingToRegister = false;
