@@ -24,7 +24,8 @@ public class CraftUtils {
 
     /**
      * Convert an ItemStack from Bukkit to a NMS one.
-     * @return teh NMS ItemStack
+     * @param item the item in the bukkit api to transfer to NMS.
+     * @return the NMS ItemStack
      */
     public static Object asItem(org.bukkit.inventory.ItemStack item) {
         return JReflection.executeMethod(craftItemStack, "asNMSCopy", null, new Class[] { org.bukkit.inventory.ItemStack.class }, item);
