@@ -7,7 +7,6 @@ import dev.jadss.jadapi.management.nms.interfaces.NMSCopyable;
 import dev.jadss.jadapi.management.nms.interfaces.NMSObject;
 import dev.jadss.jadapi.management.nms.interfaces.NMSParsable;
 import dev.jadss.jadapi.utils.JReflection;
-import org.bukkit.Location;
 
 public class BlockPosition implements NMSObject, NMSBuildable, NMSParsable, NMSCopyable {
 
