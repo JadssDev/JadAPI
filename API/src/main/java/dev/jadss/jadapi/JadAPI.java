@@ -117,7 +117,6 @@ public class JadAPI extends JavaPlugin {
 
         new JSender(Bukkit.getConsoleSender()).sendMessage("&aInitializing &3&lDebug Options&e!");
         this.debug = new DebugOptions();
-        this.debug.setReflectionDebug(true);
 
         new JSender(Bukkit.getConsoleSender()).sendMessage("&aInitializing &3&lMain Worker Manager&e!");
         managerInstance = new JManager();
