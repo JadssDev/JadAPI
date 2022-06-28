@@ -3,6 +3,9 @@
 JadAPI is a compatibility API with the idea to bring 1.7 to 1.18 support and/or add functionality that BukkitAPI will never have!
 It also contains some Objects mapping in NMS to provide this compatibility and/or functionality.
 
+### Note:
+JadAPI is not ported to 1.19 yet, attempting to use it on 1.19 may not work as intended.
+
 ## How to use JadAPI?
 
 First things first, add JadAPI to your plugin's dependencies on your plugin.yml like this:
