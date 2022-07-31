@@ -1,6 +1,5 @@
 package dev.jadss.jadapi.management.nms;
 
-import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
 import dev.jadss.jadapi.bukkitImpl.item.JMaterial;
 import dev.jadss.jadapi.management.nms.objects.network.ByteBufWorker;
 import dev.jadss.jadapi.management.nms.objects.network.PacketDataSerializer;
@@ -8,21 +7,31 @@ import dev.jadss.jadapi.management.nms.objects.other.ObjectPackage;
 import dev.jadss.jadapi.management.nms.objects.world.WorldServer;
 import dev.jadss.jadapi.management.nms.objects.world.block.Block;
 import dev.jadss.jadapi.management.nms.objects.world.entities.*;
-import dev.jadss.jadapi.management.nms.objects.world.entities.base.Entity;
 import dev.jadss.jadapi.management.nms.objects.world.entities.base.*;
-import dev.jadss.jadapi.management.nms.objects.world.entities.tile.TileEntity;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JConstructorReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JMethodReflector;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
-import org.bukkit.entity.*;
 
 /**
  * Some utils for <b>NMS</b>!
  */
 public final class NMS {
 
+    private static String nmsVersion;
+
+    public static void setupNMS() {
+        String[] version = Bukkit.getServer().getClass().getPackage().getName().split("\\.");
+        nmsVersion = version[version.length - 1];
+    }
+
+    public static String getNMSVersion() {
+        return nmsVersion;
+    }
+
     private NMS() {
-        throw new NMSException("Fuck off");
+        //Utility class
     }
 
     /**
@@ -31,7 +40,7 @@ public final class NMS {
      * @return The MinecraftServer Object.
      */
     public static Object getMinecraftServer() {
-        return JReflection.executeMethod(JReflection.getReflectionClass("org.bukkit.craftbukkit." + JReflection.getNMSVersion() + ".CraftServer"), "getServer", Bukkit.getServer(), new Class[]{});
+        return JMethodReflector.executeMethod(JClassReflector.getClass("org.bukkit.craftbukkit." + NMS.getNMSVersion() + ".CraftServer"), "getServer", new Class[]{}, Bukkit.getServer(), new Object[]{});
     }
 
     /**
@@ -44,35 +53,38 @@ public final class NMS {
         if (entity == null)
             throw new NullPointerException("Entity cannot be null!");
 
-        Object handle = JReflection.executeMethod(entity.getClass(), "getHandle", entity, new Class[]{});
+        Object handle = JMethodReflector.executeMethod(entity.getClass(), "getHandle", new Class[]{}, entity, new Object[]{});
 
-        if (entity instanceof Tameable) {
-            return new EntityTameableAnimal(handle) {
-            };
-        } else if (entity instanceof Animals) {
+        if (EntityAnimal.isEntityAnimal(handle)) {
             return new EntityAnimal(handle) {
             };
-        } else if (entity instanceof Ageable) {
+        } else if (EntityAgeable.isEntityAgeable(handle)) {
             return new EntityAgeable(handle) {
             };
-        } else if (entity instanceof Creature) {
+        } else if (EntityMonster.isEntityMonster(handle)) {
+            return new EntityMonster(handle) {
+            };
+        } else if (EntityCreature.isEntityCreature(handle)) {
             return new EntityCreature(handle) {
             };
-        } else if (entity instanceof LivingEntity) {
-            if (entity instanceof ArmorStand) {
+        } else if (EntityInsentient.isEntityInsentient(handle)) {
+            return new EntityInsentient(handle) {
+            };
+        } else if (EntityLiving.isEntityLiving(handle)) {
+            if (EntityArmorStand.isArmorStand(handle)) {
                 return new EntityArmorStand(handle);
-            } else if (entity instanceof Player) {
+            } else if (EntityPlayer.isEntityPlayer(handle)) {
                 return new EntityPlayer(handle);
             } else {
                 return new EntityLiving(handle) {
                 };
             }
         } else {
-            if (entity instanceof AreaEffectCloud) {
+            if (EntityAreaEffectCloud.isAreaEffectCloud(handle)) {
                 return new EntityAreaEffectCloud(handle);
-            } else if (entity instanceof ExperienceOrb) {
+            } else if (EntityExperienceOrb.isExperienceOrb(handle)) {
                 return new EntityExperienceOrb(handle);
-            } else if (entity instanceof Item) {
+            } else if (EntityItem.isEntityItem(handle)) {
                 return new EntityItem(handle);
             } else {
                 return new Entity(handle) {
@@ -88,7 +100,7 @@ public final class NMS {
      * @return the {@link WorldServer} object!
      */
     public static WorldServer toWorldServer(World world) {
-        return new WorldServer(JReflection.executeMethod(world.getClass(), "getHandle", world, new Class[]{}));
+        return new WorldServer(JMethodReflector.executeMethod(world.getClass(), "getHandle", new Class[]{}, world, new Object[]{}));
     }
 
     /**
@@ -101,30 +113,18 @@ public final class NMS {
         return new Block(CraftUtils.getBlock(material), material.getMaterial(JMaterial.Type.BLOCK).getValue());
     }
 
-    public static final Class<?> packetClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.protocol" : "server." + JReflection.getNMSVersion()) + ".Packet");
-    public static final Class<?> nbtTagCompoundClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "nbt" : "server." + JReflection.getNMSVersion()) + ".NBTTagCompound");
-
-    //NBT getters
+    //NBT getters«
 
     /**
      * Gets the NBT of an object that can have NBT in NMS!
+     *
      * @param nmsHandle the handle in nms
      * @return the NBT of the object!
      */
     public static ObjectPackage getNBTFromClass(Object nmsHandle) {
-        Object nbt = JReflection.executeConstructor(nbtTagCompoundClass, new Class[] {});
+        Object nbt = JConstructorReflector.executeConstructor(Others.NBT_TAG_COMPOUND_CLASS, new Class[]{});
 
-        JReflection.executeMethod(TileEntity.tileEntityClass, new Class[]{nbtTagCompoundClass}, nmsHandle,
-                (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_8) || JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_18) ? null : nbtTagCompoundClass),
-                (i) -> {
-                    if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_8)) {
-                        return i - 1;
-                    } else if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_17)) {
-                        return 0; //Ignored I because there's no point.
-                    } else {
-                        return 0; //Note: Apparently here it is 0, but it shouldn't and should be 1 instead, but since 0 is actually working, I had to keep it that way.
-                    }
-                }, nbt);
+        JMethodReflector.executeMethod(Others.NBT_TAG_COMPOUND_CLASS, Others.NBT_SAVE_METHOD.get(), new Class[]{Others.NBT_TAG_COMPOUND_CLASS}, nmsHandle, new Object[]{nbt});
 
         return new ObjectPackage(nbt);
     }
@@ -137,7 +137,7 @@ public final class NMS {
      * @return the PacketDataSerializer.
      */
     public static PacketDataSerializer newPacketDataSerializer() {
-        return new PacketDataSerializer(JReflection.executeConstructor(new PacketDataSerializer().getParsingClass(), new Class[]{ByteBufWorker.byteBufClass}, ByteBufWorker.createByteBuf().getByteBuf()));
+        return new PacketDataSerializer(JConstructorReflector.executeConstructor(PacketDataSerializer.DATA_SERIALIZER, new Class[]{ByteBufWorker.byteBufClass}, ByteBufWorker.createByteBuf().getByteBuf()));
     }
 
     /**
