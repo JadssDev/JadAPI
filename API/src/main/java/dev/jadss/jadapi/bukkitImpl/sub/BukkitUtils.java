@@ -1,7 +1,8 @@
 package dev.jadss.jadapi.bukkitImpl.sub;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JConstructorReflector;
 import org.bukkit.plugin.Plugin;
 
 /**
@@ -22,6 +23,6 @@ public class BukkitUtils {
     public static Object buildNamespacedKey(Plugin plugin, String key) {
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_11))
             throw new RuntimeException("NamespacedKeys in bukkit where not created in versions below 1.11");
-        return JReflection.executeConstructor(JReflection.getReflectionClass("org.bukkit.NamespacedKey"), new Class[] { Plugin.class, String.class }, plugin, key);
+        return JConstructorReflector.executeConstructor(JClassReflector.getClass("org.bukkit.NamespacedKey"), new Class[] { Plugin.class, String.class }, plugin, key);
     }
 }
