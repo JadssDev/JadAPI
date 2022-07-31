@@ -2,9 +2,11 @@ package dev.jadss.jadapi.bukkitImpl.misc;
 
 import com.google.common.collect.Lists;
 import dev.jadss.jadapi.JadAPI;
+import dev.jadss.jadapi.JadAPIPlugin;
 import dev.jadss.jadapi.bukkitImpl.entities.JPlayer;
 import dev.jadss.jadapi.exceptions.JException;
 import dev.jadss.jadapi.interfaces.other.PacketListener;
+import dev.jadss.jadapi.management.JPacketHook;
 import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.interfaces.DefinedPacket;
 import dev.jadss.jadapi.management.nms.objects.chat.IChatBaseComponent;
@@ -27,7 +29,8 @@ import java.util.stream.Collectors;
  */
 public final class JHologram implements PacketListener<InInteractAtEntityPacket> {
 
-    private Location currentLocation;
+    private final JadAPIPlugin registerer;
+    private final Location currentLocation;
     private final List<EntityArmorStand> armorStands;
     private final boolean autoAdd;
     private final List<JPlayer> playersShown = new ArrayList<>();
@@ -39,7 +42,12 @@ public final class JHologram implements PacketListener<InInteractAtEntityPacket>
      * @param autoAdd  Should we add every player currently on the server and everyone that joins after?
      * @param messages the message the hologram should display.
      */
-    public JHologram(Location location, boolean autoAdd, String... messages) {
+    public JHologram(JadAPIPlugin registerer, Location location, boolean autoAdd, String... messages) {
+        if (location == null)
+            throw new NullPointerException("location is null");
+
+        this.registerer = registerer;
+
         this.currentLocation = location;
         this.autoAdd = autoAdd;
         this.armorStands = generate(location.clone(), Arrays.asList(messages));
@@ -57,7 +65,12 @@ public final class JHologram implements PacketListener<InInteractAtEntityPacket>
      * @param autoAdd  Should we add every player currently on the server and everyone that joins after?
      * @param messages the message the hologram should display.
      */
-    public JHologram(Location location, boolean autoAdd, List<String> messages) {
+    public JHologram(JadAPIPlugin registerer, Location location, boolean autoAdd, List<String> messages) {
+        if (location == null)
+            throw new NullPointerException("location is null");
+
+        this.registerer = registerer;
+
         this.currentLocation = location;
         this.autoAdd = autoAdd;
         this.armorStands = generate(location.clone(), messages);
@@ -76,12 +89,17 @@ public final class JHologram implements PacketListener<InInteractAtEntityPacket>
      */
     public JHologram show(JPlayer... players) {
         players = Arrays.stream(players)
-                .filter(player -> currentLocation.getWorld().equals(player.getPlayer().getLocation().getWorld()))
+                .filter(player -> currentLocation.getWorld().equals(player.getPlayer().getWorld()))
                 .filter(player -> !this.playersShown.contains(player))
                 .toArray(JPlayer[]::new);
 
-        List<Object> addPackets = this.armorStands.stream().map(stand -> new OutSpawnEntityLiving(stand).build()).collect(Collectors.toList());
-        List<Object> modifyPackets = this.armorStands.stream().map(stand -> new OutEntityMetadata(stand).build()).collect(Collectors.toList());
+        List<Object> addPackets = this.armorStands.stream()
+                .map(stand -> new OutSpawnEntityLiving(stand).build())
+                .collect(Collectors.toList());
+
+        List<Object> modifyPackets = this.armorStands.stream()
+                .map(stand -> new OutEntityMetadata(stand).build())
+                .collect(Collectors.toList());
 
         Arrays.stream(players).forEach(p -> addPackets.forEach(p::sendPacket));
         Arrays.stream(players).forEach(p -> modifyPackets.forEach(p::sendPacket));
@@ -147,7 +165,7 @@ public final class JHologram implements PacketListener<InInteractAtEntityPacket>
      *
      * @param location the new Location of this hologram.
      */
-    public void updateLocation(Location location) { //Todo: 1.23-JadLaxyDev
+    public void updateLocation(Location location) { //Todo: later when I'm not lazy
         throw new UnsupportedOperationException("Not implemented yet!");
 //        this.currentLocation = location;
 //        List<Object> packets = new ArrayList<>();
@@ -162,6 +180,14 @@ public final class JHologram implements PacketListener<InInteractAtEntityPacket>
      */
     public boolean doAutoAdd() {
         return autoAdd;
+    }
+
+    /**
+     * Get the registerer of this hologram.
+     * @return the registerer
+     */
+    public JadAPIPlugin getRegisterer() {
+        return registerer;
     }
 
     /**
@@ -180,6 +206,38 @@ public final class JHologram implements PacketListener<InInteractAtEntityPacket>
      */
     public Location getLocation() {
         return currentLocation.clone();
+    }
+
+
+    /**
+     * Register this Hologram to JadEventHandler
+     * @param enable if this Hologram should be registered.
+     * @return itself.
+     **/
+    public JHologram register(boolean enable) {
+        if (!this.registerer.isRegistered()) {
+            throw new JException(JException.Reason.UNREGISTERED);
+        }
+
+        if (enable) {
+            if (this.isRegistered())
+                return this;
+
+            JadAPI.getInstance().getRegisterer().registerHologram(this);
+        } else {
+            this.hide(JPlayer.getJPlayers().toArray(new JPlayer[0]));
+            JadAPI.getInstance().getRegisterer().unregisterHologram(this);
+        }
+
+        return this;
+    }
+
+    /**
+     * Check if this Hologram is Registered.
+     * @return if this Hologram is registered!
+     */
+    public boolean isRegistered() {
+        return JadAPI.getInstance().getInformationManager().getPacketHooks().contains(this);
     }
 
     /**

@@ -2,6 +2,7 @@ package dev.jadss.jadapi;
 
 import dev.jadss.jadapi.bukkitImpl.enchantments.EnchantmentInstance;
 import dev.jadss.jadapi.bukkitImpl.menu.AbstractMenu;
+import dev.jadss.jadapi.bukkitImpl.misc.JHologram;
 import dev.jadss.jadapi.bukkitImpl.misc.JSender;
 import dev.jadss.jadapi.bukkitImpl.misc.JShapedCraft;
 import dev.jadss.jadapi.exceptions.JException;
@@ -48,8 +49,9 @@ public abstract class JadAPIPlugin {
 
     private final List<JQuickEvent<?>> quickEvents = new ArrayList<>();
     private final List<JPacketHook> packetHooks = new ArrayList<>();
-    private final List<AbstractMenu<?, ?, ?>> menus = new ArrayList<>();
     private final List<EnchantmentInstance> enchantments = new ArrayList<>();
+    private final List<AbstractMenu<?, ?, ?>> menus = new ArrayList<>();
+    private final List<JHologram> holograms = new ArrayList<>();
     private final List<JShapedCraft> crafts = new ArrayList<>();
 
     public List<JQuickEvent<?>> getQuickEvents() {
@@ -60,12 +62,16 @@ public abstract class JadAPIPlugin {
         return this.packetHooks;
     }
 
+    public List<EnchantmentInstance> getEnchantments() {
+        return this.enchantments;
+    }
+
     public List<AbstractMenu<?, ?, ?>> getMenus() {
         return this.menus;
     }
 
-    public List<EnchantmentInstance> getEnchantments() {
-        return this.enchantments;
+    public List<JHologram> getHolograms() {
+        return this.holograms;
     }
 
     public List<JShapedCraft> getCrafts() {
@@ -80,8 +86,11 @@ public abstract class JadAPIPlugin {
      * @param register If true, register this plugin to JadAPI, if false, it will unregister it.
      */
     public void register(boolean register) {
-        if (!JadAPI.getInstance().isEnabled()) throw new JException(JException.Reason.JADAPI_NOT_ENABLED);
-        if (this.getJavaPlugin() == null) throw new JException(JException.Reason.VALUE_IS_NULL);
+        if (!JadAPI.getInstance().isEnabled())
+            throw new JException(JException.Reason.JADAPI_NOT_ENABLED);
+
+        if (this.getJavaPlugin() == null)
+            throw new JException(JException.Reason.VALUE_IS_NULL);
 
         if (register) {
             if (JadAPIPlugin.PLUGINS.contains(this) || PLUGINS.
@@ -96,6 +105,8 @@ public abstract class JadAPIPlugin {
             new JSender(Bukkit.getConsoleSender()).sendMessage("&eUnregistered " + this.quickEvents.size() + " &bQuickEvents&e!");
             new JSender(Bukkit.getConsoleSender()).sendMessage("&eUnregistered " + this.packetHooks.size() + " &bPacketHooks&e!");
             new JSender(Bukkit.getConsoleSender()).sendMessage("&eUnregistered " + this.enchantments.size() + " &bEnchantments&e!");
+            new JSender(Bukkit.getConsoleSender()).sendMessage("&eUnregistered " + this.menus.size() + " &bMenus&e!");
+            new JSender(Bukkit.getConsoleSender()).sendMessage("&eUnregistered " + this.holograms.size() + " &bHolograms&e!");
 
             for (JQuickEvent quickEvent : this.quickEvents)
                 quickEvent.register(false);
@@ -103,10 +114,16 @@ public abstract class JadAPIPlugin {
                 packetHook.register(false);
             for (EnchantmentInstance enchantments : this.enchantments)
                 enchantments.unregister();
+            for (AbstractMenu<?, ?, ?> menu : this.menus)
+                menu.register(false);
+            for (JHologram hologram : this.holograms)
+                hologram.register(false);
 
             this.quickEvents.clear();
             this.packetHooks.clear();
             this.enchantments.clear();
+            this.menus.clear();
+            this.holograms.clear();
 
             JadAPIPlugin.PLUGINS.remove(this);
             new JSender(Bukkit.getConsoleSender()).sendMessage("&3&lJadAPI &7>> &3&lUnregistered &a" + this.getJavaPlugin() + "'s &eJadAPI &bInstance&e!");

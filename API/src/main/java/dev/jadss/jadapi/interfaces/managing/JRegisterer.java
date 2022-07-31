@@ -3,6 +3,7 @@ package dev.jadss.jadapi.interfaces.managing;
 import dev.jadss.jadapi.bukkitImpl.enchantments.EnchantmentInstance;
 import dev.jadss.jadapi.bukkitImpl.enchantments.JEnchantmentInfo;
 import dev.jadss.jadapi.bukkitImpl.menu.AbstractMenu;
+import dev.jadss.jadapi.bukkitImpl.misc.JHologram;
 import dev.jadss.jadapi.exceptions.JException;
 import dev.jadss.jadapi.management.JPacketHook;
 import dev.jadss.jadapi.management.JQuickEvent;
@@ -53,6 +54,19 @@ public interface JRegisterer {
      * @param packetHook the PacketHook to unregister!
      */
     void unregisterPacketHook(JPacketHook packetHook);
+
+    /**
+     * Register a Hologram!
+     * @param hologram the Hologram to register.
+     * @return The Hologram specified.
+     */
+    JHologram registerHologram(JHologram hologram);
+
+    /**
+     * Unregister a Hologram!
+     * @param hologram the Hologram to unregister!
+     */
+    void unregisterHologram(JHologram hologram);
 
     /**
      * Register a Menu!
