@@ -63,7 +63,7 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
 
     @Override
     public List<AbstractMenu<?, ?, ?>> getMenus() {
-        return menus;
+        return new ArrayList<>(menus);
     }
 
     public List<JHologram> getHolograms() {
@@ -395,6 +395,23 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
 
         if (JadAPI.getInstance().getDebug().doPacketHooksDebug())
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eUnregistered a &3&lPacketEvent&e! &bPackets &e&m->&a " + packetEvent.getHookedPackets().stream().map(c -> c.getSimpleName()).collect(Collectors.joining(", ")) + "&e; &bRegisterer &e&m->&a " + packetEvent.getRegisterer().getJavaPlugin().getName()));
+    }
+
+    @Override
+    public JHologram registerHologram(JHologram hologram) {
+        if (hologram.isRegistered())
+            return hologram;
+
+        this.holograms.add(hologram);
+        hologram.getRegisterer().getHolograms().add(hologram);
+
+        return hologram;
+    }
+
+    @Override
+    public void unregisterHologram(JHologram hologram) {
+        this.holograms.remove(hologram);
+        hologram.getRegisterer().getHolograms().remove(hologram);
     }
 
     @Override
