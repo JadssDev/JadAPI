@@ -1,6 +1,7 @@
 package dev.jadss.jadapi;
 
 import dev.jadss.jadapi.bukkitImpl.enchantments.EnchantmentInstance;
+import dev.jadss.jadapi.bukkitImpl.menu.AbstractMenu;
 import dev.jadss.jadapi.bukkitImpl.misc.JSender;
 import dev.jadss.jadapi.bukkitImpl.misc.JShapedCraft;
 import dev.jadss.jadapi.exceptions.JException;
@@ -21,6 +22,7 @@ public abstract class JadAPIPlugin {
 
     /**
      * Get the size of the amount of plugins registered to JadAPI.
+     *
      * @return The amount of plugins registered to JadAPI.
      */
     public static int size() {
@@ -29,8 +31,9 @@ public abstract class JadAPIPlugin {
 
     /**
      * Get a plugin instance by its JavaPlugin class.
+     *
      * @param clazz The JavaPlugin class.
-     * @param <J> The JavaPlugin class.
+     * @param <J>   The JavaPlugin class.
      * @return The plugin instance.
      */
     public static <J extends JavaPlugin> JadAPIPlugin get(Class<J> clazz) {
@@ -45,6 +48,7 @@ public abstract class JadAPIPlugin {
 
     private final List<JQuickEvent<?>> quickEvents = new ArrayList<>();
     private final List<JPacketHook> packetHooks = new ArrayList<>();
+    private final List<AbstractMenu<?, ?, ?>> menus = new ArrayList<>();
     private final List<EnchantmentInstance> enchantments = new ArrayList<>();
     private final List<JShapedCraft> crafts = new ArrayList<>();
 
@@ -54,6 +58,10 @@ public abstract class JadAPIPlugin {
 
     public List<JPacketHook> getPacketHooks() {
         return this.packetHooks;
+    }
+
+    public List<AbstractMenu<?, ?, ?>> getMenus() {
+        return this.menus;
     }
 
     public List<EnchantmentInstance> getEnchantments() {
@@ -68,6 +76,7 @@ public abstract class JadAPIPlugin {
 
     /**
      * Register this plugin to JadAPI.
+     *
      * @param register If true, register this plugin to JadAPI, if false, it will unregister it.
      */
     public void register(boolean register) {
@@ -106,6 +115,7 @@ public abstract class JadAPIPlugin {
 
     /**
      * Check if this instance is registered to JadAPI.
+     *
      * @return True if this instance is registered to JadAPI, false otherwise.
      */
     public boolean isRegistered() {
