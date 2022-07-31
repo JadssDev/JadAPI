@@ -59,7 +59,7 @@ public class LabyService {
      */
     public void handle(JPlayer player, InCustomPayloadPacket payload) {
         if (userRemover == null) {
-            userRemover = new JQuickEvent<>(JadAPI.getInstance().getJadPlugin(), PlayerQuitEvent.class, EventPriority.MONITOR, event -> {
+            userRemover = new JQuickEvent<>(JadAPI.getInstance().getJadPluginInstance(), PlayerQuitEvent.class, EventPriority.MONITOR, event -> {
                 users.remove(getUser(new JPlayer(event.getPlayer())));
             }, -1, -1, e -> isUser(player), JQuickEvent.generateID()).register(true);
         }
@@ -99,7 +99,6 @@ public class LabyService {
             try {
                 if (listener.getOwner() != null && listener.getOwner().isRegistered()) {
                     listener.handlePacket(user, packet);
-                    listener.handlePacket(user.getPlayer(), packet);
                 } else listeners.remove(listener);
             } catch (Exception ex) {
                 Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&',

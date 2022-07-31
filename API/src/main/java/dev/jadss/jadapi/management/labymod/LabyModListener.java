@@ -2,7 +2,6 @@ package dev.jadss.jadapi.management.labymod;
 
 import dev.jadss.jadapi.JadAPI;
 import dev.jadss.jadapi.JadAPIPlugin;
-import dev.jadss.jadapi.annotations.ForRemoval;
 import dev.jadss.jadapi.bukkitImpl.entities.JPlayer;
 
 /**
@@ -22,16 +21,6 @@ public interface LabyModListener {
      * @param user The new User.
      */
     void onUserCreation(LabyUser user);
-
-    /**
-     * Handle a packet sent by a player.
-     * @param player The player who sent it.
-     * @param packet The packet he sent.
-     * @see LabyModPacket
-     */
-    @Deprecated
-    @ForRemoval(willBeRemoved = true, expectedVersionForRemoval = "1.23.1", reason = "A new and improved method has been implemented.")
-    void handlePacket(JPlayer player, LabyModPacket packet);
 
     /**
      * Handles a packet sent by a user.
