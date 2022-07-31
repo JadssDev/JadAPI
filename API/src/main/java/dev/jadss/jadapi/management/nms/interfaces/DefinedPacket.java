@@ -1,11 +1,16 @@
 package dev.jadss.jadapi.management.nms.interfaces;
 
+import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
 import dev.jadss.jadapi.interfaces.Copyable;
+import dev.jadss.jadapi.management.nms.NMS;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
 
 /**
  * Represents a packet that can be parsed or built in NMS!
  */
 public abstract class DefinedPacket implements Copyable<DefinedPacket>, NMSPacket {
+
+    public static final Class<?> PACKET = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.protocol" : "server." + NMS.getNMSVersion()) + ".Packet");
 
     public DefinedPacket() {}
 
