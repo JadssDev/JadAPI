@@ -1,8 +1,10 @@
 package dev.jadss.jadapi.management.nms.enums;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.NMSException;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JEnumReflector;
 
 /**
  * Represents a Slot in NMS.
@@ -26,12 +28,13 @@ public enum EnumItemSlot implements NMSEnum {
     public String getName() { return name; }
     public int getSlot() { return slot; }
 
-    public static final Class<?> enumItemSlotClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.entity" : "server." + JReflection.getNMSVersion()) + ".EnumItemSlot");
+    public static final Class<?> enumItemSlotClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.entity" : "server." + NMS.getNMSVersion()) + ".EnumItemSlot");
 
     public Object getNMSObject() {
         if(JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_8))
-            throw new NMSException("EnumItemSlot is not available in versions below 1.8");
-        return JReflection.executeMethod(enumItemSlotClass, new Class[] { String.class }, null, enumItemSlotClass, (i) -> 0, name);
+            throw new NMSException("EnumItemSlot is not available in versions below 1.9");
+
+        return JEnumReflector.getEnum(this.ordinal(), enumItemSlotClass);
     }
 
     @Override

@@ -1,7 +1,10 @@
 package dev.jadss.jadapi.management.nms.enums;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.management.nms.NMS;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JEnumReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
 import org.bukkit.ChatColor;
 
 import java.util.Arrays;
@@ -34,7 +37,7 @@ public enum EnumChatFormat implements NMSEnum {
     ITALIC(ChatColor.ITALIC),
     RESET(ChatColor.RESET);
 
-    public static final Class<?> enumChatFormat = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "" : "server." + JReflection.getNMSVersion() + ".") + "EnumChatFormat");
+    public static final Class<?> enumChatFormat = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "" : "server." + NMS.getNMSVersion() + ".") + "EnumChatFormat");
     private static final EnumChatFormat[] VALUES = values();
 
     private final ChatColor bukkitColor;
@@ -44,7 +47,7 @@ public enum EnumChatFormat implements NMSEnum {
     }
 
     @Override
-    public Object getNMSObject() { return JReflection.getEnum(this.ordinal(), enumChatFormat); }
+    public Object getNMSObject() { return JEnumReflector.getEnum(this.ordinal(), enumChatFormat); }
 
     public ChatColor getChatColor() {
         return bukkitColor;
@@ -56,7 +59,7 @@ public enum EnumChatFormat implements NMSEnum {
     }
 
     public int getNetworkInt() {
-        return JReflection.getFieldObject(enumChatFormat, int.class, getNMSObject());
+        return JFieldReflector.getObjectFromUnspecificField(enumChatFormat, int.class, getNMSObject());
     }
 
     public static EnumChatFormat getByNetworkInt(int id) {

@@ -1,8 +1,10 @@
 package dev.jadss.jadapi.management.nms.enums;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.NMSException;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JEnumReflector;
 import org.bukkit.DyeColor;
 
 import java.util.Arrays;
@@ -30,7 +32,7 @@ public enum EnumColor implements NMSEnum {
     RED(DyeColor.RED),
     BLACK(DyeColor.BLACK);
 
-    public static final Class<?> enumColorClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.item" : "server." + JReflection.getNMSVersion()) + ".EnumColor");
+    public static final Class<?> enumColorClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.item" : "server." + NMS.getNMSVersion()) + ".EnumColor");
     private static final EnumColor[] VALUES = values();
 
     private final DyeColor bukkitColor;
@@ -52,7 +54,7 @@ public enum EnumColor implements NMSEnum {
     public Object getNMSObject() {
         if(JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7))
             throw new NMSException("EnumColor is not supported in versions below 1.7");
-        return JReflection.getEnum(this.ordinal(), enumColorClass);
+        return JEnumReflector.getEnum(this.ordinal(), enumColorClass);
     }
 
     public DyeColor getColor() {

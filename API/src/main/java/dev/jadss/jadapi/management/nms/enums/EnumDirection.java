@@ -1,8 +1,9 @@
 package dev.jadss.jadapi.management.nms.enums;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.NMSException;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
 import org.bukkit.block.BlockFace;
 
 /**
@@ -16,7 +17,7 @@ public enum EnumDirection implements NMSEnum {
     WEST(-1, 0, 0),
     EAST(1, 0, 0);
 
-    public static final Class<?> enumDirectionClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "core" : "server." + JReflection.getNMSVersion()) + ".EnumDirection");
+    public static final Class<?> enumDirectionClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "core" : "server." + NMS.getNMSVersion()) + ".EnumDirection");
 
     /**
      * Represents the value of X that has to be added to this Direction.

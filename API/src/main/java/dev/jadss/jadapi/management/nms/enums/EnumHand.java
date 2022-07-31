@@ -1,8 +1,9 @@
 package dev.jadss.jadapi.management.nms.enums;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.NMSException;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
 
 /**
  * What hand this player is on
@@ -12,7 +13,7 @@ public enum EnumHand implements NMSEnum {
     MAIN_HAND((byte) 0),
     OFF_HAND((byte) 1);
 
-    public static final Class<?> enumHandClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world" : "server." + JReflection.getNMSVersion()) + ".EnumHand");
+    public static final Class<?> enumHandClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world" : "server." + NMS.getNMSVersion()) + ".EnumHand");
 
     private byte ordinal;
 

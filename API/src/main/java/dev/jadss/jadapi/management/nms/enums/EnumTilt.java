@@ -2,7 +2,8 @@ package dev.jadss.jadapi.management.nms.enums;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
 import dev.jadss.jadapi.management.nms.NMSException;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JEnumReflector;
 
 public enum EnumTilt implements NMSEnum {
     NONE,
@@ -10,14 +11,14 @@ public enum EnumTilt implements NMSEnum {
     PARTIAL,
     FULL;
 
-    //Don't have to tell you this is preseent only in 1.17+
-    public static final Class<?> tiltEnumClass = JReflection.getReflectionClass("net.minecraft.world.level.block.state.properties.Tilt");
+    //Don't have to tell you this is present only in 1.17+
+    public static final Class<?> tiltEnumClass = JClassReflector.getClass("net.minecraft.world.level.block.state.properties.Tilt");
 
     @Override
     public Object getNMSObject() {
         if(JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_16))
             throw new NMSException("EnumTilt is not supported in versions below 1.16");
-        return JReflection.getEnum(this.ordinal(), tiltEnumClass);
+        return JEnumReflector.getEnum(this.ordinal(), tiltEnumClass);
     }
 
     @Override

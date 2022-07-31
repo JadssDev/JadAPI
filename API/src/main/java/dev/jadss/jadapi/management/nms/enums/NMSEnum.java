@@ -1,7 +1,7 @@
 package dev.jadss.jadapi.management.nms.enums;
 
 import dev.jadss.jadapi.management.nms.interfaces.NMSObject;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JMethodReflector;
 
 import java.util.Arrays;
 
@@ -33,7 +33,7 @@ public interface NMSEnum extends NMSObject {
         if(objectEnum == null) return null;
 
         if(Arrays.stream(enumClass.getDeclaredMethods()).anyMatch(m -> m.getName().equals("customParse") && m.getReturnType().equals(enumClass))) {
-            return (A) JReflection.executeMethodByName(enumClass, "customParse", null, objectEnum);
+            return (A) JMethodReflector.executeMethod(enumClass, "customParse", null, new Object[] {objectEnum});
         } else {
             if (objectEnum instanceof Enum)
                 return enumClass.getEnumConstants()[((Enum<?>) objectEnum).ordinal()];

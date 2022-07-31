@@ -1,8 +1,11 @@
 package dev.jadss.jadapi.management.nms.enums;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.NMSException;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JEnumReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
 
 public enum EnumTeamPush implements NMSEnum {
     ALWAYS,
@@ -10,17 +13,17 @@ public enum EnumTeamPush implements NMSEnum {
     PUSH_OTHER_TEAMS,
     PUSH_OWN_TEAM;
 
-    public static final Class<?> enumTeamPushClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.scores" : "server." + JReflection.getNMSVersion()) + ".ScoreboardTeamBase$EnumTeamPush");
+    public static final Class<?> enumTeamPushClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.scores" : "server." + NMS.getNMSVersion()) + ".ScoreboardTeamBase$EnumTeamPush");
 
     @Override
     public Object getNMSObject() {
         if(JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_8))
             throw new NMSException("EnumTeamPush is not supported in versions below 1.8");
-        return JReflection.getEnum(this.ordinal(), enumTeamPushClass);
+        return JEnumReflector.getEnum(this.ordinal(), enumTeamPushClass);
     }
 
     public String getNetworkId() {
-        return JReflection.getFieldObject(enumTeamPushClass, String.class, getNMSObject());
+        return JFieldReflector.getObjectFromUnspecificField(enumTeamPushClass, String.class, getNMSObject());
     }
 
     public static EnumTeamPush getByNetworkId(String id) {

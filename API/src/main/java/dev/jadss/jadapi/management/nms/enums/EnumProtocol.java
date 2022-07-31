@@ -1,7 +1,9 @@
 package dev.jadss.jadapi.management.nms.enums;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.management.nms.NMS;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JEnumReflector;
 
 /**
  * Represents the many Protocols the player can send when the player joins the server on the handshake packet.
@@ -12,7 +14,7 @@ public enum EnumProtocol implements NMSEnum {
     STATUS((byte) 1, (byte) 2),
     LOGIN((byte) 2, (byte) 3);
 
-    public static final Class<?> enumProtocolClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network" : "server." + JReflection.getNMSVersion()) + ".EnumProtocol");
+    public static final Class<?> enumProtocolClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network" : "server." + NMS.getNMSVersion()) + ".EnumProtocol");
 
     private final byte id;
     private final byte ordinal;
@@ -26,7 +28,7 @@ public enum EnumProtocol implements NMSEnum {
     public byte getOrdinal() { return ordinal; }
 
     public Object getNMSObject() {
-        return JReflection.getEnum(ordinal, enumProtocolClass);
+        return JEnumReflector.getEnum(ordinal, enumProtocolClass);
     }
 
     @Override
