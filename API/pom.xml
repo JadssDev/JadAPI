@@ -152,9 +152,16 @@
 
 <!--        Dependencies-->
         <dependency>
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot</artifactId>
+            <version>1.19.1-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+            <classifier>remapped-mojang</classifier>
+        </dependency>
+        <dependency>
             <groupId>de.tr7zw</groupId>
             <artifactId>item-nbt-api</artifactId>
-            <version>2.9.2</version>
+            <version>2.10.0</version>
         </dependency>
 
 <!--        Questionable if GSON should be removed, but I think yes since it is already included in Minecraft jar itself (1.8+), for now it is just commented here.-->

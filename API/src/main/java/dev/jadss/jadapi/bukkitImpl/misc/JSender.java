@@ -1,5 +1,6 @@
 package dev.jadss.jadapi.bukkitImpl.misc;
 
+import dev.jadss.jadapi.annotations.ForChange;
 import dev.jadss.jadapi.bukkitImpl.entities.JPlayer;
 import dev.jadss.jadapi.exceptions.JException;
 import org.bukkit.ChatColor;
@@ -9,6 +10,7 @@ import org.bukkit.entity.Player;
 
 import java.util.function.Consumer;
 
+@ForChange(isMajor = true, expectedVersionForChange = "1.24.1", reason = "Feature more methods and complete rewrite.")
 public class JSender {
 
     private final CommandSender sender;
