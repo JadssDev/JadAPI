@@ -10,6 +10,7 @@ import dev.jadss.jadapi.bukkitImpl.misc.JSkin;
 import dev.jadss.jadapi.bukkitImpl.storage.JHeadStorage;
 import dev.jadss.jadapi.bukkitImpl.sub.JSignRegister;
 import dev.jadss.jadapi.commands.JadAPICommand;
+import dev.jadss.jadapi.commands.sub.menus.InfoMenu;
 import dev.jadss.jadapi.interfaces.managing.JInformationManager;
 import dev.jadss.jadapi.interfaces.managing.JManagement;
 import dev.jadss.jadapi.interfaces.managing.JPacketHooker;
@@ -18,13 +19,13 @@ import dev.jadss.jadapi.listeners.*;
 import dev.jadss.jadapi.management.JManager;
 import dev.jadss.jadapi.management.JQuickEvent;
 import dev.jadss.jadapi.management.labymod.LabyService;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.tasks.EventHandlersUpdater;
 import dev.jadss.jadapi.tasks.RemovalTimer;
 import dev.jadss.jadapi.tasks.SkinsStorageUpdater;
 import dev.jadss.jadapi.utils.DebugOptions;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -51,6 +52,8 @@ import java.util.concurrent.ScheduledExecutorService;
 @SuppressWarnings("all")
 public class JadAPI extends JavaPlugin {
 
+    private static final JSender CONSOLE = new JSender(Bukkit.getConsoleSender());
+
     protected static JadAPI instance;
     protected JadAPIPlugin jPlugin;
 
@@ -63,14 +66,17 @@ public class JadAPI extends JavaPlugin {
     private final List<String> headsToDownload = new ArrayList<>();
 
     private BukkitTask headsUpdater;
-    private BukkitTask eventHandlersUpdater;
+    private Thread eventHandlersUpdater;
 
     private EventHandlersUpdater handlersUpdater;
     private JadEventHandler jQuickEventListener;
     private final HashMap<EventPriority, RegisteredListener> quickEventHandlers = new HashMap<>();
 
     private DebugOptions debug;
-    public DebugOptions getDebug() { return debug; }
+
+    public DebugOptions getDebug() {
+        return debug;
+    }
 
     public static final boolean serverConnectionEnabled = false;
     public static final boolean isFork = false; //You should change this if the API is a fork.. wow incredible.
@@ -79,103 +85,110 @@ public class JadAPI extends JavaPlugin {
     private LabyService labyService;
     private JManager managerInstance;
 
+    //Menus
+    private InfoMenu infoMenu;
 
     public JadAPI() throws IOException {
         //Prevent sneaky pants.
-        if(instance != null)
-            for(int i = 0; i < 5000; i++)
+        if (instance != null)
+            for (int i = 0; i < 5000; i++)
                 System.exit(Integer.MAX_VALUE);
 
         String color = isFork ? "&c" : "&3&l";
-        new JSender(Bukkit.getConsoleSender()).sendMessage(color + "     _           _          _____ _____  ");
-        new JSender(Bukkit.getConsoleSender()).sendMessage(color + "     | |         | |   /\\   |  __ \\_   _|");
-        new JSender(Bukkit.getConsoleSender()).sendMessage(color + "     | | __ _  __| |  /  \\  | |__) || |  ");
-        new JSender(Bukkit.getConsoleSender()).sendMessage(color + " _   | |/ _` |/ _` | / /\\ \\ |  ___/ | |  ");
-        new JSender(Bukkit.getConsoleSender()).sendMessage(color + "| |__| | (_| | (_| |/ ____ \\| |    _| |_ ");
-        new JSender(Bukkit.getConsoleSender()).sendMessage(color + " \\____/ \\__,_|\\__,_/_/    \\_\\_|   |_____|");
-        new JSender(Bukkit.getConsoleSender()).sendMessage(" ");
-        new JSender(Bukkit.getConsoleSender()).sendMessage("&eInitializing" + (isFork ? " &4&lForked " : " ") + "&3&lJadAPI &bv" + this.getDescription().getVersion() + "&e!");
+        CONSOLE.sendMessage(color + "     _           _          _____ _____  ");
+        CONSOLE.sendMessage(color + "     | |         | |   /\\   |  __ \\_   _|");
+        CONSOLE.sendMessage(color + "     | | __ _  __| |  /  \\  | |__) || |  ");
+        CONSOLE.sendMessage(color + " _   | |/ _` |/ _` | / /\\ \\ |  ___/ | |  ");
+        CONSOLE.sendMessage(color + "| |__| | (_| | (_| |/ ____ \\| |    _| |_ ");
+        CONSOLE.sendMessage(color + " \\____/ \\__,_|\\__,_/_/    \\_\\_|   |_____|");
+        CONSOLE.sendMessage(" ");
+        CONSOLE.sendMessage("&eInitializing" + (isFork ? " &4&lForked " : " ") + "&3&lJadAPI &bv" + this.getDescription().getVersion() + "&e!");
 
-        try { Thread.sleep(1000);
-        } catch(InterruptedException ex) { }
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ex) {
+        }
 
         instance = this;
         jPlugin = new JadAPIAsJPlugin();
 
-        JReflection.setupNMS();
-        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&eInitializing &3&lNMS &b&lversion &7> &3" + JReflection.getNMSVersion() + " &e."));
+        NMS.setupNMS();
+        CONSOLE.sendMessage("&eInitializing &3&lNMS &b&lversion &7> &3" + NMS.getNMSVersion() + " &e.");
 
-        if(JVersion.getServerVersion() == JVersion.UNKNOWN) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&a&m---------------------------------------------------------------------------------------"));
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&aJadAPI does not SUPPORT versions lower then 1.7, or too up-to-date, Bugs may occur, Please update your JadAPI!"));
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&a&m---------------------------------------------------------------------------------------"));
-        } else if(JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eCurrently, &3&l1.7 is majorly supported&e, but bugs may occur on &bNBT Tags&e."));
+        if (JVersion.getServerVersion() == JVersion.UNKNOWN) {
+            CONSOLE.sendMessage("&a&m---------------------------------------------------------------------------------------");
+            CONSOLE.sendMessage("&aJadAPI does not SUPPORT versions lower then 1.7, Bugs may occur, Please update your JadAPI!");
+            CONSOLE.sendMessage("&a&m---------------------------------------------------------------------------------------");
+        } else if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
+            CONSOLE.sendMessage("&3&lJadAPI &7>> &eCurrently, &3&l1.7 is supported&e, but bugs may occur on &bNBT Tags&e.");
         }
 
         addDefaultHeads();
 
-        new JSender(Bukkit.getConsoleSender()).sendMessage("&aInitializing &3&lDebug Options&e!");
+        CONSOLE.sendMessage("&aInitializing &3&lDebug Options&e!");
         this.debug = new DebugOptions();
 
-        new JSender(Bukkit.getConsoleSender()).sendMessage("&aInitializing &3&lMain Worker Manager&e!");
+        CONSOLE.sendMessage("&aInitializing &3&lMain Worker Manager&e!");
         managerInstance = new JManager();
         labyService = new LabyService();
 
-        new JSender(Bukkit.getConsoleSender()).sendMessage("&fIf any errors occurr doing this initialization they are for debugging purposes and are not a problem.");
+        CONSOLE.sendMessage("&fIf any errors occurr doing this initialization they are for debugging purposes and are not a problem.");
 
 
-        new JSender(Bukkit.getConsoleSender()).sendMessage("&aProcessing &3&L" + Material.values().length + " &eMaterials... &bPlease wait&e..");
+        CONSOLE.sendMessage("&aProcessing &3&L" + Material.values().length + " &eMaterials... &bPlease wait&e..");
         JMaterial.getRegistryMaterials();
-        try { Thread.sleep(2500); } catch(Exception ignored) { }
+        try {
+            Thread.sleep(2500);
+        } catch (Exception ignored) {
+        }
 
         int total = 0;
-        Class<? extends Event>[] importantEvents = new Class[] {PlayerJoinEvent.class, PlayerLoginEvent.class, PlayerQuitListener.class, InventoryClickEvent.class, PlayerCommandPreprocessEvent.class, };
+        Class<? extends Event>[] importantEvents = new Class[]{PlayerJoinEvent.class, PlayerLoginEvent.class, PlayerQuitListener.class, InventoryClickEvent.class, PlayerCommandPreprocessEvent.class,};
 
-        for(Class<? extends Event> clazz : importantEvents) {
+        for (Class<? extends Event> clazz : importantEvents) {
             boolean loaded = JQuickEvent.loadHandlerList(clazz);
             total++;
         }
 
-        new JSender(Bukkit.getConsoleSender()).sendMessage("&3&lImportant Events &bProcessed&e! (Total -> " + total + " )");
+        CONSOLE.sendMessage("&3&lImportant Events &bProcessed&e! (Total -> " + total + " )");
 
-        new JSender(Bukkit.getConsoleSender()).sendMessage("&ePatching &b&lEnchantments&e...");
-        JReflection.setFieldObjectByName(Enchantment.class, "acceptingNew", null, true);
-        new JSender(Bukkit.getConsoleSender()).sendMessage("&b&lEnchantments &3Patched&e! GG");
+        CONSOLE.sendMessage("&ePatching &b&lEnchantments&e...");
+        JFieldReflector.setObjectToField(Enchantment.class, "acceptingNew", null, true);
+        CONSOLE.sendMessage("&b&lEnchantments &3Patched&e! GG");
 
-        new JSender(Bukkit.getConsoleSender()).sendMessage("&eInitialization &3&lCompleted&e!");
+        CONSOLE.sendMessage("&eInitialization &3&lCompleted&e!");
 
     }
 
     @Override
     public void onLoad() {
         try {
-            new JSender(Bukkit.getConsoleSender()).sendMessage("&3&lJadAPI &7>>");
-            new JSender(Bukkit.getConsoleSender()).sendMessage("&eSetting up to &a&lenable&e...");
+            CONSOLE.sendMessage("&3&lJadAPI &7>>");
+            CONSOLE.sendMessage("&eSetting up to &a&lenable&e...");
 
-            new JSender(Bukkit.getConsoleSender()).sendMessage("&eCreating &3&lJQuickEvent &bhandlers&e.");
+            CONSOLE.sendMessage("&eCreating &3&lJQuickEvent &bhandlers&e.");
             jQuickEventListener = new JadEventHandler();
-            for(EventPriority priority : EventPriority.values()) {
+            for (EventPriority priority : EventPriority.values()) {
                 quickEventHandlers.put(priority,
                         new RegisteredListener(jQuickEventListener, (listener, event) -> jQuickEventListener.onEvent(event, priority), priority, this, false));
-                new JSender(Bukkit.getConsoleSender()).sendMessage("&eRegistered &3&lJQuickEvent &bhandler&e for &b" + priority.name() + "&e.");
+                CONSOLE.sendMessage("&eRegistered &3&lJQuickEvent &bhandler&e for &b" + priority.name() + "&e.");
             }
 
             try {
-                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&eInitializing &aBuilt-IN &3NBTAPI"));
-                new NBTItem(new JItemStack(JMaterial.getRegistryMaterials().find(JMaterial.MaterialEnum.DIAMOND_BLOCK)).buildItemStack());
-                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&eInitialized &aBuilt-IN &3NBTAPI"));
-            } catch(Exception ex) {
+                CONSOLE.sendMessage("&eInitializing &aBuilt-IN &3NBTAPI");
+                new NBTItem(new JItemStack(JMaterial.getRegistryMaterials().find(JMaterial.MaterialEnum.DIAMOND_BLOCK)).getBukkitItem());
+                CONSOLE.sendMessage("&eInitialized &aBuilt-IN &3NBTAPI");
+            } catch (Exception ex) {
                 ex.printStackTrace();
-                new JSender(Bukkit.getConsoleSender()).sendMessage("&c&lError occurred while loading nbtapi.");
+                CONSOLE.sendMessage("&c&lError occurred while loading nbtapi.");
             }
 
             Bukkit.getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
 
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&eFinished &bloading &3&lJadAPI &efor &aenabling&e!"));
-        } catch(Exception ex) {
+            CONSOLE.sendMessage("&eFinished &bloading &3&lJadAPI &efor &aenabling&e!");
+        } catch (Exception ex) {
             ex.printStackTrace();
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eCould &cnot &b&lload&e!"));
+            CONSOLE.sendMessage("&3&lJadAPI &7>> &eCould &cnot &b&lload&e!");
             this.getServer().getPluginManager().disablePlugin(this);
         }
     }
@@ -183,8 +196,8 @@ public class JadAPI extends JavaPlugin {
     @Override
     public void onEnable() {
         try {
-            new JSender(Bukkit.getConsoleSender()).sendMessage("&3&lJadAPI &7>>");
-            new JSender(Bukkit.getConsoleSender()).sendMessage("&eStarting up &blast steps&e!");
+            CONSOLE.sendMessage("&3&lJadAPI &7>>");
+            CONSOLE.sendMessage("&eStarting up &blast steps&e!");
             this.jPlugin.register(true);
 
 
@@ -195,29 +208,37 @@ public class JadAPI extends JavaPlugin {
             getServer().getPluginManager().registerEvents(new PlayerQuitListener(), this);
             getServer().getPluginManager().registerEvents(new PluginDisableListener(), this);
 
-            new JSender(Bukkit.getConsoleSender()).sendMessage("&eInitialized All &3required listeners&e!");
+            CONSOLE.sendMessage("&eInitialized All &3required listeners&e!");
 
             headsUpdater = new SkinsStorageUpdater().runTaskTimerAsynchronously(this, 600, 600);
-            eventHandlersUpdater = new EventHandlersUpdater().runTaskTimerAsynchronously(this, 1, 1);
+            eventHandlersUpdater = new EventHandlersUpdater();
+            eventHandlersUpdater.start();
             new RemovalTimer().runTaskTimerAsynchronously(this, 1, 1);
 
-            new JSender(Bukkit.getConsoleSender()).sendMessage("&eInitialized All &3required tasks&e!");
+            CONSOLE.sendMessage("&eInitialized All &3required tasks&e!");
 
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&eInitializing &3&lLabyMod &bListeners&e!"));
+            CONSOLE.sendMessage("&eInitializing &3&lLabyMod &bListeners&e!");
 
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&eDetecting &3&lJadAPI &bDependent Plugins&e...."));
+            CONSOLE.sendMessage("&eCreating menus...");
+
+            this.infoMenu = new InfoMenu();
+            this.infoMenu.register(true);
+
+            CONSOLE.sendMessage("&eInitialized all menus!");
+
+            CONSOLE.sendMessage("&eDetecting &3&lJadAPI &bDependent Plugins&e....");
             Bukkit.getScheduler().runTaskLater(JadAPI.getInstance(), () -> {
                 for (Plugin plugin : Bukkit.getPluginManager().getPlugins()) {
                     List<String> depend = plugin.getDescription().getDepend();
                     List<String> softDepend = plugin.getDescription().getSoftDepend();
-                    if(depend.contains("JadAPI") || softDepend.contains("JadAPI")) {
-                        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eDetected &3" + plugin.getName() + "&e!"));
+                    if (depend != null && depend.contains("JadAPI") || softDepend != null && softDepend.contains("JadAPI")) {
+                        CONSOLE.sendMessage("&3&lJadAPI &7>> &eDetected &3" + plugin.getName() + "&e!");
                     }
                 }
             }, 0);
-        } catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eCould &cnot &b&lenable&e!"));
+            CONSOLE.sendMessage("&3&lJadAPI &7>> &eCould &cnot &b&lenable&e!");
             this.getServer().getPluginManager().disablePlugin(this);
         }
     }
@@ -226,21 +247,12 @@ public class JadAPI extends JavaPlugin {
     public void onDisable() {
         managerInstance.shutdown();
 
+        this.eventHandlersUpdater.stop();
+
+        CONSOLE.sendMessage("&3&lJadAPI &7>> &eThe JadAPI is &c&lshutting down&e!");
+
         //Remove instance. erase it.
         instance = null;
-
-        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eThe JadAPI is &c&lshutting down&e!"));
-
-        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &cDisabling plugins which require &3&lJadAPI&e!"));
-        try {
-            for(JadAPIPlugin plugin : (List<JadAPIPlugin>) JReflection.getFieldObjectByName(JadAPIPlugin.class, "PLUGINS", null))
-                this.getServer().getPluginManager().disablePlugin(plugin.getJavaPlugin());
-        } catch(Exception ex) {
-            if(this.getDebug().doMiscDebug()) {
-                Bukkit.getConsoleSender().sendMessage("&3&lJadAPI &7>> &eProblem disabling all plugins.");
-                ex.printStackTrace();
-            }
-        }
     }
 
     private void addDefaultHeads() {
@@ -262,24 +274,59 @@ public class JadAPI extends JavaPlugin {
         JHeadStorage.addToStorage(jPlugin, "default_yellow-ball", new JHead("eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNTIwNzE2MjAzZGEwMzljYWZjYTI0YmJkOWYzZTliZDVjNjk4NWMzYzI1NTI3YmNkNTA2ZDM4OGU5OWJiN2FmZSJ9fX0="));
     }
 
-    public static JadAPI getInstance() { return instance; }
+    public static JadAPI getInstance() {
+        return instance;
+    }
 
-    public JadAPIPlugin getJadPlugin() { return jPlugin; }
+    public JadAPIPlugin getJadPluginInstance() {
+        return jPlugin;
+    }
 
-    public JManagement getManagement() { return managerInstance; }
-    public JPacketHooker getPacketHooker() { return managerInstance; }
-    public JInformationManager getInformationManager() { return managerInstance; }
-    public JRegisterer getRegisterer() { return managerInstance; }
+    public JManagement getManagement() {
+        return managerInstance;
+    }
 
-    public LabyService getLabyService() {return labyService;}
+    public JPacketHooker getPacketHooker() {
+        return managerInstance;
+    }
 
-    public static ScheduledExecutorService getPrivateScheduler() { return instance.executor; }
+    public JInformationManager getInformationManager() {
+        return managerInstance;
+    }
 
-    public HashMap<Player, EntityDamageEvent.DamageCause> getIgnoreHits() { return ignoreHits; }
+    public JRegisterer getRegisterer() {
+        return managerInstance;
+    }
 
-    public HashMap<EventPriority, RegisteredListener> getQuickEventHandlers() { return quickEventHandlers; }
-    public HashMap<UUID, JSignRegister> getSigns() { return signWaits; }
+    public InfoMenu getInfoMenu() {
+        return infoMenu;
+    }
 
-    public List<JSkin> getSkinsStorage() { return playerSkinsStorage; }
-    public List<String> getSkinsToDownload() { return headsToDownload; }
+    public LabyService getLabyService() {
+        return labyService;
+    }
+
+    public static ScheduledExecutorService getPrivateScheduler() {
+        return instance.executor;
+    }
+
+    public HashMap<Player, EntityDamageEvent.DamageCause> getIgnoreHits() {
+        return ignoreHits;
+    }
+
+    public HashMap<EventPriority, RegisteredListener> getQuickEventHandlers() {
+        return quickEventHandlers;
+    }
+
+    public HashMap<UUID, JSignRegister> getSigns() {
+        return signWaits;
+    }
+
+    public List<JSkin> getSkinsStorage() {
+        return playerSkinsStorage;
+    }
+
+    public List<String> getSkinsToDownload() {
+        return headsToDownload;
+    }
 }
