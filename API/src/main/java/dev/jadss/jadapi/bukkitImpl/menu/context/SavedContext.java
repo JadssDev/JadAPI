@@ -2,7 +2,6 @@ package dev.jadss.jadapi.bukkitImpl.menu.context;
 
 import dev.jadss.jadapi.bukkitImpl.item.AbstractInventory;
 import dev.jadss.jadapi.bukkitImpl.item.AbstractItemStack;
-import dev.jadss.jadapi.bukkitImpl.menu.context.Context;
 
 import java.util.Map;
 
