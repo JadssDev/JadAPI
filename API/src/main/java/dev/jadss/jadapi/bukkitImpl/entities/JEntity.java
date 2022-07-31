@@ -1,6 +1,7 @@
 package dev.jadss.jadapi.bukkitImpl.entities;
 
 import de.tr7zw.changeme.nbtapi.NBTEntity;
+import dev.jadss.jadapi.annotations.ForChange;
 import dev.jadss.jadapi.bukkitImpl.misc.JWorld;
 import dev.jadss.jadapi.exceptions.JException;
 import org.bukkit.ChatColor;
@@ -14,6 +15,7 @@ import java.util.UUID;
  * A JEntity is like a Bukkit entity but with <b>More methods</b>!
  * <h1>Note: </h1> <b>- JEntity cannot be created using a player</b>
  */
+@ForChange(isMajor = true, expectedVersionForChange = "1.24.1", reason = "Feature more methods and complete rewrite.")
 public class JEntity {
 
     protected final Entity entity;
