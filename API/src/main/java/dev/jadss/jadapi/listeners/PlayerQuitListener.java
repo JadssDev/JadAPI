@@ -12,7 +12,9 @@ public class PlayerQuitListener implements Listener {
 
     @EventHandler
     public void onQuit(PlayerQuitEvent e) {
-        for(JHologram holo : JadAPI.getInstance().getInformationManager().getHolograms()) holo.getPlayersShown().remove(new JPlayer(e.getPlayer()));
+        for (JHologram holo : JadAPI.getInstance().getInformationManager().getHolograms()) {
+            holo.getPlayersShown().remove(new JPlayer(e.getPlayer()));
+        }
 
         JadAPI.getInstance().getSigns().remove(e.getPlayer().getUniqueId());
 
