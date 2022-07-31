@@ -2,6 +2,7 @@ package dev.jadss.jadapi.interfaces.managing;
 
 import dev.jadss.jadapi.bukkitImpl.enchantments.EnchantmentInstance;
 import dev.jadss.jadapi.bukkitImpl.enchantments.JEnchantmentInfo;
+import dev.jadss.jadapi.bukkitImpl.menu.AbstractMenu;
 import dev.jadss.jadapi.exceptions.JException;
 import dev.jadss.jadapi.management.JPacketHook;
 import dev.jadss.jadapi.management.JQuickEvent;
@@ -52,4 +53,17 @@ public interface JRegisterer {
      * @param packetHook the PacketHook to unregister!
      */
     void unregisterPacketHook(JPacketHook packetHook);
+
+    /**
+     * Register a Menu!
+     * @param menu the Menu to register.
+     * @return The Menu specified.
+     */
+    <A extends AbstractMenu<?, ?, ?>> A registerMenu(A menu);
+
+    /**
+     * Unregister a Menu.
+     * @param menu the Menu to unregister!
+     */
+    <A extends AbstractMenu<?, ?, ?>> void unregisterMenu(A menu);
 }

@@ -1,5 +1,6 @@
 package dev.jadss.jadapi.interfaces.managing;
 
+import dev.jadss.jadapi.bukkitImpl.menu.AbstractMenu;
 import dev.jadss.jadapi.bukkitImpl.misc.JHologram;
 import dev.jadss.jadapi.interfaces.other.PacketListener;
 import dev.jadss.jadapi.management.JPacketHook;
@@ -67,6 +68,12 @@ public interface JInformationManager {
     List<JPacketHook> getPacketHooks();
 
     /**
+     * Get the Menus we have registered so far.
+     * @return A freshly created {@link List} with the Menus.
+     */
+    List<AbstractMenu<?, ?, ?>> getMenus();
+
+    /**
      * Get the Holograms created.
      * @return A freshly created {@link List} with Holograms.
      */
@@ -94,7 +101,6 @@ public interface JInformationManager {
     void removePacketListener(PacketListener<?> listener);
 
 
-
     //Others
 
     /**
@@ -102,6 +108,4 @@ public interface JInformationManager {
      * @return the Uptime as Long!
      */
     long getUptime();
-
-
 }
