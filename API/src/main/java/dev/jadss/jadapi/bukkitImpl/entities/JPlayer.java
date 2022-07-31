@@ -3,23 +3,25 @@ package dev.jadss.jadapi.bukkitImpl.entities;
 import dev.jadss.jadapi.JadAPI;
 import dev.jadss.jadapi.annotations.ForChange;
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
-import dev.jadss.jadapi.bukkitImpl.item.JInventory;
+import dev.jadss.jadapi.bukkitImpl.item.AbstractInventory;
 import dev.jadss.jadapi.bukkitImpl.item.JMaterial;
 import dev.jadss.jadapi.bukkitImpl.misc.JScoreboard;
 import dev.jadss.jadapi.bukkitImpl.misc.JSender;
 import dev.jadss.jadapi.bukkitImpl.sub.JSignRegister;
 import dev.jadss.jadapi.exceptions.JException;
-import dev.jadss.jadapi.interfaces.inventory.JInventoryAbstract;
 import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.enums.EnumChatFormat;
 import dev.jadss.jadapi.management.nms.interfaces.DefinedPacket;
 import dev.jadss.jadapi.management.nms.objects.chat.IChatBaseComponent;
 import dev.jadss.jadapi.management.nms.objects.other.ScoreboardTeam;
 import dev.jadss.jadapi.management.nms.objects.world.block.IBlockData;
+import dev.jadss.jadapi.management.nms.objects.world.entities.EntityPlayer;
 import dev.jadss.jadapi.management.nms.objects.world.entities.tile.TileEntitySign;
 import dev.jadss.jadapi.management.nms.objects.world.positions.BlockPosition;
 import dev.jadss.jadapi.management.nms.packets.*;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JMethodReflector;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -41,6 +43,7 @@ import java.util.*;
  * Represents a player in the JadAPI, includes <b>EXTRA EXTRA</b> functionality bukkit has not yet provided or did not provide in early versions.
  */
 @SuppressWarnings("all")
+@ForChange(isMajor = true, expectedVersionForChange = "1.24.1", reason = "Feature more methods and complete rewrite.")
 public final class JPlayer {
 
     //Thanks, NameTagEdit.
@@ -376,7 +379,7 @@ public final class JPlayer {
             for (Player player : players)
                 this.player.showPlayer(player);
         } else {
-            JReflection.executeMethod(JReflection.getReflectionClass("org.bukkit.entity.Player"), "showPlayer", this.player, new Class[]{Plugin.class, Player.class}, JadAPI.getInstance(), player);
+            JMethodReflector.executeMethod(JClassReflector.getClass("org.bukkit.entity.Player"), "showPlayer", new Class[]{Plugin.class, Player.class}, this.player, new Object[]{JadAPI.getInstance(), player});
         }
 
         return this;
@@ -397,7 +400,7 @@ public final class JPlayer {
             for (Player player : players)
                 this.player.hidePlayer(player);
         } else {
-            JReflection.executeMethod(JReflection.getReflectionClass("org.bukkit.entity.Player"), "hidePlayer", this.player, new Class[]{Plugin.class, Player.class}, JadAPI.getInstance(), player);
+            JMethodReflector.executeMethod(JClassReflector.getClass("org.bukkit.entity.Player"), "hidePlayer", new Class[]{Plugin.class, Player.class}, this.player, new Object[]{JadAPI.getInstance(), player});
         }
 
         return this;
@@ -417,7 +420,7 @@ public final class JPlayer {
                 this.player.hidePlayer(player);
         } else {
             for (Player player : players)
-                JReflection.executeMethod(JReflection.getReflectionClass("org.bukkit.entity.Player"), "hidePlayer", this.player, new Class[]{Plugin.class, Player.class}, JadAPI.getInstance(), player);
+                JMethodReflector.executeMethod(JClassReflector.getClass("org.bukkit.entity.Player"), "hidePlayer", new Class[]{Plugin.class, Player.class}, this.player, new Object[]{JadAPI.getInstance(), player});
         }
         return this;
     }
@@ -436,7 +439,7 @@ public final class JPlayer {
                 this.player.showPlayer(player);
         } else {
             for (Player player : players)
-                JReflection.executeMethod(JReflection.getReflectionClass("org.bukkit.entity.Player"), "showPlayer", this.player, new Class[]{Plugin.class, Player.class}, JadAPI.getInstance(), player);
+                JMethodReflector.executeMethod(JClassReflector.getClass("org.bukkit.entity.Player"), "showPlayer", new Class[]{Plugin.class, Player.class}, this.player, new Object[]{JadAPI.getInstance(), player});
         }
         return this;
     }
@@ -452,7 +455,7 @@ public final class JPlayer {
                 this.player.hidePlayer(player);
         } else {
             for (Player player : Bukkit.getOnlinePlayers())
-                JReflection.executeMethod(JReflection.getReflectionClass("org.bukkit.entity.Player"), "hidePlayer", this.player, new Class[]{Plugin.class, Player.class}, JadAPI.getInstance(), player);
+                JMethodReflector.executeMethod(JClassReflector.getClass("org.bukkit.entity.Player"), "hidePlayer", new Class[]{Plugin.class, Player.class}, this.player, new Object[]{JadAPI.getInstance(), player});
         }
 
         return this;
@@ -469,7 +472,7 @@ public final class JPlayer {
                 this.player.showPlayer(player);
         } else {
             for (Player player : Bukkit.getOnlinePlayers())
-                JReflection.executeMethod(JReflection.getReflectionClass("org.bukkit.entity.Player"), "showPlayer", this.player, new Class[]{Plugin.class, Player.class}, JadAPI.getInstance(), player);
+                JMethodReflector.executeMethod(JClassReflector.getClass("org.bukkit.entity.Player"), "showPlayer", new Class[]{Plugin.class, Player.class}, this.player, new Object[]{JadAPI.getInstance(), player});
         }
         return this;
     }
@@ -482,18 +485,22 @@ public final class JPlayer {
      * @throws JException if packet == null || packet DOESN'T extends Packet @ NMS.
      */
     public JPlayer sendPacket(Object packet) {
-        if (packet == null) throw new JException(JException.Reason.VALUE_IS_NULL);
-
-        final Class<?> packetClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.protocol" : "server." + JReflection.getNMSVersion()) + ".Packet");
-
-        if (JReflection.cast(packetClass, packet) == null)
+        //Checks
+        if (packet == null)
+            throw new JException(JException.Reason.VALUE_IS_NULL);
+        if (JClassReflector.cast(DefinedPacket.PACKET, packet) == null)
             throw new JException(JException.Reason.NOT_A_PACKET);
 
-        final Class<?> playerConnectionClass = JReflection.getReflectionClass("net.minecraft.server." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network" : JReflection.getNMSVersion()) + ".PlayerConnection");
-        final Class<?> entityPlayerClass = JReflection.getReflectionClass("net.minecraft.server." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "level" : JReflection.getNMSVersion()) + ".EntityPlayer");
+        //End.
 
-        Object playerConnection = JReflection.getFieldObject(entityPlayerClass, playerConnectionClass,
-                JReflection.executeMethod(JReflection.getReflectionClass("org.bukkit.craftbukkit." + JReflection.getNMSVersion() + ".entity.CraftPlayer"), "getHandle", this.player, new Class[]{}));
+        final Class<?> playerConnectionClass = JClassReflector.getClass("net.minecraft.server." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network" : NMS.getNMSVersion()) + ".PlayerConnection");
+
+        Object handle = JMethodReflector.executeMethod(JClassReflector.getClass("org.bukkit.craftbukkit." + NMS.getNMSVersion() + ".entity.CraftPlayer"), "getHandle", new Class[]{}, this.player, null);
+
+
+        Object playerConnection = JFieldReflector.getObjectFromUnspecificField(EntityPlayer.ENTITY_PLAYER, playerConnectionClass, handle);
+
+
         if (playerConnection == null) {
             if (JadAPI.getInstance().getDebug().doMiscDebug()) {
                 Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &3Player Connection &eis null! Couldn't send packet."));
@@ -502,7 +509,8 @@ public final class JPlayer {
             return this;
         }
 
-        JReflection.executeMethod(playerConnectionClass, new Class[] { NMS.packetClass }, playerConnection, null, (i) -> 0, packet);
+
+        JMethodReflector.executeUnspecificMethod(playerConnectionClass, new Class[]{DefinedPacket.PACKET}, void.class, playerConnection, new Object[]{packet});
         if (JadAPI.getInstance().getDebug().doMiscDebug())
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eSent a &3&lPacket &eto &b" + this.player.getName() + "&e. Type -> " + packet.getClass().getSimpleName() + "!"));
         return this;
@@ -571,7 +579,7 @@ public final class JPlayer {
 
         IChatBaseComponent ichatComponent = new IChatBaseComponent(ChatColor.translateAlternateColorCodes('&', message), false, "");
 
-        OutChatTypePacket chatPacket = new OutChatTypePacket(OutChatTypePacket.ChatMessageType.ACTION_BAR, new UUID(0L, 0L), ichatComponent, 0, 0, 0);
+        OutChatPacket chatPacket = new OutChatPacket(OutChatPacket.Type.ACTION_BAR, ichatComponent, new OutChatPacket.ChatSender(new UUID(0L, 0L), null, null), null, null);
 
         this.sendPacket(chatPacket.build());
 
@@ -591,50 +599,20 @@ public final class JPlayer {
     public JPlayer sendTitle(String title, String subtitle, int fadeIn, int stay, int fadeOut) {
         if (title == null && subtitle == null) throw new JException(JException.Reason.BOTH_ARE_NULL);
 
+        List<DefinedPacket> packets = new ArrayList<>();
 
         if (title != null) {
-            OutChatTypePacket titlePacket = new OutChatTypePacket(OutChatTypePacket.TitleMessageType.TITLE, null, new IChatBaseComponent(ChatColor.translateAlternateColorCodes('&', title), false, ""), 0, 0, 0);
-            sendPacket(titlePacket.build());
+            packets.add(new OutTitlePacket(OutTitlePacket.Type.TITLE, new IChatBaseComponent(title, false, null), -1, -1, -1));
         }
         if (subtitle != null) {
-            OutChatTypePacket subtitlePacket = new OutChatTypePacket(OutChatTypePacket.TitleMessageType.SUBTITLE, null, new IChatBaseComponent(ChatColor.translateAlternateColorCodes('&', subtitle), false, ""), 0, 0, 0);
-            sendPacket(subtitlePacket.build());
+            packets.add(new OutTitlePacket(OutTitlePacket.Type.SUBTITLE, new IChatBaseComponent(subtitle, false, null), -1, -1, -1));
         }
 
-        OutChatTypePacket timingsPacket = new OutChatTypePacket(OutChatTypePacket.TitleMessageType.TIMINGS, null, null, fadeIn, stay, fadeOut);
-        sendPacket(timingsPacket.build());
+        DefinedPacket timingsPacket = new OutTitlePacket(OutTitlePacket.Type.TIMES, null, fadeIn, stay, fadeOut);
 
-//        if(title != null) {
-//            Object iChatComponent = new MinecraftIChatBaseComponent(title).build();
-//            Enum enumTitleAction = null;
-//            for(Enum e : (Enum[]) JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".PacketPlayOutTitle$EnumTitleAction").getEnumConstants()) if(e.name().equals("TIMES")) enumTitleAction = e;
-//            Object packet = JReflection.executeConstructor(JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".PacketPlayOutTitle"),
-//                    new Class[] { JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".PacketPlayOutTitle$EnumTitleAction"), JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".IChatBaseComponent"), int.class, int.class, int.class },
-//                    enumTitleAction, iChatComponent, fadeIn, stay, fadeOut);
-//            this.sendPacket(packet);
-//
-//            for(Enum e : (Enum[]) JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".PacketPlayOutTitle$EnumTitleAction").getEnumConstants()) if(e.name().equals("TITLE")) enumTitleAction = e;
-//            packet = JReflection.executeConstructor(JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".PacketPlayOutTitle"),
-//                    new Class[] { JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".PacketPlayOutTitle$EnumTitleAction"), JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".IChatBaseComponent"), int.class, int.class, int.class },
-//                    enumTitleAction, iChatComponent, fadeIn, stay, fadeOut);
-//            this.sendPacket(packet);
-//        }
-//
-//        if(subtitle != null) {
-//            Object iChatComponent = new MinecraftIChatBaseComponent(subtitle).build();
-//            Enum enumTitleAction = null;
-//            for(Enum e : (Enum[]) JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".PacketPlayOutTitle$EnumTitleAction").getEnumConstants()) if(e.name().equals("TIMES")) enumTitleAction = e;
-//            Object packet = JReflection.executeConstructor(JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".PacketPlayOutTitle"),
-//                    new Class[] { JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".PacketPlayOutTitle$EnumTitleAction"), JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".IChatBaseComponent"), int.class, int.class, int.class },
-//                    enumTitleAction, iChatComponent, fadeIn, stay, fadeOut);
-//            this.sendPacket(packet);
-//
-//            for(Enum e : (Enum[]) JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".PacketPlayOutTitle$EnumTitleAction").getEnumConstants()) if(e.name().equals("SUBTITLE")) enumTitleAction = e;
-//            packet = JReflection.executeConstructor(JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".PacketPlayOutTitle"),
-//                    new Class[] { JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".PacketPlayOutTitle$EnumTitleAction"), JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".IChatBaseComponent"), int.class, int.class, int.class },
-//                    enumTitleAction, iChatComponent, fadeIn, stay, fadeOut);
-//            this.sendPacket(packet);
-//        }
+        this.sendPacket(timingsPacket.build());
+        packets.stream().map(DefinedPacket::build).forEach(this::sendPacket);
+
         return this;
     }
 
@@ -711,7 +689,7 @@ public final class JPlayer {
         Object openSignEditor = new OutOpenSignEditor(position).build();
 
         //Before sending packets.
-        JReflection.setFieldObject(JSignRegister.class, Location.class, register, location.clone());
+        JFieldReflector.setObjectToUnspecificField(JSignRegister.class, Location.class, register, location.clone());
         JadAPI.getInstance().getSigns().put(this.player.getUniqueId(), register);
 
         //Send update packets.
@@ -926,20 +904,8 @@ public final class JPlayer {
      * @param inventory The inventory to open.
      * @return itself.
      */
-    public JPlayer openInventory(JInventory inventory) {
-        this.player.openInventory(inventory.getInventory());
-
-        return this;
-    }
-
-    /**
-     * Open an inventory on the player.
-     *
-     * @param jInventoryAbstract The inventory to open.
-     * @return itself.
-     */
-    public JPlayer openInventory(JInventoryAbstract jInventoryAbstract) {
-        this.player.openInventory(new JInventory(jInventoryAbstract).getInventory());
+    public JPlayer openInventory(AbstractInventory<?, ?> inventory) {
+        this.player.openInventory(inventory.getBukkitInventory());
 
         return this;
     }
@@ -1025,6 +991,7 @@ public final class JPlayer {
     /**
      * Checks if this Player Object is equals to another Object
      * <p><b>This Object can be compared against {@link JPlayer}, {@link OfflinePlayer} and {@link UUID} objects!</b></p>
+     *
      * @param object The object to compare against.
      * @return If the comparation is equals, ig.
      */
@@ -1046,6 +1013,7 @@ public final class JPlayer {
 
     /**
      * Get all the players currently joined on thsi Spigot!
+     *
      * @return A list of all the players in this spigot server!
      */
     public static List<JPlayer> getJPlayers() {
