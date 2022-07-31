@@ -6,18 +6,19 @@ import org.bukkit.ChatColor;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.RegisteredListener;
-import org.bukkit.scheduler.BukkitRunnable;
 
-public class EventHandlersUpdater extends BukkitRunnable {
+public class EventHandlersUpdater extends Thread {
 
     @Override
     public void run() {
-        for (HandlerList handler : HandlerList.getHandlerLists()) { // for every event.
-            for (EventPriority priority : JadAPI.getInstance().getQuickEventHandlers().keySet()) { // for every priority JadAPI has.
-                RegisteredListener listener = getListener(priority);
-                if (!hasHandler(handler.getRegisteredListeners(), listener)) {
-                    log(handler);
-                    handler.register(getListener(priority));
+        while (true) {
+            for (HandlerList handler : HandlerList.getHandlerLists()) { // for every event.
+                for (EventPriority priority : JadAPI.getInstance().getQuickEventHandlers().keySet()) { // for every priority JadAPI has.
+                    RegisteredListener listener = getListener(priority);
+                    if (!hasHandler(handler.getRegisteredListeners(), listener)) {
+                        log(handler);
+                        handler.register(getListener(priority));
+                    }
                 }
             }
         }
