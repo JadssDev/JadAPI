@@ -5,6 +5,7 @@ import dev.jadss.jadapi.bukkitImpl.enchantments.EnchantmentInstance;
 import dev.jadss.jadapi.bukkitImpl.enchantments.JEnchantmentInfo;
 import dev.jadss.jadapi.bukkitImpl.entities.JPlayer;
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.bukkitImpl.menu.AbstractMenu;
 import dev.jadss.jadapi.bukkitImpl.misc.JHologram;
 import dev.jadss.jadapi.exceptions.JException;
 import dev.jadss.jadapi.interfaces.managing.JInformationManager;
@@ -13,7 +14,12 @@ import dev.jadss.jadapi.interfaces.managing.JPacketHooker;
 import dev.jadss.jadapi.interfaces.managing.JRegisterer;
 import dev.jadss.jadapi.interfaces.other.PacketListener;
 import dev.jadss.jadapi.management.nms.NMS;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.management.nms.Others;
+import dev.jadss.jadapi.management.nms.objects.world.entities.EntityPlayer;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JConstructorReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JMethodReflector;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.enchantments.Enchantment;
@@ -23,7 +29,6 @@ import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @SuppressWarnings("all")
@@ -39,6 +44,7 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
 
     private List<JQuickEvent<?>> quickEvents = new ArrayList<>();
     private List<JPacketHook> packetHooks = new ArrayList<>();
+    private List<AbstractMenu<?, ?, ?>> menus = new ArrayList<>();
     private List<JHologram> holograms = new ArrayList<>();
 
     private List<PacketListener<?>> specifiedPacketListener = new ArrayList<>();
@@ -53,6 +59,11 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
 
     public List<JPacketHook> getPacketHooks() {
         return new ArrayList<>(packetHooks);
+    }
+
+    @Override
+    public List<AbstractMenu<?, ?, ?>> getMenus() {
+        return menus;
     }
 
     public List<JHologram> getHolograms() {
@@ -105,14 +116,6 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
     //InformationManager finish.
 
 
-
-
-
-
-
-
-
-
     //PacketHooker type of job.
     public EventResult callPacketHooks(Object packet, JPlayer player, boolean cancellable, boolean editable) {
         PacketEvent packetEvent = new PacketEvent(!Bukkit.getServer().isPrimaryThread(), packet, player, cancellable, editable);
@@ -122,7 +125,7 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
                 packetHook.run(packetEvent);
             } else {
                 for (Class<?> classy : packetHook.getHookedPackets()) {
-                    if (classy.equals(packet.getClass())) {
+                    if (packet.getClass().equals(classy)) {
                         if (packetHook.getHookedPlayer() == null || packetHook.getHookedPlayer().equals(player)) {
                             packetHook.run(packetEvent);
                             if (packetEvent.getResult() != null) {
@@ -151,7 +154,7 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
             Field field = PacketEvent.class.getDeclaredField("result");
             field.setAccessible(true);
             ((CompletableFuture<EventResult>) field.get(packetEvent)).complete(result);
-        } catch(NoSuchFieldException | IllegalAccessException ex) {
+        } catch (NoSuchFieldException | IllegalAccessException ex) {
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eError attempting to complete Event!"));
             ex.printStackTrace();
         }
@@ -177,7 +180,9 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
         boolean success = injectInternal(player.getPlayer(), true);
 
         if (success) {
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &bInjected &3&lChannel &eto &3" + player.getPlayer().getName() + "&e!"));
+            if (JadAPI.getInstance().getDebug().doMiscDebug())
+                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &bInjected &3&lChannel &eto &3" + player.getPlayer().getName() + "&e!"));
+
             return;
         }
 
@@ -194,21 +199,22 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
 
     private boolean isLegacy = JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7);
 
-    private Class<?> legacyChannelClass = JReflection.getReflectionClass("net.minecraft.util.io.netty.channel.Channel");
-    private Class<?> legacyChannelHandlerClass = JReflection.getReflectionClass("net.minecraft.util.io.netty.channel.ChannelHandler");
-    private Class<?> legacyChannelPipelineClass = JReflection.getReflectionClass("net.minecraft.util.io.netty.channel.ChannelPipeline");
-    private Class<?> legacyChannelFutureClass = JReflection.getReflectionClass("net.minecraft.util.io.netty.channel.ChannelFuture");
-    private Class<?> legacyChannelInitializerClass = JReflection.getReflectionClass("net.minecraft.util.io.netty.channel.ChannelInitializer");
+    private Class<?> legacyChannelClass = JClassReflector.getClass("net.minecraft.util.io.netty.channel.Channel");
+    private Class<?> legacyChannelHandlerClass = JClassReflector.getClass("net.minecraft.util.io.netty.channel.ChannelHandler");
+    private Class<?> legacyChannelPipelineClass = JClassReflector.getClass("net.minecraft.util.io.netty.channel.ChannelPipeline");
+    private Class<?> legacyChannelFutureClass = JClassReflector.getClass("net.minecraft.util.io.netty.channel.ChannelFuture");
+    private Class<?> legacyChannelInitializerClass = JClassReflector.getClass("net.minecraft.util.io.netty.channel.ChannelInitializer");
 
-    private Class<?> newerChannelClass = JReflection.getReflectionClass("io.netty.channel.Channel");
-    private Class<?> newerChannelHandlerClass = JReflection.getReflectionClass("io.netty.channel.ChannelHandler");
-    private Class<?> newerChannelPipelineClass = JReflection.getReflectionClass("io.netty.channel.ChannelPipeline");
-    private Class<?> newerChannelFutureClass = JReflection.getReflectionClass("io.netty.channel.ChannelFuture");
-    private Class<?> newerChannelInitializerClass = JReflection.getReflectionClass("io.netty.channel.ChannelInitializer");
+    private Class<?> newerChannelClass = JClassReflector.getClass("io.netty.channel.Channel");
+    private Class<?> newerChannelHandlerClass = JClassReflector.getClass("io.netty.channel.ChannelHandler");
+    private Class<?> newerChannelPipelineClass = JClassReflector.getClass("io.netty.channel.ChannelPipeline");
+    private Class<?> newerChannelFutureClass = JClassReflector.getClass("io.netty.channel.ChannelFuture");
+    private Class<?> newerChannelInitializerClass = JClassReflector.getClass("io.netty.channel.ChannelInitializer");
 
     private boolean injectInternal(Player player, boolean log) {
-        if (log)
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &bInjecting &3&lChannel &eto &3" + player.getPlayer().getName() + "&e!"));
+        if (JadAPI.getInstance().getDebug().doMiscDebug())
+            if (log)
+                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &bInjecting &3&lChannel &eto &3" + player.getPlayer().getName() + "&e!"));
 
         Object channel = channelLookup.get(player.getName());
 
@@ -216,17 +222,17 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
             if (log)
                 Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eCould not &bacquire &ecached &3&lChannel &efor &3" + player.getPlayer().getName() + "&e! Acquiring it now!"));
 
-            Object entityPlayer = JReflection.executeMethod(JReflection.getReflectionClass("org.bukkit.craftbukkit." + JReflection.getNMSVersion() + ".entity.CraftPlayer"), "getHandle", player, new Class[]{});
+            Object entityPlayer = JMethodReflector.executeMethod(JClassReflector.getClass("org.bukkit.craftbukkit." + NMS.getNMSVersion() + ".entity.CraftPlayer"), "getHandle", player, new Class[]{});
             if (entityPlayer == null) return false;
-            Object playerConnection = JReflection.getFieldObject(entityPlayer.getClass(), JReflection.getReflectionClass("net.minecraft.server." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network" : JReflection.getNMSVersion()) + ".PlayerConnection"), entityPlayer);
+            Object playerConnection = JFieldReflector.getObjectFromUnspecificField(EntityPlayer.ENTITY_PLAYER, Others.PLAYER_CONNECTION_CLASS, entityPlayer);
             if (playerConnection == null) return false;
-            Object networkManager = JReflection.getFieldObject(playerConnection.getClass(), JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network" : "server." + JReflection.getNMSVersion()) + ".NetworkManager"), playerConnection);
+            Object networkManager = JFieldReflector.getObjectFromUnspecificField(playerConnection.getClass(), JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network" : "server." + NMS.getNMSVersion()) + ".NetworkManager"), playerConnection);
             if (networkManager == null) return false;
 
             if (isLegacy)
-                channel = JReflection.getFieldObject(networkManager.getClass(), legacyChannelClass, networkManager);
+                channel = JFieldReflector.getObjectFromUnspecificField(networkManager.getClass(), legacyChannelClass, networkManager);
             else
-                channel = JReflection.getFieldObject(networkManager.getClass(), newerChannelClass, networkManager);
+                channel = JFieldReflector.getObjectFromUnspecificField(networkManager.getClass(), newerChannelClass, networkManager);
 
             if (channel == null) {
                 if (log)
@@ -238,20 +244,28 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
                 Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eSuccessfully acquired &3&lChannel&e."));
         } else if (log) {
             channelLookup.remove(player.getName());
-            Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eFound &bcached &3&lChannel&e!"));
+            if (JadAPI.getInstance().getDebug().doMiscDebug())
+                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eFound &bcached &3&lChannel&e!"));
         }
 
-        Object pipeline = JReflection.executeMethod((isLegacy ? legacyChannelClass : newerChannelClass), "pipeline", channel, new Class[]{});
+        Object pipeline = JMethodReflector.executeMethod((isLegacy ? legacyChannelClass : newerChannelClass), "pipeline", new Class[]{}, channel, new Object[]{});
         Class<?> pipelineClass = (isLegacy ? legacyChannelPipelineClass : newerChannelPipelineClass);
-        if (JReflection.executeMethod(pipelineClass, "get", pipeline, new Class[]{String.class}, "JadAPI_Player_Handler") != null)
+        if (JMethodReflector.executeMethod(pipelineClass, "get", new Class[]{String.class}, pipeline, new Object[]{"JadAPI_Player_Handler"}) != null)
             return true;
 
         { //register. (String, String, ChannelHandler) ((Add Handler))
-            JReflection.executeMethod(isLegacy ? legacyChannelPipelineClass : newerChannelPipelineClass, "addBefore", pipeline,
+            Class<?> baseClass = isLegacy ? legacyChannelPipelineClass : newerChannelPipelineClass;
+            Class<?> channelClass = isLegacy ? JClassReflector.getClass("dev.jadss.jadapi.management.channel.legacy.JLegacyChannelHandler") :
+                    JClassReflector.getClass("dev.jadss.jadapi.management.channel.newer.JChannelHandler");
+            JMethodReflector.executeMethod(baseClass, "addBefore",
                     new Class[]{String.class, String.class, isLegacy ? legacyChannelHandlerClass : newerChannelHandlerClass},
-                    "packet_handler", "JadAPI_Player_Handler",
-                    JReflection.executeConstructor(isLegacy ? JReflection.getReflectionClass("dev.jadss.jadapi.management.channel.legacy.JLegacyChannelHandler") : JReflection.getReflectionClass("dev.jadss.jadapi.management.channel.newer.JChannelHandler"),
-                            new Class[]{int.class, JPlayer.class}, new Object[]{1, new JPlayer(player)}));
+                    pipeline,
+                    new Object[]{
+                            "packet_handler",
+                            "JadAPI_Player_Handler",
+                            JConstructorReflector.executeConstructor(channelClass,
+                                    new Class[]{int.class, JPlayer.class}, new Object[]{1, new JPlayer(player)})}
+            );
 
         }
 
@@ -261,11 +275,6 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
     //private util to inject.
 
     //JManagement finish.
-
-
-
-
-
 
 
     //UTILS
@@ -278,7 +287,7 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
         if (instantiated) throw new JException(JException.Reason.NOT_AVAILABLE);
         instantiated = true;
 
-        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&eInitializing &3&lManager&e! &b(CodeName: JPacketHooker, JInformationManager, JRegisterer, JManagement"));
+        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&eInitializing &3&lManager&e! Please wait..."));
 
         if (JadAPI.serverConnectionEnabled) {
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&eInitializing &3&lJadAPI Servers &aconnection&e! (it doesn't connect, it's disabled)"));
@@ -299,15 +308,15 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
         if (info.getEnchantmentOwner() != null && info.getEnchantmentOwner().isRegistered()) {
             EnchantmentInstance instance = null;
             if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_9)) {
-                instance = (EnchantmentInstance) JReflection.executeConstructor(JReflection.getReflectionClass("dev.jadss.jadapi.enchmodules.RevisionOneEnchantment"), new Class[]{JEnchantmentInfo.class}, info);
+                instance = (EnchantmentInstance) JConstructorReflector.executeConstructor(JClassReflector.getClass("dev.jadss.jadapi.enchmodules.RevisionOneEnchantment"), new Class[]{JEnchantmentInfo.class}, info);
             } else if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_10)) {
-                instance = (EnchantmentInstance) JReflection.executeConstructor(JReflection.getReflectionClass("dev.jadss.jadapi.enchmodules.RevisionTwoEnchantment"), new Class[]{JEnchantmentInfo.class}, info);
+                instance = (EnchantmentInstance) JConstructorReflector.executeConstructor(JClassReflector.getClass("dev.jadss.jadapi.enchmodules.RevisionTwoEnchantment"), new Class[]{JEnchantmentInfo.class}, info);
             } else if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_11)) {
-                instance = (EnchantmentInstance) JReflection.executeConstructor(JReflection.getReflectionClass("dev.jadss.jadapi.enchmodules.RevisionThreeEnchantment"), new Class[]{JEnchantmentInfo.class}, info);
+                instance = (EnchantmentInstance) JConstructorReflector.executeConstructor(JClassReflector.getClass("dev.jadss.jadapi.enchmodules.RevisionThreeEnchantment"), new Class[]{JEnchantmentInfo.class}, info);
             } else if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_12)) {
-                instance = (EnchantmentInstance) JReflection.executeConstructor(JReflection.getReflectionClass("dev.jadss.jadapi.enchmodules.RevisionFourEnchantment"), new Class[]{JEnchantmentInfo.class}, info);
+                instance = (EnchantmentInstance) JConstructorReflector.executeConstructor(JClassReflector.getClass("dev.jadss.jadapi.enchmodules.RevisionFourEnchantment"), new Class[]{JEnchantmentInfo.class}, info);
             } else if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13)) {
-                instance = (EnchantmentInstance) JReflection.executeConstructor(JReflection.getReflectionClass("dev.jadss.jadapi.enchmodules.RevisionFiveEnchantment"), new Class[]{JEnchantmentInfo.class}, info);
+                instance = (EnchantmentInstance) JConstructorReflector.executeConstructor(JClassReflector.getClass("dev.jadss.jadapi.enchmodules.RevisionFiveEnchantment"), new Class[]{JEnchantmentInfo.class}, info);
             } else throw new JException(JException.Reason.NOT_AVAILABLE);
             info.getEnchantmentOwner().getEnchantments().add(instance);
             //Register it....
@@ -324,20 +333,21 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
             instance.unregister();
         }
 
-        ((Map<String, Enchantment>) JReflection.getFieldObjectByName(Enchantment.class, "byName", null)).remove(instance.getEnchantmentInformation().getName(), instance.asEnchantment());
+        ((Map<String, Enchantment>) JFieldReflector.getObjectFromField(Enchantment.class, "byName", null)).remove(instance.getEnchantmentInformation().getName(), instance.asEnchantment());
+
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_12)) {
-            ((Map<Integer, Enchantment>) JReflection.getFieldObjectByName(Enchantment.class, "byId", null)).remove(instance.getEnchantmentInformation().getId());
+            ((Map<Integer, Enchantment>) JFieldReflector.getObjectFromField(Enchantment.class, "byId", null)).remove(instance.getEnchantmentInformation().getId());
         } else {
-            Map<?, Enchantment> map = (Map<?, Enchantment>) JReflection.getFieldObjectByName(Enchantment.class, "byKey", null);
-            AtomicReference<Object> nameSpace = null;
-            map.forEach((object, enchantment) -> {
-                if (enchantment.equals(instance.asEnchantment()))
-                    nameSpace.set(object);
-            });
-            if (nameSpace.get() == null) {
-                throw new JException(JException.Reason.SOMETHING_WENT_WRONG);
-            }
-            map.remove(nameSpace);
+            Map<?, Enchantment> map = (Map<?, Enchantment>) JFieldReflector.getObjectFromField(Enchantment.class, "byKey", null);
+
+            Object nameSpacedKey = map.entrySet().stream()
+                    .filter(entry -> entry.getValue() == instance.asEnchantment())
+                    .findFirst().orElse(null);
+
+            if (nameSpacedKey == null)
+                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eCould not find the &3enchantment key &eto &b&lunregister&e!"));
+
+            map.remove(nameSpacedKey);
         }
     }
 
@@ -387,6 +397,23 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eUnregistered a &3&lPacketEvent&e! &bPackets &e&m->&a " + packetEvent.getHookedPackets().stream().map(c -> c.getSimpleName()).collect(Collectors.joining(", ")) + "&e; &bRegisterer &e&m->&a " + packetEvent.getRegisterer().getJavaPlugin().getName()));
     }
 
+    @Override
+    public <A extends AbstractMenu<?, ?, ?>> A registerMenu(A menu) {
+        if (menu.isRegistered())
+            return menu;
+
+        this.menus.add(menu);
+        menu.getRegisterer().getMenus().add(menu);
+
+        return menu;
+    }
+
+    @Override
+    public <A extends AbstractMenu<?, ?, ?>> void unregisterMenu(A menu) {
+        this.menus.remove(menu);
+        menu.getRegisterer().getMenus().remove(menu);
+    }
+
 
     //Other.
 
@@ -404,11 +431,11 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
                     Object minecraftServer = NMS.getMinecraftServer();
                     if (minecraftServer == null) continue;
 
-                    Object serverConnection = JReflection.getFieldObject(JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "server" : "server." + JReflection.getNMSVersion()) + ".MinecraftServer"),
-                            JReflection.getReflectionClass("net.minecraft.server." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network" : JReflection.getNMSVersion()) + ".ServerConnection"), minecraftServer);
+                    Object serverConnection = JFieldReflector.getObjectFromUnspecificField(JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "server" : "server." + NMS.getNMSVersion()) + ".MinecraftServer"),
+                            JClassReflector.getClass("net.minecraft.server." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network" : NMS.getNMSVersion()) + ".ServerConnection"), minecraftServer);
                     if (serverConnection == null) continue;
 
-                    List<Object> listObjects = (List<Object>) JReflection.getFieldObject(serverConnection.getClass(), List.class, serverConnection);
+                    List<Object> listObjects = (List<Object>) JFieldReflector.getObjectFromUnspecificField(serverConnection.getClass(), List.class, serverConnection);
                     if (listObjects == null) continue;
 
                     if (listObjects.size() == 0) continue;
@@ -416,11 +443,11 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
                     Thread thread = new Thread(() -> {
                         for (Object channelFuture : listObjects) {
                             try {
-                                Object channel = JReflection.executeMethod(isLegacy ? legacyChannelFutureClass : newerChannelFutureClass, "channel", channelFuture, new Class[]{});
-                                Object pipeline = JReflection.executeMethod(isLegacy ? legacyChannelClass : newerChannelClass, "pipeline", channel, new Class[]{});
-                                for (String handlerName : (List<String>) JReflection.executeMethod(isLegacy ? legacyChannelPipelineClass : newerChannelPipelineClass, "names", pipeline, new Class[]{})) {
+                                Object channel = JMethodReflector.executeMethod(isLegacy ? legacyChannelFutureClass : newerChannelFutureClass, "channel", new Class[]{}, channelFuture, new Object[]{});
+                                Object pipeline = JMethodReflector.executeMethod(isLegacy ? legacyChannelClass : newerChannelClass, "pipeline", new Class[]{}, channel, new Object[]{});
+                                for (String handlerName : (List<String>) JMethodReflector.executeMethod(isLegacy ? legacyChannelPipelineClass : newerChannelPipelineClass, "names", new Class[]{}, pipeline, new Object[]{})) {
                                     Object bootstrapAcceptor;
-                                    Object handler = JReflection.executeMethod(isLegacy ? legacyChannelPipelineClass : newerChannelPipelineClass, "get", pipeline, new Class[]{String.class}, handlerName);
+                                    Object handler = JMethodReflector.executeMethod(isLegacy ? legacyChannelPipelineClass : newerChannelPipelineClass, "get", new Class[]{String.class}, pipeline, new Object[]{handlerName});
                                     if (handler == null) continue;
 
                                     Field bootstrapAcceptorField = handler.getClass().getDeclaredField("childHandler");
@@ -428,8 +455,8 @@ public final class JManager implements JPacketHooker, JInformationManager, JRegi
                                     bootstrapAcceptorField.get(handler);
                                     bootstrapAcceptor = handler;
 
-                                    Object channelInitializer = JReflection.executeConstructor(
-                                            isLegacy ? JReflection.getReflectionClass("dev.jadss.jadapi.management.channel.legacy.JLegacyChannelInitializer") : JReflection.getReflectionClass("dev.jadss.jadapi.management.channel.newer.JChannelInitializer"),
+                                    Object channelInitializer = JConstructorReflector.executeConstructor(
+                                            isLegacy ? JClassReflector.getClass("dev.jadss.jadapi.management.channel.legacy.JLegacyChannelInitializer") : JClassReflector.getClass("dev.jadss.jadapi.management.channel.newer.JChannelInitializer"),
                                             new Class[]{Object.class}, bootstrapAcceptorField.get(bootstrapAcceptor));
 
                                     for (Player player : Bukkit.getOnlinePlayers())
