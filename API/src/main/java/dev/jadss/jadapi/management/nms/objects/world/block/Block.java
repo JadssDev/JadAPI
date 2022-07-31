@@ -3,14 +3,16 @@ package dev.jadss.jadapi.management.nms.objects.world.block;
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
 import dev.jadss.jadapi.bukkitImpl.item.JMaterial;
 import dev.jadss.jadapi.management.nms.CraftUtils;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.NMSException;
 import dev.jadss.jadapi.management.nms.interfaces.NMSManipulable;
 import dev.jadss.jadapi.management.nms.interfaces.NMSObject;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JMethodReflector;
 
 public class Block implements NMSObject, NMSManipulable, SimpleBlock {
 
-    public static final Class<?> blockClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.level.block" : "server." + JReflection.getNMSVersion()) + ".Block");
+    public static final Class<?> blockClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.level.block" : "server." + NMS.getNMSVersion()) + ".Block");
 
     private final Object block;
     private final byte data;
@@ -38,9 +40,9 @@ public class Block implements NMSObject, NMSManipulable, SimpleBlock {
             throw new NMSException("Block is invalid");
 
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13)) {
-            return JReflection.executeMethod(blockClass, new Class[]{}, block, IBlockData.iBlockDataClass, (i) -> 0);
-        } else { //Note: \/ this uses IBlockData toLegacyData(int); method
-            return JReflection.executeMethod(blockClass, new Class[]{int.class}, block, IBlockData.iBlockDataClass, (i) -> 0, data);
+            return JMethodReflector.executeUnspecificMethod(blockClass, new Class[]{}, IBlockData.iBlockDataClass, block, null);
+        } else { //Note: \/ this uses IBlockData fromLegacyData(int); method //Note: For some reason this stupid method just keeps getting annoying so I just use it's name instead.
+            return JMethodReflector.executeMethod(blockClass, "fromLegacyData", block, new Object[]{data});
         }
     }
 
@@ -48,7 +50,7 @@ public class Block implements NMSObject, NMSManipulable, SimpleBlock {
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13) || JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
             return 0;
         } else {
-            return JReflection.executeMethod(Block.blockClass, new Class[]{IBlockData.iBlockDataClass}, this.block, int.class, (i) -> 0, nmsBlockData).byteValue();
+            return ((Integer) JMethodReflector.executeMethod(Block.blockClass, "toLegacyData", this.block, new Object[]{nmsBlockData})).byteValue();
         }
     }
 
@@ -78,5 +80,13 @@ public class Block implements NMSObject, NMSManipulable, SimpleBlock {
 
     public int getBlockData() {
         return data;
+    }
+
+    @Override
+    public String toString() {
+        return "Block{" +
+                "block=" + this.getMaterial() +
+                ", data=" + data +
+                '}';
     }
 }

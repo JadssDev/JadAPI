@@ -1,9 +1,10 @@
 package dev.jadss.jadapi.management.nms.objects.world.block.state;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.enums.NMSEnum;
 import dev.jadss.jadapi.management.nms.objects.world.block.state.impl.EnumState;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
 
 /**
  * Represents an NMS BlockState which uses Enums!
@@ -11,7 +12,7 @@ import dev.jadss.jadapi.utils.JReflection;
  */
 public interface EnumBlockState<N extends NMSEnum> extends StateType<N> {
 
-    public static final Class<?> blockStateEnumClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.level.block.state.properties" : "server." + JReflection.getNMSVersion()) + ".BlockStateEnum");
+    public static final Class<?> blockStateEnumClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.level.block.state.properties" : "server." + NMS.getNMSVersion()) + ".BlockStateEnum");
 
     /**
      * Create an instance of a BlockState.

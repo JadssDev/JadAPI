@@ -1,17 +1,20 @@
 package dev.jadss.jadapi.management.nms.objects.world.positions;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.NMSException;
 import dev.jadss.jadapi.management.nms.interfaces.NMSBuildable;
 import dev.jadss.jadapi.management.nms.interfaces.NMSCopyable;
 import dev.jadss.jadapi.management.nms.interfaces.NMSObject;
 import dev.jadss.jadapi.management.nms.interfaces.NMSParsable;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JConstructorReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
 
 public class BlockPosition implements NMSObject, NMSBuildable, NMSParsable, NMSCopyable {
 
-    public static final Class<?> blockPositionClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "core" : "server." + JReflection.getNMSVersion()) + ".BlockPosition");
-    public static final Class<?> baseBlockPositionClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "core" : "server." + JReflection.getNMSVersion()) + ".BaseBlockPosition");
+    public static final Class<?> blockPositionClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "core" : "server." + NMS.getNMSVersion()) + ".BlockPosition");
+    public static final Class<?> baseBlockPositionClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "core" : "server." + NMS.getNMSVersion()) + ".BaseBlockPosition");
 
     private double x = 0;
     private double y = 0;
@@ -55,7 +58,7 @@ public class BlockPosition implements NMSObject, NMSBuildable, NMSParsable, NMSC
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7))
             throw new NMSException("This cannot be built in the current version!");
 
-        return JReflection.executeConstructor(blockPositionClass, new Class[]{double.class, double.class, double.class}, this.x, this.y, this.z);
+        return JConstructorReflector.executeConstructor(blockPositionClass, new Class[]{double.class, double.class, double.class}, this.x, this.y, this.z);
     }
 
     @Override
@@ -68,9 +71,9 @@ public class BlockPosition implements NMSObject, NMSBuildable, NMSParsable, NMSC
         if (object == null) return;
         if (!canParse(object)) throw new NMSException("Cannot parse this object.");
 
-        this.x = JReflection.getFieldObject(baseBlockPositionClass, int.class, object, (i) -> 0);
-        this.y = JReflection.getFieldObject(baseBlockPositionClass, int.class, object, (i) -> 1);
-        this.z = JReflection.getFieldObject(baseBlockPositionClass, int.class, object, (i) -> 2);
+        this.x = JFieldReflector.getObjectFromUnspecificField(baseBlockPositionClass, int.class, (i) -> 0, object);
+        this.y = JFieldReflector.getObjectFromUnspecificField(baseBlockPositionClass, int.class, (i) -> 1, object);
+        this.z = JFieldReflector.getObjectFromUnspecificField(baseBlockPositionClass, int.class, (i) -> 2, object);
     }
 
     @Override
@@ -81,5 +84,14 @@ public class BlockPosition implements NMSObject, NMSBuildable, NMSParsable, NMSC
     @Override
     public NMSObject copy() {
         return new BlockPosition(this.x, this.y, this.z);
+    }
+
+    @Override
+    public String toString() {
+        return "BlockPosition{" +
+                "x=" + x +
+                ", y=" + y +
+                ", z=" + z +
+                '}';
     }
 }

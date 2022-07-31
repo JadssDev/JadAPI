@@ -2,11 +2,14 @@ package dev.jadss.jadapi.management.nms.packets;
 
 import dev.jadss.jadapi.annotations.Beta;
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.NMSException;
 import dev.jadss.jadapi.management.nms.interfaces.DefinedPacket;
 import dev.jadss.jadapi.management.nms.objects.other.ObjectPackage;
 import dev.jadss.jadapi.management.nms.objects.world.entities.base.Entity;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JConstructorReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
 
 @Beta(description = "The datawatcher is not parsed by this packet.") //todo
 public class OutEntityMetadata extends DefinedPacket {
@@ -14,13 +17,13 @@ public class OutEntityMetadata extends DefinedPacket {
     private int entityID;
     private ObjectPackage dataWatcherPackage;
 
-    public static final Class<?> entityMetadataPacketClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.protocol.game" : "server." + JReflection.getNMSVersion()) + ".PacketPlayOutEntityMetadata");
+    public static final Class<?> entityMetadataPacketClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.protocol.game" : "server." + NMS.getNMSVersion()) + ".PacketPlayOutEntityMetadata");
 
     public OutEntityMetadata() {
     }
 
     public OutEntityMetadata(Entity entity) {
-        this.entityID = entity.getId();
+        this.entityID = entity.getEntityId();
         this.dataWatcherPackage = new ObjectPackage(entity.getDataWatcher());
     }
 
@@ -47,7 +50,7 @@ public class OutEntityMetadata extends DefinedPacket {
 
     @Override
     public Object build() {
-        return JReflection.executeConstructor(entityMetadataPacketClass, new Class[]{int.class, Entity.dataWatcherClass, boolean.class}, entityID, dataWatcherPackage.getObject(), true);
+        return JConstructorReflector.executeConstructor(entityMetadataPacketClass, new Class[]{int.class, Entity.DATA_WATCHER_CLASS, boolean.class}, entityID, (dataWatcherPackage != null ? dataWatcherPackage.getObject() : null), true);
     }
 
     /**
@@ -62,7 +65,7 @@ public class OutEntityMetadata extends DefinedPacket {
         if (!canParse(packet))
             throw new NMSException("The packet specified is not parsable by this class.");
 
-        this.entityID = JReflection.getFieldObject(entityMetadataPacketClass, int.class, packet);
+        this.entityID = JFieldReflector.getObjectFromUnspecificField(entityMetadataPacketClass, int.class, packet);
     }
 
     @Override
@@ -78,5 +81,13 @@ public class OutEntityMetadata extends DefinedPacket {
     @Override
     public DefinedPacket copy() {
         return new OutEntityMetadata(this.entityID, this.dataWatcherPackage);
+    }
+
+    @Override
+    public String toString() {
+        return "OutEntityMetadata{" +
+                "entityID=" + entityID +
+                ", dataWatcherPackage=" + dataWatcherPackage +
+                '}';
     }
 }

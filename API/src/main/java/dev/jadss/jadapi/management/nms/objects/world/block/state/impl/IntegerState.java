@@ -3,7 +3,7 @@ package dev.jadss.jadapi.management.nms.objects.world.block.state.impl;
 import dev.jadss.jadapi.management.nms.objects.world.block.IBlockState;
 import dev.jadss.jadapi.management.nms.objects.world.block.state.IntegerBlockState;
 import dev.jadss.jadapi.management.nms.objects.world.block.state.StateType;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JMethodReflector;
 
 public class IntegerState implements IntegerBlockState {
 
@@ -19,9 +19,9 @@ public class IntegerState implements IntegerBlockState {
         this.minValue = minValue;
         this.maxValue = maxValue;
 
-        if(StateType.isStatesSupported()) {
-            Object object = JReflection.executeMethod(IntegerBlockState.blockStateIntegerClass, new Class[] { String.class, int.class, int.class}, null, IntegerBlockState.blockStateIntegerClass, (i) -> 0, nmsName, minValue, maxValue);
-            if(object != null)
+        if (StateType.isStatesSupported()) {
+            Object object = JMethodReflector.executeUnspecificMethod(IntegerBlockState.blockStateIntegerClass, new Class[]{String.class, int.class, int.class}, IntegerBlockState.blockStateIntegerClass, null, new Object[]{nmsName, minValue, maxValue});
+            if (object != null)
                 this.blockState = new IBlockState(object);
             else
                 this.blockState = null;

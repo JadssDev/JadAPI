@@ -3,7 +3,7 @@ package dev.jadss.jadapi.management.nms.objects.world.block.state.impl;
 import dev.jadss.jadapi.management.nms.objects.world.block.IBlockState;
 import dev.jadss.jadapi.management.nms.objects.world.block.state.BooleanBlockState;
 import dev.jadss.jadapi.management.nms.objects.world.block.state.StateType;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JMethodReflector;
 
 public class BooleanState implements BooleanBlockState {
 
@@ -17,16 +17,17 @@ public class BooleanState implements BooleanBlockState {
         this.id = nmsName;
         this.defaultValue = defaultValue;
 
-        if(StateType.isStatesSupported()) {
-            Object object = JReflection.executeMethod(BooleanBlockState.blockStateBooleanClass, new Class[] { String.class }, null, BooleanBlockState.blockStateBooleanClass, (i) -> 0, nmsName);
-            if(object != null)
+        if (StateType.isStatesSupported()) {
+            Object object = JMethodReflector.executeUnspecificMethod(BooleanBlockState.blockStateBooleanClass, new Class[]{String.class}, BooleanBlockState.blockStateBooleanClass, null, new Object[]{nmsName});
+            if (object != null)
                 this.blockState = new IBlockState(object);
             else
                 this.blockState = null;
         } else {
             this.blockState = null;
         }
-        this.isSupported = (blockState != null); ;
+        this.isSupported = (blockState != null);
+        ;
     }
 
     @Override

@@ -4,7 +4,7 @@ import dev.jadss.jadapi.management.nms.enums.NMSEnum;
 import dev.jadss.jadapi.management.nms.objects.world.block.IBlockState;
 import dev.jadss.jadapi.management.nms.objects.world.block.state.EnumBlockState;
 import dev.jadss.jadapi.management.nms.objects.world.block.state.StateType;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JMethodReflector;
 
 public class EnumState<N extends NMSEnum> implements EnumBlockState<N> {
 
@@ -20,9 +20,9 @@ public class EnumState<N extends NMSEnum> implements EnumBlockState<N> {
         this.nmsEnumParsedClass = nmsParsedEnum;
         this.nmsEnumClass = nmsEnumClass;
 
-        if(StateType.isStatesSupported()) {
-            Object object = JReflection.executeMethod(EnumBlockState.blockStateEnumClass, new Class[] { String.class, Class.class }, null, EnumBlockState.blockStateEnumClass, (i) -> 0, nmsName, nmsEnumClass);
-            if(object != null)
+        if (StateType.isStatesSupported()) {
+            Object object = JMethodReflector.executeUnspecificMethod(EnumBlockState.blockStateEnumClass, new Class[]{String.class, Class.class}, EnumBlockState.blockStateEnumClass, null, new Object[]{nmsName, nmsEnumClass});
+            if (object != null)
                 this.blockState = new IBlockState(object);
             else
                 this.blockState = null;

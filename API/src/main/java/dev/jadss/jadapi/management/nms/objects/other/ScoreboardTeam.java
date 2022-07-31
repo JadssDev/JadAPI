@@ -1,6 +1,7 @@
 package dev.jadss.jadapi.management.nms.objects.other;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.NMSException;
 import dev.jadss.jadapi.management.nms.enums.EnumChatFormat;
 import dev.jadss.jadapi.management.nms.enums.EnumNameTagVisibility;
@@ -11,7 +12,9 @@ import dev.jadss.jadapi.management.nms.interfaces.NMSCopyable;
 import dev.jadss.jadapi.management.nms.interfaces.NMSObject;
 import dev.jadss.jadapi.management.nms.interfaces.NMSParsable;
 import dev.jadss.jadapi.management.nms.objects.chat.IChatBaseComponent;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JConstructorReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
 import org.bukkit.ChatColor;
 
 import javax.annotation.Nullable;
@@ -20,8 +23,8 @@ import java.util.Set;
 
 public class ScoreboardTeam implements NMSObject, NMSBuildable, NMSParsable, NMSCopyable {
 
-    public static final Class<?> scoreboardTeamClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.scores" : "server." + JReflection.getNMSVersion()) + ".ScoreboardTeam");
-    public static final Class<?> scoreboardClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.scores" : "server." + JReflection.getNMSVersion()) + ".Scoreboard");
+    public static final Class<?> scoreboardTeamClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.scores" : "server." + NMS.getNMSVersion()) + ".ScoreboardTeam");
+    public static final Class<?> scoreboardClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.scores" : "server." + NMS.getNMSVersion()) + ".Scoreboard");
     /*Todo: Maybe create a Scoreboard Parser?*/
 
     //Scoreboard
@@ -182,35 +185,35 @@ public class ScoreboardTeam implements NMSObject, NMSBuildable, NMSParsable, NMS
 
     @Override
     public Object build() {
-        Object object = JReflection.executeConstructor(scoreboardTeamClass, new Class[]{scoreboardClass, String.class}, (scoreboardPack == null ? null : this.scoreboardPack.getObject()), this.name);
+        Object object = JConstructorReflector.executeConstructor(scoreboardTeamClass, new Class[]{scoreboardClass, String.class}, (scoreboardPack == null ? null : this.scoreboardPack.getObject()), this.name);
 
         //Global (same places for each version)
-        JReflection.setFieldObject(scoreboardTeamClass, boolean.class, object, friendlyFire, (i) -> 0);
-        JReflection.setFieldObject(scoreboardTeamClass, boolean.class, object, seeFriendlyInvisibles, (i) -> 1);
+        JFieldReflector.setObjectToUnspecificField(scoreboardTeamClass, boolean.class, (i) -> 0, object, friendlyFire);
+        JFieldReflector.setObjectToUnspecificField(scoreboardTeamClass, boolean.class, (i) -> 1, object, seeFriendlyInvisibles);
 
         //No casting, or Mr. Exception will pop here.
-        Set set = JReflection.getFieldObject(scoreboardTeamClass, Set.class, object);
+        Set set = JFieldReflector.getObjectFromUnspecificField(scoreboardTeamClass, Set.class, object);
         set.clear();
         set.addAll(playerNameSet);
 
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13)) {
-            JReflection.setFieldObject(scoreboardTeamClass, IChatBaseComponent.iChatBaseComponentClass, object, displayName.build(), (i) -> 0);
-            JReflection.setFieldObject(scoreboardTeamClass, IChatBaseComponent.iChatBaseComponentClass, object, prefix.build(), (i) -> 1);
-            JReflection.setFieldObject(scoreboardTeamClass, IChatBaseComponent.iChatBaseComponentClass, object, suffix.build(), (i) -> 2);
+            JFieldReflector.setObjectToUnspecificField(scoreboardTeamClass, IChatBaseComponent.iChatBaseComponentClass, (i) -> 0, object, displayName.build());
+            JFieldReflector.setObjectToUnspecificField(scoreboardTeamClass, IChatBaseComponent.iChatBaseComponentClass, (i) -> 1, object, prefix.build());
+            JFieldReflector.setObjectToUnspecificField(scoreboardTeamClass, IChatBaseComponent.iChatBaseComponentClass, (i) -> 2, object, suffix.build());
         } else {
-            JReflection.setFieldObject(scoreboardTeamClass, String.class, object, displayName.getMessage(), (i) -> 0);
-            JReflection.setFieldObject(scoreboardTeamClass, String.class, object, prefix.getMessage(), (i) -> 1);
-            JReflection.setFieldObject(scoreboardTeamClass, String.class, object, suffix.getMessage(), (i) -> 2);
+            JFieldReflector.setObjectToUnspecificField(scoreboardTeamClass, String.class, (i) -> 0, object, displayName.getMessage());
+            JFieldReflector.setObjectToUnspecificField(scoreboardTeamClass, String.class, (i) -> 1, object, prefix.getMessage());
+            JFieldReflector.setObjectToUnspecificField(scoreboardTeamClass, String.class, (i) -> 2, object, suffix.getMessage());
         }
 
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_8)) {
-            JReflection.setFieldObject(scoreboardTeamClass, EnumNameTagVisibility.enumNameTagVisibilityClass, object, nameTagVisibility.getNMSObject(), (i) -> 0);
-            JReflection.setFieldObject(scoreboardTeamClass, EnumNameTagVisibility.enumNameTagVisibilityClass, object, deathMessageVisibility.getNMSObject(), (i) -> 1);
-            JReflection.setFieldObject(scoreboardTeamClass, EnumChatFormat.enumChatFormat, object, color.getNMSObject(), (i) -> 0);
+            JFieldReflector.setObjectToUnspecificField(scoreboardTeamClass, EnumNameTagVisibility.enumNameTagVisibilityClass, (i) -> 0, object, nameTagVisibility.getNMSObject());
+            JFieldReflector.setObjectToUnspecificField(scoreboardTeamClass, EnumNameTagVisibility.enumNameTagVisibilityClass, (i) -> 1, object, deathMessageVisibility.getNMSObject());
+            JFieldReflector.setObjectToUnspecificField(scoreboardTeamClass, EnumChatFormat.enumChatFormat, (i) -> 0, object, color.getNMSObject());
         }
 
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_9)) {
-            JReflection.setFieldObject(scoreboardTeamClass, EnumTeamPush.enumTeamPushClass, object, teamPush.getNMSObject(), (i) -> 0);
+            JFieldReflector.setObjectToUnspecificField(scoreboardTeamClass, EnumTeamPush.enumTeamPushClass, (i) -> 0, object, teamPush.getNMSObject());
         }
 
         return object;
@@ -222,13 +225,13 @@ public class ScoreboardTeam implements NMSObject, NMSBuildable, NMSParsable, NMS
         if (!canParse(object)) throw new NMSException("Cannot parse this object.");
 
         //Global (same places for each version)
-        this.name = JReflection.getFieldObject(scoreboardTeamClass, String.class, object);
+        this.name = JFieldReflector.getObjectFromUnspecificField(scoreboardTeamClass, String.class, object);
 
-        this.friendlyFire = JReflection.getFieldObject(scoreboardTeamClass, boolean.class, object, (i) -> 0);
-        this.seeFriendlyInvisibles = JReflection.getFieldObject(scoreboardTeamClass, boolean.class, object, (i) -> 1);
+        this.friendlyFire = JFieldReflector.getObjectFromUnspecificField(scoreboardTeamClass, boolean.class, (i) -> 0, object);
+        this.seeFriendlyInvisibles = JFieldReflector.getObjectFromUnspecificField(scoreboardTeamClass, boolean.class, (i) -> 1, object);
 
         //No casting, or Mr. Exception will pop here.
-        Set set = JReflection.getFieldObject(scoreboardTeamClass, Set.class, object);
+        Set set = JFieldReflector.getObjectFromUnspecificField(scoreboardTeamClass, Set.class, object);
         this.playerNameSet.addAll(set);
 
         this.displayName = new IChatBaseComponent();
@@ -236,13 +239,13 @@ public class ScoreboardTeam implements NMSObject, NMSBuildable, NMSParsable, NMS
         this.suffix = new IChatBaseComponent();
 
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13)) {
-            this.displayName.parse(JReflection.getFieldObject(scoreboardTeamClass, IChatBaseComponent.iChatBaseComponentClass, object, (i) -> 0));
-            this.prefix.parse(JReflection.getFieldObject(scoreboardTeamClass, IChatBaseComponent.iChatBaseComponentClass, object, (i) -> 1));
-            this.suffix.parse(JReflection.getFieldObject(scoreboardTeamClass, IChatBaseComponent.iChatBaseComponentClass, object, (i) -> 2));
+            this.displayName.parse(JFieldReflector.getObjectFromUnspecificField(scoreboardTeamClass, IChatBaseComponent.iChatBaseComponentClass, (i) -> 0, object));
+            this.prefix.parse(JFieldReflector.getObjectFromUnspecificField(scoreboardTeamClass, IChatBaseComponent.iChatBaseComponentClass, (i) -> 1, object));
+            this.suffix.parse(JFieldReflector.getObjectFromUnspecificField(scoreboardTeamClass, IChatBaseComponent.iChatBaseComponentClass, (i) -> 2, object));
         } else {
-            String displayName = JReflection.getFieldObject(scoreboardTeamClass, String.class, object, (i) -> 0);
-            String prefix = JReflection.getFieldObject(scoreboardTeamClass, String.class, object, (i) -> 1);
-            String suffix = JReflection.getFieldObject(scoreboardTeamClass, String.class, object, (i) -> 2);
+            String displayName = JFieldReflector.getObjectFromUnspecificField(scoreboardTeamClass, String.class, (i) -> 0, object);
+            String prefix = JFieldReflector.getObjectFromUnspecificField(scoreboardTeamClass, String.class, (i) -> 1, object);
+            String suffix = JFieldReflector.getObjectFromUnspecificField(scoreboardTeamClass, String.class, (i) -> 2, object);
 
             this.displayName.setMessage(displayName);
             this.displayName.setJsonMessage(IChatBaseComponent.defaultSimpleFormat.replace("%text%", displayName));
@@ -255,14 +258,14 @@ public class ScoreboardTeam implements NMSObject, NMSBuildable, NMSParsable, NMS
         }
 
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_8)) {
-            this.nameTagVisibility = NMSEnum.getEnum(EnumNameTagVisibility.class, JReflection.getFieldObject(scoreboardTeamClass, EnumNameTagVisibility.enumNameTagVisibilityClass, object));
-            this.deathMessageVisibility = NMSEnum.getEnum(EnumNameTagVisibility.class, JReflection.getFieldObject(scoreboardTeamClass, EnumNameTagVisibility.enumNameTagVisibilityClass, object, (i) -> 1));
+            this.nameTagVisibility = NMSEnum.getEnum(EnumNameTagVisibility.class, JFieldReflector.getObjectFromUnspecificField(scoreboardTeamClass, EnumNameTagVisibility.enumNameTagVisibilityClass, object));
+            this.deathMessageVisibility = NMSEnum.getEnum(EnumNameTagVisibility.class, JFieldReflector.getObjectFromUnspecificField(scoreboardTeamClass, EnumNameTagVisibility.enumNameTagVisibilityClass, (i) -> 1, object));
 
-            this.color = NMSEnum.getEnum(EnumChatFormat.class, JReflection.getFieldObject(scoreboardTeamClass, EnumChatFormat.enumChatFormat, object));
+            this.color = NMSEnum.getEnum(EnumChatFormat.class, JFieldReflector.getObjectFromUnspecificField(scoreboardTeamClass, EnumChatFormat.enumChatFormat, object));
         }
 
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_9)) {
-            this.teamPush = NMSEnum.getEnum(EnumTeamPush.class, JReflection.getFieldObject(scoreboardTeamClass, EnumTeamPush.enumTeamPushClass, object));
+            this.teamPush = NMSEnum.getEnum(EnumTeamPush.class, JFieldReflector.getObjectFromUnspecificField(scoreboardTeamClass, EnumTeamPush.enumTeamPushClass, object));
         }
     }
 
@@ -280,6 +283,24 @@ public class ScoreboardTeam implements NMSObject, NMSBuildable, NMSParsable, NMS
     @Override
     public NMSObject copy() {
         return new ScoreboardTeam(this.scoreboardPack, this.name, new HashSet<String>(this.playerNameSet), (IChatBaseComponent) this.displayName.copy(), (IChatBaseComponent) this.prefix.copy(), (IChatBaseComponent) this.suffix.copy(), this.color, this.friendlyFire, this.seeFriendlyInvisibles, this.nameTagVisibility, this.deathMessageVisibility, this.teamPush);
+    }
+
+    @Override
+    public String toString() {
+        return "ScoreboardTeam{" +
+                "scoreboardPack=" + scoreboardPack +
+                ", name='" + name + '\'' +
+                ", playerNameSet=" + playerNameSet +
+                ", displayName=" + displayName +
+                ", prefix=" + prefix +
+                ", suffix=" + suffix +
+                ", color=" + color +
+                ", friendlyFire=" + friendlyFire +
+                ", seeFriendlyInvisibles=" + seeFriendlyInvisibles +
+                ", nameTagVisibility=" + nameTagVisibility +
+                ", deathMessageVisibility=" + deathMessageVisibility +
+                ", teamPush=" + teamPush +
+                '}';
     }
 
     public int getFlags() {

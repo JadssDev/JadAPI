@@ -1,18 +1,23 @@
 package dev.jadss.jadapi.management.nms.objects.world.entities.base;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.management.nms.NMS;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
 
 public abstract class EntityAnimal extends EntityAgeable {
 
-    public final static Class<?> entityAnimalClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.entity.animal" : "server." + JReflection.getNMSVersion()) + ".EntityAnimal");;
+    public static final Class<?> ENTITY_ANIMAL = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.entity.animal" : "server." + NMS.getNMSVersion()) + ".EntityAnimal");
 
-    public EntityAnimal(Object nmsEntityAgeable) {
-        super(nmsEntityAgeable);
-        if(!isEntityAnimal(nmsEntityAgeable)) throwExceptionNotClass("Entity Animal");
+    public EntityAnimal(Object entity) {
+        super(entity);
+
+        if (!isEntityAnimal(entity))
+            throwExceptionNotClass("Entity Animal");
     }
 
-    public boolean isEntityAnimal(Object entity) { return entityAnimalClass.isAssignableFrom(entity.getClass()); }
+    public static boolean isEntityAnimal(Object entity) {
+        return ENTITY_ANIMAL.isAssignableFrom(entity.getClass());
+    }
 
     //Custom methods.
 }

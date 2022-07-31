@@ -1,14 +1,17 @@
 package dev.jadss.jadapi.management.nms.packets;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.NMSException;
 import dev.jadss.jadapi.management.nms.interfaces.DefinedPacket;
 import dev.jadss.jadapi.management.nms.objects.chat.IChatBaseComponent;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JConstructorReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
 
 public class OutPlayerHeaderFooter extends DefinedPacket {
 
-    public static final Class<?> playerHeaderFooterPacketClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.protocol.game" : "server." + JReflection.getNMSVersion()) + ".PacketPlayOutPlayerListHeaderFooter");
+    public static final Class<?> playerHeaderFooterPacketClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.protocol.game" : "server." + NMS.getNMSVersion()) + ".PacketPlayOutPlayerListHeaderFooter");
 
     private IChatBaseComponent headerComponent;
     private IChatBaseComponent footerComponent;
@@ -45,22 +48,22 @@ public class OutPlayerHeaderFooter extends DefinedPacket {
             throw new NMSException("The packet specified is not parsable by this class.");
 
         this.headerComponent = new IChatBaseComponent();
-        this.headerComponent.parse(JReflection.getFieldObject(playerHeaderFooterPacketClass, IChatBaseComponent.iChatBaseComponentClass, packet, (i) -> 0));
+        this.headerComponent.parse(JFieldReflector.getObjectFromUnspecificField(playerHeaderFooterPacketClass, IChatBaseComponent.iChatBaseComponentClass, (i) -> i - 1, packet));
 
         this.footerComponent = new IChatBaseComponent();
-        this.footerComponent.parse(JReflection.getFieldObject(playerHeaderFooterPacketClass, IChatBaseComponent.iChatBaseComponentClass, packet, (i) -> 1));
+        this.footerComponent.parse(JFieldReflector.getObjectFromUnspecificField(playerHeaderFooterPacketClass, IChatBaseComponent.iChatBaseComponentClass, (i) -> i, packet));
     }
 
     @Override
     public Object build() {
         Object packet;
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_16)) {
-            packet = JReflection.executeConstructor(playerHeaderFooterPacketClass, new Class[]{});
+            packet = JConstructorReflector.executeConstructor(playerHeaderFooterPacketClass, new Class[]{});
 
-            JReflection.setFieldObject(playerHeaderFooterPacketClass, IChatBaseComponent.iChatBaseComponentClass, packet, this.headerComponent.build(), (i) -> 0);
-            JReflection.setFieldObject(playerHeaderFooterPacketClass, IChatBaseComponent.iChatBaseComponentClass, packet, this.footerComponent.build(), (i) -> 1);
+            JFieldReflector.setObjectToUnspecificField(playerHeaderFooterPacketClass, IChatBaseComponent.iChatBaseComponentClass, (i) -> i - 1, packet, this.headerComponent.build());
+            JFieldReflector.setObjectToUnspecificField(playerHeaderFooterPacketClass, IChatBaseComponent.iChatBaseComponentClass, (i) -> i, packet, this.footerComponent.build());
         } else {
-            packet = JReflection.executeConstructor(playerHeaderFooterPacketClass, new Class[]{IChatBaseComponent.iChatBaseComponentClass, IChatBaseComponent.iChatBaseComponentClass}, this.headerComponent.build(), this.footerComponent.build());
+            packet = JConstructorReflector.executeConstructor(playerHeaderFooterPacketClass, new Class[]{IChatBaseComponent.iChatBaseComponentClass, IChatBaseComponent.iChatBaseComponentClass}, this.headerComponent.build(), this.footerComponent.build());
         }
         return packet;
     }
@@ -78,5 +81,13 @@ public class OutPlayerHeaderFooter extends DefinedPacket {
     @Override
     public DefinedPacket copy() {
         return new OutPlayerHeaderFooter((IChatBaseComponent) this.headerComponent.copy(), (IChatBaseComponent) this.footerComponent.copy());
+    }
+
+    @Override
+    public String toString() {
+        return "OutPlayerHeaderFooter{" +
+                "headerComponent=" + headerComponent +
+                ", footerComponent=" + footerComponent +
+                '}';
     }
 }

@@ -1,55 +1,56 @@
 package dev.jadss.jadapi.management.nms.objects.other;
 
-import dev.jadss.jadapi.annotations.ForChange;
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
-import dev.jadss.jadapi.management.nms.NMSException;
-import dev.jadss.jadapi.management.nms.interfaces.NMSBuildable;
 import dev.jadss.jadapi.management.nms.interfaces.NMSCopyable;
+import dev.jadss.jadapi.management.nms.interfaces.NMSManipulable;
 import dev.jadss.jadapi.management.nms.interfaces.NMSObject;
-import dev.jadss.jadapi.management.nms.interfaces.NMSParsable;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JConstructorReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
 
 import java.util.UUID;
 
-@ForChange(isMajor = true, expectedVersionForChange = "1.23.1", reason = "This is outdated and needs to be redone to support more thingies.")
-public class GameProfile implements NMSObject, NMSBuildable, NMSParsable, NMSCopyable {
+public class GameProfile implements NMSObject, NMSManipulable, NMSCopyable {
 
-    public static final Class<?> gameProfileClass = (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_8) ? com.mojang.authlib.GameProfile.class : net.minecraft.util.com.mojang.authlib.GameProfile.class);
+    public static final Class<?> gameProfileClass = JClassReflector.getClass(JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_8) ? "com.mojang.authlib.GameProfile" : "net.minecraft.util.com.mojang.authlib.GameProfile");
 
-    private String name;
-    private UUID id;
+    private final Object handle;
 
-    public GameProfile() { }
-    public GameProfile(String name, UUID id) {
-        this.name = name;
-        this.id = id;
+    public GameProfile(UUID id, String name) {
+        handle = JConstructorReflector.executeConstructor(gameProfileClass, new Class[] { UUID.class, String.class }, id, name);
     }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
-
-    @Override
-    public Object build() {
-        return JReflection.executeConstructor(gameProfileClass, new Class[] { UUID.class, String.class }, this.id, this.name);
+    public GameProfile(Object handle) {
+        if (gameProfileClass.equals(handle.getClass())) {
+            this.handle = handle;
+        } else {
+            throw new IllegalArgumentException("Not a GameProfile!");
+        }
     }
 
-    @Override
-    public void parse(Object object) {
-        if(object == null) return;
-        if(!canParse(object)) throw new NMSException("Cannot parse this object.");
+    public String getName() {
+        return JFieldReflector.getObjectFromUnspecificField(gameProfileClass, String.class, handle);
+    }
 
-        this.name = (String) JReflection.executeMethod(gameProfileClass, "getName", object, new Class[] { });
-        this.id = (UUID) JReflection.executeMethod(gameProfileClass, "getId", object, new Class[] { });
+    public UUID getId() {
+        return JFieldReflector.getObjectFromUnspecificField(gameProfileClass, UUID.class, handle);
     }
 
     @Override
-    public Class<?> getParsingClass() { return gameProfileClass; }
+    public Object getHandle() {
+        return handle;
+    }
 
     @Override
-    public boolean canParse(Object object) { return object.getClass().equals(gameProfileClass); }
+    public NMSObject copy() {
+        return new GameProfile(this.getId(), this.getName());
+    }
 
     @Override
-    public NMSObject copy() { return new GameProfile(this.name, this.id); }
+    public String toString() {
+        return "GameProfile{" +
+                "id=" + this.getId() +
+                ", name='" + this.getName() + '\'' +
+                '}';
+    }
 }

@@ -1,18 +1,23 @@
 package dev.jadss.jadapi.management.nms.objects.world.entities.base;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.management.nms.NMS;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
 
 public abstract class EntityAgeable extends EntityCreature {
 
-    public static final Class<?> entityAgeableClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.entity" : "server." + JReflection.getNMSVersion()) + ".EntityAgeable");
+    public static final Class<?> ENTITY_AGEABLE = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.entity" : "server." + NMS.getNMSVersion()) + ".EntityAgeable");
 
-    public EntityAgeable(Object nmsEntityAgeable) {
-        super(nmsEntityAgeable);
-        if(!isEntityAgeable(nmsEntityAgeable)) throwExceptionNotClass("Entity Ageable");
+    public EntityAgeable(Object entity) {
+        super(entity);
+
+        if (!isEntityAgeable(entity))
+            throwExceptionNotClass("Entity Ageable");
     }
 
-    public boolean isEntityAgeable(Object entity) { return entityAgeableClass.isAssignableFrom(entity.getClass()); }
+    public static boolean isEntityAgeable(Object entity) {
+        return ENTITY_AGEABLE.isAssignableFrom(entity.getClass());
+    }
 
     //Custom methods.
 }

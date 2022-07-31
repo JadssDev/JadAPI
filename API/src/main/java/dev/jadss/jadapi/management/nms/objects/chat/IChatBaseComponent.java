@@ -2,12 +2,15 @@ package dev.jadss.jadapi.management.nms.objects.chat;
 
 import com.google.gson.Gson;
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.NMSException;
 import dev.jadss.jadapi.management.nms.interfaces.NMSBuildable;
 import dev.jadss.jadapi.management.nms.interfaces.NMSCopyable;
 import dev.jadss.jadapi.management.nms.interfaces.NMSObject;
 import dev.jadss.jadapi.management.nms.interfaces.NMSParsable;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.JMappings;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JMethodReflector;
 import org.bukkit.ChatColor;
 
 /**
@@ -17,12 +20,12 @@ import org.bukkit.ChatColor;
  */
 public class IChatBaseComponent implements NMSObject, NMSBuildable, NMSParsable, NMSCopyable {
 
-    public static final Class<?> iChatBaseComponentClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.chat" : "server." + JReflection.getNMSVersion()) + ".IChatBaseComponent");
-    public static final Class<?> iChatBaseMutableComponentClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.chat" : "server." + JReflection.getNMSVersion()) + ".IChatMutableComponent");
-    public static final Class<?> chatSerializerClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.chat" : "server." + JReflection.getNMSVersion()) + ".IChatBaseComponent$ChatSerializer");
+    public static final Class<?> iChatBaseComponentClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.chat" : "server." + NMS.getNMSVersion()) + ".IChatBaseComponent");
+    public static final Class<?> iChatBaseMutableComponentClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.chat" : "server." + NMS.getNMSVersion()) + ".IChatMutableComponent");
+    public static final Class<?> chatSerializerClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.chat" : "server." + NMS.getNMSVersion()) + "." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_8) ? "IChatBaseComponent$" : "") + "ChatSerializer");
     public static final String defaultSimpleFormat = "{\"text\":\"" + "%text%" + "\"}";
 
-    private static final Gson g = new Gson();
+    private static final Gson gsonInstance = new Gson();
 
     private String message;
 
@@ -54,6 +57,9 @@ public class IChatBaseComponent implements NMSObject, NMSBuildable, NMSParsable,
     }
 
     public IChatBaseComponent() {
+        this.message = "";
+        this.jsonMode = false;
+        this.jsonMessage = "";
     }
 
     public IChatBaseComponent(String message, boolean jsonMode, String jsonMessage) {
@@ -66,17 +72,27 @@ public class IChatBaseComponent implements NMSObject, NMSBuildable, NMSParsable,
 
     @Override
     public Object build() {
-        Class<?> clazz = JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_16) ? iChatBaseMutableComponentClass : iChatBaseComponentClass;
-        return JReflection.executeMethod(chatSerializerClass, new Class[]{String.class}, null, clazz, (i) -> 0, jsonMode ? jsonMessage : defaultSimpleFormat.replace("%text%", message));
+        return JMethodReflector.executeMethod(chatSerializerClass, "a", new Class[]{String.class}, null, new Object[]{jsonMode ? jsonMessage : defaultSimpleFormat.replace("%text%", message)});
     }
+
+    public static final JMappings GET_TEXT_METHOD = JMappings.create(iChatBaseComponentClass)
+            .add(JVersion.v1_7, "e")
+            .add(JVersion.v1_8, "getText")
+            .add(JVersion.v1_18, "a")
+            .add(JVersion.v1_19, "getString") //They removed getText method so this is the alternative...
+            .finish();
+
+    public static final JMappings JSON_METHOD = JMappings.create(iChatBaseComponentClass)
+            .add(JVersion.v1_7, "a")
+            .finish();
 
     @Override
     public void parse(Object object) {
         if (object == null) return;
         if (!canParse(object)) throw new NMSException("Cannot parse this object.");
 
-        this.message = JReflection.executeMethod(iChatBaseComponentClass, new Class[]{}, object, String.class, (i) -> 0);
-        this.jsonMessage = JReflection.executeMethod(chatSerializerClass, new Class[]{iChatBaseComponentClass}, null, String.class, (i) -> 0, object);
+        this.message = (String) JMethodReflector.executeMethod(iChatBaseComponentClass, GET_TEXT_METHOD.get(), new Class[]{}, object, null);
+        this.jsonMessage = (String) JMethodReflector.executeMethod(chatSerializerClass, JSON_METHOD.get(), new Class[]{IChatBaseComponent.iChatBaseComponentClass}, null, new Object[]{object});
     }
 
     @Override
@@ -92,5 +108,14 @@ public class IChatBaseComponent implements NMSObject, NMSBuildable, NMSParsable,
     @Override
     public NMSObject copy() {
         return new IChatBaseComponent(this.message, this.jsonMode, this.jsonMessage);
+    }
+
+    @Override
+    public String toString() {
+        return "IChatBaseComponent{" +
+                "message='" + message + '\'' +
+                ", jsonMode=" + jsonMode +
+                ", jsonMessage='" + jsonMessage + '\'' +
+                '}';
     }
 }

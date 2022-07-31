@@ -1,55 +1,89 @@
 package dev.jadss.jadapi.management.nms.objects.world.entities.base;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.management.nms.NMS;
+import dev.jadss.jadapi.utils.reflection.JMappings;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JMethodReflector;
 
 import java.util.UUID;
 
 public abstract class EntityTameableAnimal extends EntityAnimal {
 
-    public final static Class<?> entityTameableAnimalClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.entity.animal" : "server." + JReflection.getNMSVersion()) + ".EntityTameableAnimal");
-    ;
+    public static final Class<?> ENTITY_TAMEABLE_ANIMAL = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.entity.animal" : "server." + NMS.getNMSVersion()) + ".EntityTameableAnimal");
 
-    public EntityTameableAnimal(Object nmsEntityTameableAnimal) {
-        super(nmsEntityTameableAnimal);
-        if (!isEntityTameableAnimal(nmsEntityTameableAnimal)) throwExceptionNotClass("Entity Tameable Animal");
+    public EntityTameableAnimal(Object entity) {
+        super(entity);
+
+        if (!isEntityTameableAnimal(entity))
+            throwExceptionNotClass("Entity Tameable Animal");
     }
 
     public boolean isEntityTameableAnimal(Object entity) {
-        return entityTameableAnimalClass.isAssignableFrom(entity.getClass());
+        return ENTITY_TAMEABLE_ANIMAL.isAssignableFrom(entity.getClass());
     }
 
     //Custom methods.
 
+    public static final JMappings IS_TAMED_METHOD = JMappings.create(ENTITY_TAMEABLE_ANIMAL)
+            .add(JVersion.v1_7, "isTamed")
+            .add(JVersion.v1_18, "q")
+            .finish();
+
     public boolean isTamed() {
-        return JReflection.executeMethod(entityTameableAnimalClass, new Class[]{}, this.entity, boolean.class, (i) -> 0);
+        return (boolean) JMethodReflector.executeMethod(ENTITY_TAMEABLE_ANIMAL, IS_TAMED_METHOD.get(), new Class[]{}, this.entity, null);
     }
+
+
+    public static final JMappings SET_TAMED_METHOD = JMappings.create(ENTITY_TAMEABLE_ANIMAL)
+            .add(JVersion.v1_7, "setTamed")
+            .add(JVersion.v1_18, "w")
+            .finish();
 
     public void setTamed(boolean tamed) {
-        JReflection.executeMethod(entityTameableAnimalClass, new Class[]{boolean.class}, this.entity, null, (i) -> 0, tamed);
+        JMethodReflector.executeMethod(ENTITY_TAMEABLE_ANIMAL, SET_TAMED_METHOD.get(), new Class[]{boolean.class}, this.entity, new Object[]{tamed});
     }
 
-    public void setOwnerUUID(UUID uuid) {
-        if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_8)) {
-            JReflection.executeMethod(entityTameableAnimalClass, new Class[]{String.class}, this.entity, null, (i) -> 0, uuid.toString());
-        } else {
-            JReflection.executeMethod(entityTameableAnimalClass, new Class[]{UUID.class}, this.entity, null, (i) -> 0, uuid);
-        }
-    }
+
+    public static final JMappings GET_OWNER_UUID_METHOD = JMappings.create(ENTITY_TAMEABLE_ANIMAL)
+            .add(JVersion.v1_7, "getOwnerUUID")
+            .add(JVersion.v1_18, "d")
+            .finish();
 
     public UUID getOwnerUUID() {
-        if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_8)) {
-            return UUID.fromString(JReflection.executeMethod(entityTameableAnimalClass, new Class[]{}, this.entity, String.class, (i) -> 0));
-        } else {
-            return JReflection.executeMethod(entityTameableAnimalClass, new Class[]{}, this.entity, UUID.class, (i) -> 0);
-        }
+        Object uuid = JMethodReflector.executeMethod(ENTITY_TAMEABLE_ANIMAL, GET_OWNER_UUID_METHOD.get(), new Class[]{}, this.entity, null);
+        return (uuid instanceof UUID ? (UUID) uuid : UUID.fromString((String) uuid));
     }
+
+
+    public static final JMappings SET_OWNER_UUID_METHOD = JMappings.create(ENTITY_TAMEABLE_ANIMAL)
+            .add(JVersion.v1_7, "setOwnerUUID")
+            .add(JVersion.v1_18, "b")
+            .finish();
+
+    public void setOwnerUUID(UUID uuid) {
+        boolean outdated = JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_8);
+        JMethodReflector.executeMethod(ENTITY_TAMEABLE_ANIMAL, SET_OWNER_UUID_METHOD.get(), outdated ? new Class[]{String.class} : new Class[]{UUID.class}, this.entity, new Object[]{outdated ? uuid.toString() : uuid});
+    }
+
+
+    public static final JMappings IS_SITTING_METHOD = JMappings.create(ENTITY_TAMEABLE_ANIMAL)
+            .add(JVersion.v1_7, "isSitting")
+            .add(JVersion.v1_18, "fz")
+            .add(JVersion.v1_19, "fK")
+            .finish();
 
     public boolean isSitting() {
-        return JReflection.executeMethod(entityTameableAnimalClass, new Class[]{}, this.entity, boolean.class, (i) -> i);
+        return (boolean) JMethodReflector.executeMethod(ENTITY_TAMEABLE_ANIMAL, IS_SITTING_METHOD.get(), new Class[]{}, this.entity, null);
     }
 
+
+    public static final JMappings SET_SITTING_METHOD = JMappings.create(ENTITY_TAMEABLE_ANIMAL)
+            .add(JVersion.v1_7, "setSitting")
+            .add(JVersion.v1_18, "x")
+            .finish();
+
     public void setSitting(boolean sitting) {
-        JReflection.executeMethod(entityTameableAnimalClass, new Class[]{boolean.class}, this.entity, null, (i) -> i, sitting);
+        JMethodReflector.executeMethod(ENTITY_TAMEABLE_ANIMAL, SET_SITTING_METHOD.get(), new Class[]{boolean.class}, this.entity, new Object[]{sitting});
     }
 }

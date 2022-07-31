@@ -1,15 +1,18 @@
 package dev.jadss.jadapi.management.nms.objects.attributes;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.interfaces.NMSManipulable;
 import dev.jadss.jadapi.management.nms.interfaces.NMSObject;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
 
 public class Attribute implements NMSObject, NMSManipulable {
 
-    public static final Class<?> attributeBaseClass = JReflection.getReflectionClass("net.minecraft" + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.entity.ai.attributes" : "server." + JReflection.getNMSVersion()) + ".AttributeBase");
-    //Inexistent in >1.15
-    public static final Class<?> iAttributeClass = JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".IAttribute");
+    public static final Class<?> attributeBaseClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.entity.ai.attributes" : "server." + NMS.getNMSVersion()) + ".AttributeBase");
+
+    //Removed in 1.16 \/ for a better alternative /\
+    public static final Class<?> iAttributeClass = JClassReflector.getClass("net.minecraft.server." + NMS.getNMSVersion() + ".IAttribute");
 
     private final Object handle;
     private final AttributeType type;
@@ -22,12 +25,12 @@ public class Attribute implements NMSObject, NMSManipulable {
     public AttributeType getType() { return type; }
 
     public String getName() {
-        return JReflection.getFieldObject(attributeBaseClass, String.class, handle);
+        return JFieldReflector.getObjectFromUnspecificField(attributeBaseClass, String.class, handle);
     }
 
-    public static String getNameFromNMS(Object nms) {
+    public static String getNameFromObject(Object nms) {
         if(attributeBaseClass.isAssignableFrom(nms.getClass()))
-            return JReflection.getFieldObject(attributeBaseClass, String.class, nms);
+            return JFieldReflector.getObjectFromUnspecificField(attributeBaseClass, String.class, nms);
         else
             return null;
     }

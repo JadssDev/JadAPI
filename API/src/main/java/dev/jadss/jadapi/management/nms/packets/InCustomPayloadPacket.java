@@ -4,17 +4,20 @@ import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
 import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.NMSException;
 import dev.jadss.jadapi.management.nms.interfaces.DefinedPacket;
+import dev.jadss.jadapi.management.nms.objects.network.ByteBufWorker;
 import dev.jadss.jadapi.management.nms.objects.network.PacketDataSerializer;
 import dev.jadss.jadapi.management.nms.objects.other.Key;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JConstructorReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
 
-//Note: the channel in newer versions is a Minecraft key, use ":" in between the channel namespace and key for better compatibility.
+//Note: the channel in newer versions is a Minecraft key, use ":" and ALWAYS lowercase in between the channel namespace and key for better compatibility.
 public class InCustomPayloadPacket extends DefinedPacket {
 
     private String channel;
     private PacketDataSerializer data;
 
-    public static final Class<?> customPayloadPacketClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.protocol.game" : "server." + JReflection.getNMSVersion()) + ".PacketPlayInCustomPayload");
+    public static final Class<?> CUSTOM_PAYLOAD = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.protocol.game" : "server." + NMS.getNMSVersion()) + ".PacketPlayInCustomPayload");
 
     public InCustomPayloadPacket() {
     }
@@ -53,60 +56,79 @@ public class InCustomPayloadPacket extends DefinedPacket {
             throw new NMSException("The packet specified is not parsable by this class.");
 
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13)) {
-            this.channel = JReflection.getFieldObject(customPayloadPacketClass, Key.keyClass, packet, (i) -> i).toString();
-            this.data = new PacketDataSerializer();
-            this.data.setPDS(JReflection.getFieldObject(customPayloadPacketClass, PacketDataSerializer.packetDataSerializerClass, packet, (i) -> i));
+            this.channel = JFieldReflector.getObjectFromUnspecificField(CUSTOM_PAYLOAD, Key.KEY, (i) -> i, packet).toString();
         } else {
-            this.channel = JReflection.getFieldObject(customPayloadPacketClass, String.class, packet);
-
-            if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
-                this.data = NMS.newPacketDataSerializer(JReflection.getFieldObject(customPayloadPacketClass, byte[].class, packet));
-            } else {
-                this.data = new PacketDataSerializer(JReflection.getFieldObject(customPayloadPacketClass, PacketDataSerializer.packetDataSerializerClass, packet));
-            }
+            this.channel = JFieldReflector.getObjectFromUnspecificField(CUSTOM_PAYLOAD, String.class, packet);
         }
+
+        if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
+            this.data = NMS.newPacketDataSerializer(JFieldReflector.getObjectFromUnspecificField(CUSTOM_PAYLOAD, byte[].class, packet));
+        } else {
+            this.data = (PacketDataSerializer) new PacketDataSerializer(JFieldReflector.getObjectFromUnspecificField(CUSTOM_PAYLOAD, PacketDataSerializer.DATA_SERIALIZER, packet)).copy();
+        }
+
+        ByteBufWorker byteBuf = this.data.getASByteBuf();
+        byteBuf.setReaderIndex(0);
+        this.data = NMS.newPacketDataSerializer(byteBuf.readBytes());
     }
 
     @Override
-    public Object build() {
+    public Object build() { //Redo this.
         Object packet;
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
-            packet = JReflection.executeConstructor(InCustomPayloadPacket.customPayloadPacketClass, new Class[]{});
-            JReflection.setFieldObject(customPayloadPacketClass, String.class, packet, this.channel, (i) -> i);
-            JReflection.setFieldObject(customPayloadPacketClass, int.class, packet, this.data.getASByteBuf().readableBytes(), (i) -> i);
-            JReflection.setFieldObject(customPayloadPacketClass, byte[].class, packet, this.data.getASByteBuf().readBytes(), (i) -> i);
+            packet = JConstructorReflector.executeConstructor(InCustomPayloadPacket.CUSTOM_PAYLOAD, new Class[]{});
+            JFieldReflector.setObjectToUnspecificField(CUSTOM_PAYLOAD, String.class, (i) -> i, packet, this.channel);
+            JFieldReflector.setObjectToUnspecificField(CUSTOM_PAYLOAD, int.class, (i) -> i, packet, this.data.getASByteBuf().readableBytes());
+            JFieldReflector.setObjectToUnspecificField(CUSTOM_PAYLOAD, byte[].class, (i) -> i, packet, this.data.getASByteBuf().readBytes());
         } else if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_12)) {
-            packet = JReflection.executeConstructor(InCustomPayloadPacket.customPayloadPacketClass, new Class[]{});
-            JReflection.setFieldObject(customPayloadPacketClass, String.class, packet, this.channel);
-            JReflection.setFieldObject(customPayloadPacketClass, PacketDataSerializer.packetDataSerializerClass, packet, this.data.getPDS(), (i) -> i);
+            packet = JConstructorReflector.executeConstructor(InCustomPayloadPacket.CUSTOM_PAYLOAD, new Class[]{});
+            JFieldReflector.setObjectToUnspecificField(CUSTOM_PAYLOAD, String.class, packet, this.channel);
+            JFieldReflector.setObjectToUnspecificField(CUSTOM_PAYLOAD, PacketDataSerializer.DATA_SERIALIZER, (i) -> i, packet, this.data.getPDS());
         } else if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_16)) {
-            packet = JReflection.executeConstructor(InCustomPayloadPacket.customPayloadPacketClass, new Class[]{});
-            JReflection.setFieldObject(customPayloadPacketClass, Key.keyClass, packet, this.channel, (i) -> i);
-            JReflection.setFieldObject(customPayloadPacketClass, PacketDataSerializer.packetDataSerializerClass, packet, this.data.getPDS(), (i) -> i);
-        } else if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_18)) {
-            String keys[] = this.channel.split(":");
+            packet = JConstructorReflector.executeConstructor(InCustomPayloadPacket.CUSTOM_PAYLOAD, new Class[]{});
+
+            String[] keys = this.channel.split(":");
+            if (keys.length != 2)
+                throw new IllegalArgumentException("Keys should have one : to divide the namespace from key.");
             String namespace = keys[0];
             String key = keys[1];
 
-            packet = JReflection.executeConstructor(InCustomPayloadPacket.customPayloadPacketClass, new Class[]{Key.keyClass, PacketDataSerializer.packetDataSerializerClass}, new Key(namespace, key).build(), this.data.getPDS());
-        } else
-            throw new NMSException("Uhh, not gonna lie, Your version is stupidly outdated, or something wrong happened! Sorry!");
+            JFieldReflector.setObjectToUnspecificField(CUSTOM_PAYLOAD, Key.KEY, (i) -> i, packet, new Key(namespace, key).build());
+
+            JFieldReflector.setObjectToUnspecificField(CUSTOM_PAYLOAD, PacketDataSerializer.DATA_SERIALIZER, (i) -> i, packet, this.data.getPDS());
+        } else {
+            String[] keys = this.channel.split(":");
+            if (keys.length != 2)
+                throw new IllegalArgumentException("Keys should have one : to divide the namespace from key.");
+            String namespace = keys[0];
+            String key = keys[1];
+
+            packet = JConstructorReflector.executeConstructor(InCustomPayloadPacket.CUSTOM_PAYLOAD, new Class[]{Key.KEY, PacketDataSerializer.DATA_SERIALIZER}, new Key(namespace, key).build(), this.data.getPDS());
+        }
 
         return packet;
     }
 
     @Override
     public boolean canParse(Object packet) {
-        return customPayloadPacketClass.equals(packet.getClass());
+        return CUSTOM_PAYLOAD.equals(packet.getClass());
     }
 
     @Override
     public Class<?> getParsingClass() {
-        return customPayloadPacketClass;
+        return CUSTOM_PAYLOAD;
     }
 
     @Override
     public DefinedPacket copy() {
         return new InCustomPayloadPacket(this.channel, (PacketDataSerializer) this.data.copy());
+    }
+
+    @Override
+    public String toString() {
+        return "InCustomPayloadPacket{" +
+                "channel='" + channel + '\'' +
+                ", data=" + data +
+                '}';
     }
 }

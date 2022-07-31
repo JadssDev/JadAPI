@@ -1,9 +1,12 @@
 package dev.jadss.jadapi.management.nms.packets;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.NMSException;
 import dev.jadss.jadapi.management.nms.interfaces.DefinedPacket;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JConstructorReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
 
 public class OutUpdateHealth extends DefinedPacket {
 
@@ -11,7 +14,7 @@ public class OutUpdateHealth extends DefinedPacket {
     private int food;
     private float saturation;
 
-    private final Class<?> updateHealthPacketClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.protocol.game" : "server." + JReflection.getNMSVersion()) + ".PacketPlayOutUpdateHealth");
+    private static final Class<?> updateHealthPacketClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.protocol.game" : "server." + NMS.getNMSVersion()) + ".PacketPlayOutUpdateHealth");
 
     public OutUpdateHealth() {
     }
@@ -55,14 +58,14 @@ public class OutUpdateHealth extends DefinedPacket {
         if (!canParse(packet))
             throw new NMSException("The packet specified is not parsable by this class.");
 
-        this.health = JReflection.getFieldObject(updateHealthPacketClass, float.class, packet, (i) -> 0);
-        this.food = JReflection.getFieldObject(updateHealthPacketClass, int.class, packet);
-        this.saturation = JReflection.getFieldObject(updateHealthPacketClass, float.class, packet, (i) -> 1);
+        this.health = JFieldReflector.getObjectFromUnspecificField(updateHealthPacketClass, float.class, (i) -> i - 1, packet);
+        this.food = JFieldReflector.getObjectFromUnspecificField(updateHealthPacketClass, int.class, packet);
+        this.saturation = JFieldReflector.getObjectFromUnspecificField(updateHealthPacketClass, float.class, (i) -> i, packet);
     }
 
     @Override
     public Object build() {
-        return JReflection.executeConstructor(updateHealthPacketClass, new Class[]{float.class, int.class, float.class}, this.health, this.food, this.saturation);
+        return JConstructorReflector.executeConstructor(updateHealthPacketClass, new Class[]{float.class, int.class, float.class}, this.health, this.food, this.saturation);
     }
 
     @Override
@@ -78,5 +81,14 @@ public class OutUpdateHealth extends DefinedPacket {
     @Override
     public DefinedPacket copy() {
         return new OutUpdateHealth(this.health, this.food, this.saturation);
+    }
+
+    @Override
+    public String toString() {
+        return "OutUpdateHealth{" +
+                "health=" + health +
+                ", food=" + food +
+                ", saturation=" + saturation +
+                '}';
     }
 }

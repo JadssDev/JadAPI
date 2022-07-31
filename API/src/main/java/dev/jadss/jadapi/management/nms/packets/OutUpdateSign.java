@@ -2,12 +2,15 @@ package dev.jadss.jadapi.management.nms.packets;
 
 import dev.jadss.jadapi.JadAPI;
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.NMSException;
 import dev.jadss.jadapi.management.nms.interfaces.DefinedPacket;
 import dev.jadss.jadapi.management.nms.objects.chat.IChatBaseComponent;
 import dev.jadss.jadapi.management.nms.objects.world.WorldServer;
 import dev.jadss.jadapi.management.nms.objects.world.positions.BlockPosition;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JConstructorReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 
@@ -16,7 +19,7 @@ import java.util.Arrays;
 
 public class OutUpdateSign extends DefinedPacket {
 
-    public static final Class<?> updateSignClass = JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".PacketPlayOutUpdateSign");
+    public static final Class<?> updateSignClass = JClassReflector.getClass("net.minecraft.server." + NMS.getNMSVersion() + ".PacketPlayOutUpdateSign");
 
     private BlockPosition position;
     private IChatBaseComponent[] lines;
@@ -24,6 +27,7 @@ public class OutUpdateSign extends DefinedPacket {
     public OutUpdateSign(BlockPosition position, IChatBaseComponent[] lines) {
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_9))
             throw new NMSException("Unsupported in this version! Only available in 1.8 and below!");
+
         this.position = position;
         this.lines = lines;
     }
@@ -56,18 +60,18 @@ public class OutUpdateSign extends DefinedPacket {
         if (!canParse(packet))
             throw new NMSException("The packet specified is not parsable by this class.");
 
-        this.lines = new IChatBaseComponent[4];
-        for (int i = 0; i < 4; i++)
-            lines[i] = new IChatBaseComponent();
+        this.lines = new IChatBaseComponent[] { new IChatBaseComponent(), new IChatBaseComponent(), new IChatBaseComponent(), new IChatBaseComponent() };
+
         if (JVersion.getServerVersion() == JVersion.v1_8) {
             this.position = new BlockPosition();
-            this.position.parse(JReflection.getFieldObject(updateSignClass, BlockPosition.blockPositionClass, packet));
+            this.position.parse(JFieldReflector.getObjectFromUnspecificField(updateSignClass, BlockPosition.blockPositionClass, packet));
 
-            Object[] lines = (Object[]) JReflection.getFieldObject(updateSignClass, Array.newInstance(IChatBaseComponent.iChatBaseComponentClass, 0).getClass(), packet);
+            Object[] lines = (Object[]) JFieldReflector.getObjectFromUnspecificField(updateSignClass, Array.newInstance(IChatBaseComponent.iChatBaseComponentClass, 0).getClass(), packet);
 
             try {
                 for (int i = 0; i < 4; i++)
                     this.lines[i].parse(lines[i]);
+
             } catch (ArrayIndexOutOfBoundsException ex) {
                 if (JadAPI.getInstance().getDebug().doMiscDebug()) {
                     Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eReached &3final &eof &b&lArray&e! &b&lCatched &3OutOfBoundsException&e!!"));
@@ -75,12 +79,12 @@ public class OutUpdateSign extends DefinedPacket {
                 }
             }
         } else {
-            int x = JReflection.getFieldObject(updateSignClass, int.class, packet, (i) -> 0);
-            int y = JReflection.getFieldObject(updateSignClass, int.class, packet, (i) -> 1);
-            int z = JReflection.getFieldObject(updateSignClass, int.class, packet, (i) -> 2);
+            int x = JFieldReflector.getObjectFromUnspecificField(updateSignClass, int.class, (i) -> i - 2, packet);
+            int y = JFieldReflector.getObjectFromUnspecificField(updateSignClass, int.class, (i) -> i - 1, packet);
+            int z = JFieldReflector.getObjectFromUnspecificField(updateSignClass, int.class, (i) -> i - 0, packet);
             this.position = new BlockPosition(x, y, z);
 
-            String[] lines = JReflection.getFieldObject(updateSignClass, String[].class, packet);
+            String[] lines = JFieldReflector.getObjectFromUnspecificField(updateSignClass, String[].class, packet);
 
             try {
                 for (int i = 0; i < 4; i++)
@@ -96,20 +100,23 @@ public class OutUpdateSign extends DefinedPacket {
 
     @Override
     public Object build() {
-        if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_9))
-            throw new NMSException("Unsupported in this version! Only available in 1.8 and below!");
-
-        if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
-            return JReflection.executeConstructor(updateSignClass,
-                    new Class[]{int.class, int.class, int.class, String[].class},
-                    position.getX(), position.getY(), position.getZ(), Arrays.stream(lines).map(IChatBaseComponent::getMessage).toArray(String[]::new));
-        } else {
-            Object[] array = (Object[]) Array.newInstance(IChatBaseComponent.iChatBaseComponentClass, 4);
-            for (int i = 0; i < 4; i++)
-                array[i] = lines[i].build();
-            return JReflection.executeConstructor(updateSignClass,
-                    new Class[]{WorldServer.worldClass, BlockPosition.blockPositionClass, Array.newInstance(IChatBaseComponent.iChatBaseComponentClass, 0).getClass()},
-                    null, position.build(), array);
+        switch (JVersion.getServerVersion()) {
+            case v1_7: {
+                return JConstructorReflector.executeConstructor(updateSignClass,
+                        new Class[]{int.class, int.class, int.class, String[].class},
+                        position.getX(), position.getY(), position.getZ(), Arrays.stream(lines).map(IChatBaseComponent::getMessage).toArray(String[]::new));
+            }
+            case v1_8: {
+                Object[] array = (Object[]) Array.newInstance(IChatBaseComponent.iChatBaseComponentClass, 4);
+                for (int i = 0; i < 4; i++)
+                    array[i] = lines[i].build();
+                return JConstructorReflector.executeConstructor(updateSignClass,
+                        new Class[]{WorldServer.worldClass, BlockPosition.blockPositionClass, Array.newInstance(IChatBaseComponent.iChatBaseComponentClass, 0).getClass()},
+                        null, position.build(), array);
+            }
+            default: {
+                throw new NMSException("Cannot build this packet on new versions!");
+            }
         }
     }
 
@@ -128,5 +135,13 @@ public class OutUpdateSign extends DefinedPacket {
         return new OutUpdateSign((BlockPosition) position.copy(), Arrays.stream(this.lines)
                 .map(component -> (IChatBaseComponent) component.copy())
                 .toArray(IChatBaseComponent[]::new));
+    }
+
+    @Override
+    public String toString() {
+        return "OutUpdateSign{" +
+                "position=" + position +
+                ", lines=" + Arrays.toString(lines) +
+                '}';
     }
 }

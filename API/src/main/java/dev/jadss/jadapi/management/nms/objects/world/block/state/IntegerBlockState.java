@@ -1,15 +1,16 @@
 package dev.jadss.jadapi.management.nms.objects.world.block.state;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.objects.world.block.state.impl.IntegerState;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
 
 /**
  * Represents an integer value!
  */
 public interface IntegerBlockState extends StateType<Integer> {
 
-    public static final Class<?> blockStateIntegerClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.level.block.state.properties" : "server." + JReflection.getNMSVersion()) + ".BlockStateInteger");
+    public static final Class<?> blockStateIntegerClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.level.block.state.properties" : "server." + NMS.getNMSVersion()) + ".BlockStateInteger");
 
     /**
      * Create an instance of a BlockState.

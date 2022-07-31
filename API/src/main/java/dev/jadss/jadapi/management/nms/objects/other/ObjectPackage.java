@@ -11,4 +11,11 @@ public class ObjectPackage implements NMSObject {
 
     public ObjectPackage() {}
     public ObjectPackage(Object object) { this.object = object; }
+
+    @Override
+    public String toString() {
+        return "ObjectPackage{" +
+                "object=" + object +
+                '}';
+    }
 }

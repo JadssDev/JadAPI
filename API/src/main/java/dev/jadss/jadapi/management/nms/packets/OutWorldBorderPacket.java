@@ -7,7 +7,10 @@ import dev.jadss.jadapi.management.nms.enums.NMSEnum;
 import dev.jadss.jadapi.management.nms.interfaces.DefinedPacket;
 import dev.jadss.jadapi.management.nms.interfaces.MultipleDefinedPacket;
 import dev.jadss.jadapi.management.nms.objects.network.PacketDataSerializer;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JConstructorReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JEnumReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,33 +36,14 @@ public class OutWorldBorderPacket extends MultipleDefinedPacket {
     private int warningTime;
     private int warningDistance;
 
-    private Class<?> getClientboundInitializeBorderPacket() {
-        return JReflection.getReflectionClass("net.minecraft.network.protocol.game.ClientboundInitializeBorderPacket");
-    }
+    public static final Class<?> INITIALIZE_PACKET = JClassReflector.getClass("net.minecraft.network.protocol.game.ClientboundInitializeBorderPacket");
+    public static final Class<?> SET_BORDER_SIZE_PACKET = JClassReflector.getClass("net.minecraft.network.protocol.game.ClientboundSetBorderSizePacket");
+    public static final Class<?> SET_BORDER_LERP_SIZE_PACKET = JClassReflector.getClass("net.minecraft.network.protocol.game.ClientboundSetBorderLerpSizePacket");
+    public static final Class<?> SET_BORDER_CENTER_PACKET = JClassReflector.getClass("net.minecraft.network.protocol.game.ClientboundSetBorderCenterPacket");
+    public static final Class<?> SET_BORDER_WARNING_DELAY_PACKET = JClassReflector.getClass("net.minecraft.network.protocol.game.ClientboundSetBorderWarningDelayPacket");
+    public static final Class<?> SET_BORDER_WARNING_DISTANCE_PACKET = JClassReflector.getClass("net.minecraft.network.protocol.game.ClientboundSetBorderWarningDistancePacket");
 
-    private Class<?> getClientboundSetBorderSizePacket() {
-        return JReflection.getReflectionClass("net.minecraft.network.protocol.game.ClientboundSetBorderSizePacket");
-    }
-
-    private Class<?> getClientboundSetBorderLerpSizePacket() {
-        return JReflection.getReflectionClass("net.minecraft.network.protocol.game.ClientboundSetBorderLerpSizePacket");
-    }
-
-    private Class<?> getClientboundSetBorderCenterPacket() {
-        return JReflection.getReflectionClass("net.minecraft.network.protocol.game.ClientboundSetBorderCenterPacket");
-    }
-
-    private Class<?> getClientboundSetBorderWarningDelayPacket() {
-        return JReflection.getReflectionClass("net.minecraft.network.protocol.game.ClientboundSetBorderWarningDelayPacket");
-    }
-
-    private Class<?> getClientboundSetBorderWarningDistancePacket() {
-        return JReflection.getReflectionClass("net.minecraft.network.protocol.game.ClientboundSetBorderWarningDistancePacket");
-    }
-
-    private Class<?> getWorldBorderPacket() {
-        return JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".PacketPlayOutWorldBorder");
-    }
+    public static final Class<?> OLD_WORLD_BORDER_PACKET = JClassReflector.getClass("net.minecraft.server." + NMS.getNMSVersion() + ".PacketPlayOutWorldBorder");
 
     public OutWorldBorderPacket() {
     }
@@ -159,40 +143,52 @@ public class OutWorldBorderPacket extends MultipleDefinedPacket {
             throw new NMSException("The packet specified is not parsable by this class.");
 
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_16)) {
-            this.action = NMSEnum.getEnum(WorldBorderAction.class, JReflection.getFieldObject(getWorldBorderPacket(), WorldBorderAction.worldBorderActionEnum, packet));
-            this.portalTeleportBoundary = JReflection.getFieldObject(getWorldBorderPacket(), int.class, packet, (i) -> 0);
-            this.centerX = JReflection.getFieldObject(getWorldBorderPacket(), double.class, packet, (i) -> 0);
-            this.centerZ = JReflection.getFieldObject(getWorldBorderPacket(), double.class, packet, (i) -> 1);
-            this.oldDiameter = JReflection.getFieldObject(getWorldBorderPacket(), double.class, packet, (i) -> 2);
-            this.newDiameter = JReflection.getFieldObject(getWorldBorderPacket(), double.class, packet, (i) -> 3);
-            this.millisecondsToNewDiameter = JReflection.getFieldObject(getWorldBorderPacket(), long.class, packet, (i) -> 0);
-            this.warningTime = JReflection.getFieldObject(getWorldBorderPacket(), int.class, packet, (i) -> 1);
-            this.warningDistance = JReflection.getFieldObject(getWorldBorderPacket(), int.class, packet, (i) -> 2);
+            this.action = NMSEnum.getEnum(WorldBorderAction.class, JFieldReflector.getObjectFromUnspecificField(OLD_WORLD_BORDER_PACKET, WorldBorderAction.worldBorderActionEnum, (i) -> i, packet));
+            this.portalTeleportBoundary = JFieldReflector.getObjectFromUnspecificField(OLD_WORLD_BORDER_PACKET, int.class, (i) -> i - 2, packet);
+            this.centerX = JFieldReflector.getObjectFromUnspecificField(OLD_WORLD_BORDER_PACKET, double.class, (i) -> i - 3, packet);
+            this.centerZ = JFieldReflector.getObjectFromUnspecificField(OLD_WORLD_BORDER_PACKET, double.class, (i) -> i - 2, packet);
+            this.oldDiameter = JFieldReflector.getObjectFromUnspecificField(OLD_WORLD_BORDER_PACKET, double.class, (i) -> i - 1, packet);
+            this.newDiameter = JFieldReflector.getObjectFromUnspecificField(OLD_WORLD_BORDER_PACKET, double.class, (i) -> i, packet);
+            this.millisecondsToNewDiameter = JFieldReflector.getObjectFromUnspecificField(OLD_WORLD_BORDER_PACKET, long.class, (i) -> i, packet);
+            this.warningTime = JFieldReflector.getObjectFromUnspecificField(OLD_WORLD_BORDER_PACKET, int.class, (i) -> i - 1, packet);
+            this.warningDistance = JFieldReflector.getObjectFromUnspecificField(OLD_WORLD_BORDER_PACKET, int.class, (i) -> i, packet);
         } else {
             Class<?> packetClass = packet.getClass();
 
-            if (getClientboundInitializeBorderPacket().equals(packetClass)) {
-                this.centerX = JReflection.getFieldObject(getClientboundInitializeBorderPacket(), double.class, packet, (i) -> 0);
-                this.centerZ = JReflection.getFieldObject(getClientboundInitializeBorderPacket(), double.class, packet, (i) -> 1);
-                this.oldDiameter = JReflection.getFieldObject(getClientboundInitializeBorderPacket(), double.class, packet, (i) -> 2);
-                this.newDiameter = JReflection.getFieldObject(getClientboundInitializeBorderPacket(), double.class, packet, (i) -> 3);
-                this.millisecondsToNewDiameter = JReflection.getFieldObject(getClientboundInitializeBorderPacket(), long.class, packet, (i) -> 0);
-                this.portalTeleportBoundary = JReflection.getFieldObject(getClientboundInitializeBorderPacket(), int.class, packet, (i) -> 0);
-                this.warningDistance = JReflection.getFieldObject(getClientboundInitializeBorderPacket(), int.class, packet, (i) -> 1);
-                this.warningTime = JReflection.getFieldObject(getClientboundInitializeBorderPacket(), int.class, packet, (i) -> 2);
-            } else if (getClientboundSetBorderSizePacket().equals(packetClass)) {
-                this.newDiameter = JReflection.getFieldObject(getClientboundSetBorderSizePacket(), double.class, packet, (i) -> 0);
-            } else if (getClientboundSetBorderLerpSizePacket().equals(packetClass)) {
-                this.newDiameter = JReflection.getFieldObject(getClientboundSetBorderLerpSizePacket(), double.class, packet, (i) -> 0);
-                this.oldDiameter = JReflection.getFieldObject(getClientboundSetBorderLerpSizePacket(), double.class, packet, (i) -> 1);
-                this.millisecondsToNewDiameter = JReflection.getFieldObject(getClientboundSetBorderLerpSizePacket(), long.class, packet, (i) -> 0);
-            } else if (getClientboundSetBorderCenterPacket().equals(packetClass)) {
-                this.centerX = JReflection.getFieldObject(getClientboundSetBorderCenterPacket(), double.class, packet, (i) -> 0);
-                this.centerZ = JReflection.getFieldObject(getClientboundSetBorderCenterPacket(), double.class, packet, (i) -> 1);
-            } else if (getClientboundSetBorderWarningDelayPacket().equals(packetClass)) {
-                this.warningDistance = JReflection.getFieldObject(getClientboundSetBorderWarningDelayPacket(), int.class, packet, (i) -> 0);
-            } else if (getClientboundSetBorderWarningDistancePacket().equals(packetClass)) {
-                this.warningTime = JReflection.getFieldObject(getClientboundSetBorderWarningDistancePacket(), int.class, packet, (i) -> 0);
+            if (INITIALIZE_PACKET.equals(packetClass)) {
+                this.action = WorldBorderAction.INITIALIZE;
+
+                this.centerX = JFieldReflector.getObjectFromUnspecificField(INITIALIZE_PACKET, double.class, (i) -> i - 3, packet);
+                this.centerZ = JFieldReflector.getObjectFromUnspecificField(INITIALIZE_PACKET, double.class, (i) -> i - 2, packet);
+                this.oldDiameter = JFieldReflector.getObjectFromUnspecificField(INITIALIZE_PACKET, double.class, (i) -> i - 1, packet);
+                this.newDiameter = JFieldReflector.getObjectFromUnspecificField(INITIALIZE_PACKET, double.class, (i) -> i, packet);
+                this.millisecondsToNewDiameter = JFieldReflector.getObjectFromUnspecificField(INITIALIZE_PACKET, long.class, (i) -> i, packet);
+                this.portalTeleportBoundary = JFieldReflector.getObjectFromUnspecificField(INITIALIZE_PACKET, int.class, (i) -> i - 2, packet);
+                this.warningDistance = JFieldReflector.getObjectFromUnspecificField(INITIALIZE_PACKET, int.class, (i) -> i - 1, packet);
+                this.warningTime = JFieldReflector.getObjectFromUnspecificField(INITIALIZE_PACKET, int.class, (i) -> i, packet);
+            } else if (SET_BORDER_SIZE_PACKET.equals(packetClass)) {
+                this.action = WorldBorderAction.SET_SIZE;
+
+                this.newDiameter = JFieldReflector.getObjectFromUnspecificField(SET_BORDER_SIZE_PACKET, double.class, (i) -> i, packet);
+            } else if (SET_BORDER_LERP_SIZE_PACKET.equals(packetClass)) {
+                this.action = WorldBorderAction.LERP_SIZE;
+
+                this.newDiameter = JFieldReflector.getObjectFromUnspecificField(SET_BORDER_LERP_SIZE_PACKET, double.class, (i) -> i - 1, packet);
+                this.oldDiameter = JFieldReflector.getObjectFromUnspecificField(SET_BORDER_LERP_SIZE_PACKET, double.class, (i) -> i, packet);
+                this.millisecondsToNewDiameter = JFieldReflector.getObjectFromUnspecificField(SET_BORDER_LERP_SIZE_PACKET, long.class, (i) -> i, packet);
+            } else if (SET_BORDER_CENTER_PACKET.equals(packetClass)) {
+                this.action = WorldBorderAction.SET_CENTER;
+
+                this.centerX = JFieldReflector.getObjectFromUnspecificField(SET_BORDER_CENTER_PACKET, double.class, (i) -> i - 1, packet);
+                this.centerZ = JFieldReflector.getObjectFromUnspecificField(SET_BORDER_CENTER_PACKET, double.class, (i) -> i, packet);
+            } else if (SET_BORDER_WARNING_DELAY_PACKET.equals(packetClass)) {
+                this.action = WorldBorderAction.SET_WARNING_TIME;
+
+                this.warningDistance = JFieldReflector.getObjectFromUnspecificField(SET_BORDER_WARNING_DELAY_PACKET, int.class, (i) -> i, packet);
+            } else if (SET_BORDER_WARNING_DISTANCE_PACKET.equals(packetClass)) {
+                this.action = WorldBorderAction.SET_WARNING_BLOCKS;
+
+                this.warningTime = JFieldReflector.getObjectFromUnspecificField(SET_BORDER_WARNING_DISTANCE_PACKET, int.class, (i) -> i, packet);
             } else throw new NMSException("Could not parse.");
         }
     }
@@ -201,17 +197,17 @@ public class OutWorldBorderPacket extends MultipleDefinedPacket {
     public Object build() {
         Object packet;
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_16)) {
-            packet = JReflection.executeConstructor(getWorldBorderPacket(), new Class[]{});
+            packet = JConstructorReflector.executeConstructor(OLD_WORLD_BORDER_PACKET, new Class[]{});
 
-            JReflection.setFieldObject(getWorldBorderPacket(), WorldBorderAction.worldBorderActionEnum, packet, this.action.getNMSObject());
-            JReflection.setFieldObject(getWorldBorderPacket(), int.class, packet, this.portalTeleportBoundary, (i) -> 0);
-            JReflection.setFieldObject(getWorldBorderPacket(), double.class, packet, this.centerX, (i) -> 0);
-            JReflection.setFieldObject(getWorldBorderPacket(), double.class, packet, this.centerZ, (i) -> 1);
-            JReflection.setFieldObject(getWorldBorderPacket(), double.class, packet, this.oldDiameter, (i) -> 2);
-            JReflection.setFieldObject(getWorldBorderPacket(), double.class, packet, this.newDiameter, (i) -> 3);
-            JReflection.setFieldObject(getWorldBorderPacket(), long.class, packet, this.millisecondsToNewDiameter, (i) -> 0);
-            JReflection.setFieldObject(getWorldBorderPacket(), int.class, packet, this.warningTime, (i) -> 1);
-            JReflection.setFieldObject(getWorldBorderPacket(), int.class, packet, this.warningDistance, (i) -> 2);
+            JFieldReflector.setObjectToUnspecificField(OLD_WORLD_BORDER_PACKET, WorldBorderAction.worldBorderActionEnum, packet, this.action.getNMSObject());
+            JFieldReflector.setObjectToUnspecificField(OLD_WORLD_BORDER_PACKET, int.class, (i) -> i - 2, packet, this.portalTeleportBoundary);
+            JFieldReflector.setObjectToUnspecificField(OLD_WORLD_BORDER_PACKET, double.class, (i) -> i - 3, packet, this.centerX);
+            JFieldReflector.setObjectToUnspecificField(OLD_WORLD_BORDER_PACKET, double.class, (i) -> i - 2, packet, this.centerZ);
+            JFieldReflector.setObjectToUnspecificField(OLD_WORLD_BORDER_PACKET, double.class, (i) -> i - 1, packet, this.oldDiameter);
+            JFieldReflector.setObjectToUnspecificField(OLD_WORLD_BORDER_PACKET, double.class, (i) -> i, packet, this.newDiameter);
+            JFieldReflector.setObjectToUnspecificField(OLD_WORLD_BORDER_PACKET, long.class, (i) -> i, packet, this.millisecondsToNewDiameter);
+            JFieldReflector.setObjectToUnspecificField(OLD_WORLD_BORDER_PACKET, int.class, (i) -> i - 1, packet, this.warningTime);
+            JFieldReflector.setObjectToUnspecificField(OLD_WORLD_BORDER_PACKET, int.class, (i) -> i, packet, this.warningDistance);
 
         } else {
             PacketDataSerializer data = NMS.newPacketDataSerializer();
@@ -225,30 +221,30 @@ public class OutWorldBorderPacket extends MultipleDefinedPacket {
                     data.writeVarInt(this.portalTeleportBoundary);
                     data.writeVarInt(this.warningDistance);
                     data.writeVarInt(this.warningTime);
-                    packet = JReflection.executeConstructor(getClientboundInitializeBorderPacket(), new Class[]{data.getParsingClass()}, data.getPDS());
+                    packet = JConstructorReflector.executeConstructor(INITIALIZE_PACKET, new Class[]{data.getParsingClass()}, data.getPDS());
                     break;
                 case SET_SIZE:
                     data.writeDouble(this.newDiameter);
-                    packet = JReflection.executeConstructor(getClientboundSetBorderSizePacket(), new Class[]{data.getParsingClass()}, data.getPDS());
+                    packet = JConstructorReflector.executeConstructor(SET_BORDER_SIZE_PACKET, new Class[]{data.getParsingClass()}, data.getPDS());
                     break;
                 case LERP_SIZE:
                     data.writeDouble(this.oldDiameter);
                     data.writeDouble(this.newDiameter);
                     data.writeVarLong(this.millisecondsToNewDiameter);
-                    packet = JReflection.executeConstructor(getClientboundSetBorderLerpSizePacket(), new Class[]{data.getParsingClass()}, data.getPDS());
+                    packet = JConstructorReflector.executeConstructor(SET_BORDER_LERP_SIZE_PACKET, new Class[]{data.getParsingClass()}, data.getPDS());
                     break;
                 case SET_CENTER:
                     data.writeDouble(this.centerX);
                     data.writeDouble(this.centerZ);
-                    packet = JReflection.executeConstructor(getClientboundSetBorderCenterPacket(), new Class[]{data.getParsingClass()}, data.getPDS());
+                    packet = JConstructorReflector.executeConstructor(SET_BORDER_CENTER_PACKET, new Class[]{data.getParsingClass()}, data.getPDS());
                     break;
                 case SET_WARNING_TIME:
                     data.writeVarInt(this.warningTime);
-                    packet = JReflection.executeConstructor(getClientboundSetBorderWarningDelayPacket(), new Class[]{data.getParsingClass()}, data.getPDS());
+                    packet = JConstructorReflector.executeConstructor(SET_BORDER_WARNING_DELAY_PACKET, new Class[]{data.getParsingClass()}, data.getPDS());
                     break;
                 case SET_WARNING_BLOCKS:
                     data.writeVarInt(this.warningDistance);
-                    packet = JReflection.executeConstructor(getClientboundSetBorderWarningDistancePacket(), new Class[]{data.getParsingClass()}, data.getPDS());
+                    packet = JConstructorReflector.executeConstructor(SET_BORDER_WARNING_DISTANCE_PACKET, new Class[]{data.getParsingClass()}, data.getPDS());
                     break;
                 default:
                     throw new NMSException("The fuck?");
@@ -263,14 +259,16 @@ public class OutWorldBorderPacket extends MultipleDefinedPacket {
         List<Class<?>> list = new ArrayList<>();
 
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17)) {
-            list.add(getClientboundInitializeBorderPacket());
-            list.add(getClientboundSetBorderSizePacket());
-            list.add(getClientboundSetBorderLerpSizePacket());
-            list.add(getClientboundSetBorderCenterPacket());
-            list.add(getClientboundSetBorderWarningDelayPacket());
-            list.add(getClientboundSetBorderWarningDistancePacket());
+            list.add(INITIALIZE_PACKET);
+            list.add(SET_BORDER_SIZE_PACKET);
+            list.add(SET_BORDER_LERP_SIZE_PACKET);
+            list.add(SET_BORDER_CENTER_PACKET);
+            list.add(SET_BORDER_WARNING_DELAY_PACKET);
+            list.add(SET_BORDER_WARNING_DISTANCE_PACKET);
+            list.add(SET_BORDER_WARNING_DELAY_PACKET);
+            list.add(SET_BORDER_WARNING_DISTANCE_PACKET);
         } else {
-            list.add(getWorldBorderPacket());
+            list.add(OLD_WORLD_BORDER_PACKET);
         }
 
         return list;
@@ -298,19 +296,34 @@ public class OutWorldBorderPacket extends MultipleDefinedPacket {
         SET_WARNING_TIME,
         SET_WARNING_BLOCKS;
 
-        public static final Class<?> worldBorderActionEnum = JReflection.getReflectionClass("net.minecraft.server." + JReflection.getNMSVersion() + ".PacketPlayOutWorldBorder$EnumWorldBorderAction");
+        public static final Class<?> worldBorderActionEnum = JClassReflector.getClass("net.minecraft.server." + NMS.getNMSVersion() + ".PacketPlayOutWorldBorder$EnumWorldBorderAction");
 
         @Override
         public Object getNMSObject() {
             if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7) || JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17))
                 throw new NMSException("Unsupported!");
 
-            return JReflection.getEnum(this.ordinal(), worldBorderActionEnum);
+            return JEnumReflector.getEnum(this.ordinal(), worldBorderActionEnum);
         }
 
         @Override
         public Class<?> getNMSEnumClass() {
             return worldBorderActionEnum;
         }
+    }
+
+    @Override
+    public String toString() {
+        return "OutWorldBorderPacket{" +
+                "action=" + action +
+                ", portalTeleportBoundary=" + portalTeleportBoundary +
+                ", centerX=" + centerX +
+                ", centerZ=" + centerZ +
+                ", oldDiameter=" + oldDiameter +
+                ", newDiameter=" + newDiameter +
+                ", millisecondsToNewDiameter=" + millisecondsToNewDiameter +
+                ", warningTime=" + warningTime +
+                ", warningDistance=" + warningDistance +
+                '}';
     }
 }

@@ -1,19 +1,19 @@
 package dev.jadss.jadapi.management.nms.objects.world.block.state;
 
-import dev.jadss.jadapi.annotations.ForChange;
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.bukkitImpl.item.JMaterial;
 import dev.jadss.jadapi.management.nms.enums.*;
-import dev.jadss.jadapi.utils.JReflection;
-import org.bukkit.Bukkit;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
 
-import java.util.List;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Represents a list with all the Block states Minecraft has!
  * <p>I used this page here with some consulting in NMS: <b>https://minecraft.fandom.com/wiki/Block_states</b></p>
  */
-@ForChange(isMajor = false, expectedVersionForChange = "1.23.1", reason = "Make it so for each of the states specified, they have annotation " +
-        "specifying the version they are available in &/or making it so it shows which blocks it is applicable to.")
 public class StateList {
 
     //MISSING BLOCK STATES:
@@ -36,332 +36,395 @@ public class StateList {
     // "vertical_direction"
     // "thickness" //Enum
 
-    /**
-     * This BlockState can be used in many many many Blocks, so that's why the material specified is AIR.
-     */
+
+    @StateId(id = "facing")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "The direction the Block is facing.")
     public static final EnumBlockState<EnumDirection> FACING;
 
-    /**
-     * This BlockState can be used in many many many Blocks, so that's why the material specified is AIR.
-     */
+    @StateId(id = "rotation")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "The rotation the Block is facing.")
     public static final IntegerBlockState ROTATION;
 
-    /**
-     * This BlockState can be used in many many many Blocks, so that's why the material specified is AIR.
-     */
+    @StateId(id = "axis")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "The axis the Block, only 3 values instead of 6 from facing.")
     public static final EnumBlockState<EnumAxis> AXIS;
 
-    /**
-     * Represents which part of the bed this block state is.
-     */
-    public static final EnumBlockState<EnumBedPart> BED_PART;
+    @StateId(id = "part")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "The part of the Bed.")
+    public static final EnumBlockState<EnumBedPart> PART;
 
-    /**
-     * Represents if this bed is occupied!
-     */
-    public static final BooleanBlockState BED_OCCUPIED;
+    @StateId(id = "occupied")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "If the bed is occupied...")
+    public static final BooleanBlockState OCCUPIED;
 
-    /**
-     * Represents the damage the anvil has.
-     */
+    @StateId(id = "damage")
+    @ImplementedAt(implementedVersion = JVersion.v1_8, removedVersion = JVersion.v1_13)
+    @StateExplanation(explanation = "Represents the damage of the anvil before the Flattening update!")
     public static final IntegerBlockState ANVIL_DAMAGE;
 
-    /**
-     * Represents the bottles in a brewing stand.
-     */
-    public static final BooleanBlockState BREWING_STAND_HAS_BOTTLE_0, BREWING_STAND_HAS_BOTTLE_1, BREWING_STAND_HAS_BOTTLE_2;
+    @StateId(id = "has_bottle_0")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents if the bottle has a potion the first position.")
+    public static final BooleanBlockState BREWING_STAND_HAS_BOTTLE_0;
 
-    /**
-     * Represents if the block is powered by redstone (means a block is affected by redstone, and is currently updated).
-     */
+    @StateId(id = "has_bottle_1")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents if the bottle has a potion the second position.")
+    public static final BooleanBlockState BREWING_STAND_HAS_BOTTLE_1;
+
+    @StateId(id = "has_bottle_2")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents if the bottle has a potion the third position.")
+    public static final BooleanBlockState BREWING_STAND_HAS_BOTTLE_2;
+
+    @StateId(id = "powered")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents if the block can be powered by Redstone!")
     public static final BooleanBlockState POWERED_BY_REDSTONE;
 
-    /**
-     * Means the power of a redstone wire. (can also be used in daylight detectors to determine the sun's power basically)
-     */
-    public static final IntegerBlockState REDSTONE_POWER;
+    @StateId(id = "power")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents the power of a Redstone Wire or Redstone object!")
+    public static final IntegerBlockState POWER;
 
-    /**
-     * Represents the many ages plants can have.
-     */
-    public static final IntegerBlockState AGE_TYPE_1, AGE_TYPE_2, AGE_TYPE_3, AGE_TYPE_4, AGE_TYPE_5, AGE_TYPE_6, AGE_TYPE_7;
+    @StateId(id = "age")
+    @ImplementedAt(implementedVersion = JVersion.v1_14) //bamboo
+    @StateExplanation(explanation = "Represents the age of this block! (like bamboo)")
+    public static final IntegerBlockState AGE_TO_1;
 
-    /**
-     * Represents the bites of a cake, 0 bites = full cake, 6 = 1 bite remains.
-     */
+    @StateId(id = "age")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents the age of this block! (like cocoa)")
+    public static final IntegerBlockState AGE_TO_2;
+
+    @StateId(id = "age")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents the age of this block! (like nether wart and beetroots)")
+    public static final IntegerBlockState AGE_TO_3;
+
+    @StateId(id = "age")
+    @ImplementedAt(implementedVersion = JVersion.v1_9)
+    @StateExplanation(explanation = "Represents the age of this block! (like Chorus Flower)")
+    public static final IntegerBlockState AGE_TO_5;
+
+    @StateId(id = "age")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents the age of this block! (like carrots and potatoes)")
+    public static final IntegerBlockState AGE_TO_7;
+
+    @StateId(id = "age")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents the age of this block! (like cactus and sugar cane)")
+    public static final IntegerBlockState AGE_TO_15;
+
+    @StateId(id = "age")
+    @ImplementedAt(implementedVersion = JVersion.v1_13)
+    @StateExplanation(explanation = "Represents the age of this block! (like kelp)")
+    public static final IntegerBlockState AGE_TO_25;
+
+    @StateId(id = "bites")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents the amount of bites a cake has, starting at 0 until 6 where there's only 1 slice left.")
     public static final IntegerBlockState CAKE_BITES;
 
-    /**
-     * Represents the color of for example, a wool, or a bed in 1.12
-     */
+    @StateId(id = "color")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents the color the block.")
     public static final EnumBlockState<EnumColor> COLOR;
 
-    /**
-     * The level of water in the cauldron!
-     */
+    @StateId(id = "level")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents the level of the liquid in the cauldron.")
     public static final IntegerBlockState CAULDRON_LEVEL;
 
-    /**
-     * Used for walls and fences (please note fences do not support up and down), for their connections to other blocks or walls, etc.
-     */
-    public static final BooleanBlockState UP, DOWN, NORTH, EAST, SOUTH, WEST;
+    @StateId(id = "up")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Depending on the block this has different objectives.")
+    public static final BooleanBlockState UP;
 
-    /**
-     * if the block is triggered by redstone, this is specific to Droppers, dispensers, and others....
-     */
+    @StateId(id = "down")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Depending on the block this has different objectives.")
+    public static final BooleanBlockState DOWN;
+
+    @StateId(id = "north")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Depending on the block this has different objectives.")
+    public static final BooleanBlockState NORTH;
+
+    @StateId(id = "east")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Depending on the block this has different objectives.")
+    public static final BooleanBlockState EAST;
+
+    @StateId(id = "south")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Depending on the block this has different objectives.")
+    public static final BooleanBlockState SOUTH;
+
+    @StateId(id = "west")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Depending on the block this has different objectives.")
+    public static final BooleanBlockState WEST;
+
+    @StateId(id = "triggered")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents if this block is activated!")
     public static final BooleanBlockState TRIGGERED;
 
-    /**
-     * Represents that this dirt or grass is snowy!
-     */
+    @StateId(id = "snowy")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents when a grass block has a snow layer on top!")
     public static final BooleanBlockState SNOWY;
 
-    /**
-     * Represents if a door, trapdoor, or fence gate (and others) is open or closed.
-     */
+    @StateId(id = "open")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents if a door OR trapdoor is open.")
     public static final BooleanBlockState OPEN;
 
-    /**
-     * Where the location of the hinge is, left or right!
-     */
+    @StateId(id = "hinge")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents where the hinge of the door is located.")
     public static final EnumBlockState<EnumDoorHinge> DOOR_HINGE;
 
-    /**
-     * ....
-     */
+    @StateId(id = "half")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents the half of the door.")
     public static final EnumBlockState<EnumDoorHalf> HALF;
 
-    /**
-     * Represents if the block is seamless, used in slabs. (not present in versions newer than 1.13) (only in 1.12 and down)
-     */
+    @StateId(id = "seamless")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents if the Slab has a line in the middle of it's a double slab. (true means there's no line)")
     public static final BooleanBlockState SEAMLESS;
 
-    /**
-     * Represents if an End portal frame has an eye in its center.
-     */
+    @StateId(id = "eye")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents if an Ender Frame has an eye or not.")
     public static final BooleanBlockState HAS_EYE;
 
-    /**
-     * Represents if the fence gate has a wall attached to it.
-     */
+    @StateId(id = "in_wall")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "If a Fence is attached to a wall, it spawns a little bit lower.")
     public static final BooleanBlockState FENCE_GATE_ATTACHED_TO_WALL;
 
-    /**
-     * Represents the level of a fluid in minecraft.
-     */
+    @StateId(id = "level")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents how the fluid \"works\"")
     public static final IntegerBlockState FLUID_LEVEL;
 
-    /**
-     * You know what this is...
-     */
+    @StateId(id = "enabled")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents if the hopper is enabled.")
     public static final BooleanBlockState HOPPER_ENABLED;
 
-    /**
-     * Represents if a jukebox has a record.
-     */
+    @StateId(id = "has_record")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents if a jukebox has a disk inside of it!")
     public static final BooleanBlockState JUKEBOX_HAS_RECORD;
 
-    /**
-     * Represents if leaves are to be decayed.
-     * <b>Note, in 1.13 and above this state was actually changed to be persistent, so if you're in 1.13, make sure to invert it!</b>
-     */
-    public static final BooleanBlockState LEAVES_DECAYABLE;
+    @StateId(id = "persistent")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents if a leaf is persistent")
+    @StateChanged(changeExplanation = "This State was changed during the flatten update from the original \"decayable\" state name. Make sure to invert the value given on an older version!")
+    public static final BooleanBlockState LEAVES_PERSISTENT;
 
-    /**
-     * Represents the distance from the respective wood type! Please note this does not exist in versions bellow 1.13. (it does in 1.13 tho)
-     */
+    @StateId(id = "distance")
+    @ImplementedAt(implementedVersion = JVersion.v1_13)
+    @StateExplanation(explanation = "Represents the distance of this leave to the log")
     public static final IntegerBlockState LEAVES_DISTANCE;
 
-    /**
-     * Represents if a piston is extended.
-     */
+    @StateId(id = "extended")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents when the piston is extended.")
     public static final BooleanBlockState EXTENDED;
 
-    /**
-     * Represents if a piston is short, the head itself, this is actually stupid, but it exists and it's mapped, it's on the piston head extended btw.
-     */
+    @StateId(id = "short")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents if the head of the piston is short (2-6 pixels less on the rod)")
     public static final BooleanBlockState SHORT_PISTON;
 
-    /**
-     * Represents how a rail is positioned.
-     */
+    @StateId(id = "shape")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents how the rail is positioned.")
     public static final EnumBlockState<EnumTrackPosition> TRACK_POSITION;
 
-    /**
-     * Represents the power of a Weighted pressure plate!
-     */
-    public static final IntegerBlockState WEIGHTED_PRESSURE_PLATE_POWER;
-
-    /**
-     * Represents the mode a comparator is currently in!
-     */
+    @StateId(id = "mode")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents the mode of a comparator.")
     public static final EnumBlockState<EnumComparatorMode> COMPARATOR_MODE;
 
-    /**
-     * Represents if the command block is conditional.
-     */
+    @StateId(id = "conditional")
+    @ImplementedAt(implementedVersion = JVersion.v1_9)
+    @StateExplanation(explanation = "Represents if the command block has the conditional tag.")
     public static final BooleanBlockState CONDITIONAL_COMMAND_BLOCK;
 
-    /**
-     * Represents the connection of a Redstone Wire to the north.
-     */
+    @StateId(id = "north")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents where the redstone wire will connect on the pole.")
     public static final EnumBlockState<EnumRedstoneWireConnection> REDSTONE_WIRE_CONNECTION_NORTH;
 
-    /**
-     * Represents the connection of a Redstone Wire to the east.
-     */
+    @StateId(id = "east")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents where the redstone wire will connect on the pole.")
     public static final EnumBlockState<EnumRedstoneWireConnection> REDSTONE_WIRE_CONNECTION_EAST;
 
-    /**
-     * Represents the connection of a Redstone Wire to the south.
-     */
+    @StateId(id = "south")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents where the redstone wire will connect on the pole.")
     public static final EnumBlockState<EnumRedstoneWireConnection> REDSTONE_WIRE_CONNECTION_SOUTH;
 
-    /**
-     * Represents the connection of a Redstone Wire to the west.
-     */
+    @StateId(id = "west")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents where the redstone wire will connect on the pole.")
     public static final EnumBlockState<EnumRedstoneWireConnection> REDSTONE_WIRE_CONNECTION_WEST;
 
-    /**
-     * Represents if a repeater is currently blocked... this means the repeater's current mode (powered or not) is continuous.
-     */
+    @StateId(id = "locked")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents if the repeater is locked.")
     public static final BooleanBlockState REPEATER_LOCKED;
 
-    /**
-     * The delay of a repeater, in ticks.
-     */
+    @StateId(id = "delay")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents the delay of a repeater.")
     public static final IntegerBlockState REPEATER_DELAY;
 
-    /**
-     * Which stage a tree is from growing!
-     */
+    @StateId(id = "stage")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents the stage of a sapling")
     public static final IntegerBlockState SAPLING_STAGE;
 
-    /**
-     * Represents if this skull will be dropped when you break it.
-     */
+    @StateId(id = "nodrop")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents if this skull will NOT be dropped on break.")
     public static final BooleanBlockState SKULL_NO_DROP;
 
-    /**
-     * How many layers a snow layer has.
-     */
+    @StateId(id = "layers")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents how many snow layers there are on a snow layer block.")
     public static final IntegerBlockState SNOW_LAYERS;
 
-    /**
-     * Represents the moisture level of a Farmland.
-     */
+    @StateId(id = "moisture")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents if the farm land has/is moisture/wet or not.")
     public static final IntegerBlockState FARM_LAND_MOISTURE;
 
-    /**
-     * Represents if a Sponge is wet or not!
-     */
+    @StateId(id = "wet")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents if a sponge is wet.")
     public static final BooleanBlockState SPONGE_WET;
 
-    /**
-     * Represents the half of the slab.
-     * @see EnumStairsHalf
-     */
+    @StateId(id = "half")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents the half of the stairs.")
     public static final EnumBlockState<EnumStairsHalf> STAIRS_HALF;
 
-    /**
-     * Represents the shape of the Stairs!
-     */
+    @StateId(id = "shape")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents how the stairs are connected.")
     public static final EnumBlockState<EnumStairsShape> STAIRS_SHAPE;
 
-    /**
-     * Represents what half of the tall plant this block is!
-     */
+    @StateId(id = "half")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents which half of a tall plant this block is.")
     public static final EnumBlockState<EnumTallPlantHalf> TALL_PLANT_HALF;
 
-    /**
-     * Where the trapdoor is attached to!
-     */
+    @StateId(id = "half")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents where a trapdoor is attached to, this means, the lower or upper part.")
     public static final EnumBlockState<EnumTrapdoorHalf> TRAPDOOR_ATTACHED_HALF;
 
-    /**
-     * Is this tripwire suspended, please note that this does not exist in 1.9+. (yes in 1.8 tho, that's why it is here!)
-     * <p>This means there is air bellow the block.</p>
-     */
-    public static final BooleanBlockState TRIPWIRE_SUSPENDED;
+    @StateId(id = "suspended")
+    @ImplementedAt(implementedVersion = JVersion.v1_8, removedVersion = JVersion.v1_9)
+    @StateExplanation(explanation = "Represents if this block is suspended, this is, above a block that is not solid.")
+    public static final BooleanBlockState SUSPENDED;
 
-    /**
-     * Is this tripwire attached to a string or is the string attached to a tripwire hook?
-     */
-    public static final BooleanBlockState TRIPWIRE_ATTACHED;
+    @StateId(id = "attached")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents if this block is attached. (like string and tripwire hooks)")
+    public static final BooleanBlockState ATTACHED;
 
-    /**
-     * Is this tripwire disabled?
-     */
+    @StateId(id = "disarmed")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents if this tripwire was disarmed using a shears.")
     public static final BooleanBlockState TRIPWIRE_DISARMED;
 
-    /**
-     * Represents if a Lectern has a book on it.
-     */
+    @StateId(id = "has_book")
+    @ImplementedAt(implementedVersion = JVersion.v1_14)
+    @StateExplanation(explanation = "Represents if this lectern has a book in it.")
     public static final BooleanBlockState LECTERN_HAS_BOOK;
 
-    /**
-     * Represents how many charges does a Respawn Anchor have.
-     */
+    @StateId(id = "charges")
+    @ImplementedAt(implementedVersion = JVersion.v1_16)
+    @StateExplanation(explanation = "Represents how many charges a respawn anchor has.")
     public static final IntegerBlockState RESPAWN_ANCHOR_CHARGES;
 
-    /**
-     * Represents the instrument of a note block!
-     */
-    public static final EnumBlockState<EnumInstrument> NOTE_BLOCK_INSTRUMENT; //S
+    @StateId(id = "instrument")
+    @ImplementedAt(implementedVersion = JVersion.v1_13)
+    @StateExplanation(explanation = "Represents the instrument of a Note block.")
+    @StateChanged(changeExplanation = "The Note Block's instrument is stored in the BlockEntity in legacy versions (1.8-1.12), which is not accessible using BlockStates.")
+    public static final EnumBlockState<EnumInstrument> NOTE_BLOCK_INSTRUMENT;
 
-    /**
-     * Represents the note of Note Block!
-     */
-    public static final IntegerBlockState NOTE_BLOCK_NOTE; //S
+    @StateId(id = "note")
+    @ImplementedAt(implementedVersion = JVersion.v1_13)
+    @StateExplanation(explanation = "Represents the note of the Note block.")
+    @StateChanged(changeExplanation = "The Note Block's note is stored in the BlockEntity in legacy versions (1.8-1.12), which is not accessible using BlockStates.")
+    public static final IntegerBlockState NOTE_BLOCK_NOTE;
 
-    /**
-     * This block state defines if a cave vine has berries to be collected.
-     */
+    @StateId(id = "berries")
+    @ImplementedAt(implementedVersion = JVersion.v1_17)
+    @StateExplanation(explanation = "Represents if cave vines have berries that can be collected.")
     public static final BooleanBlockState CAVE_VINE_HAS_BERRIES;
 
-    /**
-     * Does the block have water? is it waterlogged... just google it.
-     */
+    @StateId(id = "waterlogged")
+    @ImplementedAt(implementedVersion = JVersion.v1_13)
+    @StateExplanation(explanation = "Represents if this block can be water logged.")
     public static final BooleanBlockState WATERLOGGED;
 
-    /**
-     * Represents if a tnt will blow up if you even destroy it.
-     */
+    @StateId(id = "unstable")
+    @ImplementedAt(implementedVersion = JVersion.v1_8)
+    @StateExplanation(explanation = "Represents if the TNT should ignite when broken.")
+    @StateChanged(changeExplanation = "This BlockState had it's name changed after the Flattening update from the original \"explode\"")
     public static final BooleanBlockState TNT_UNSTABLE;
 
-    /**
-     * Represents if a campfire has a hay bale bellow it.
-     */
+    @StateId(id = "signal_fire")
+    @ImplementedAt(implementedVersion = JVersion.v1_14)
+    @StateExplanation(explanation = "Represents if the campfire should produce more smoke, this could also be done by adding a hay bale below the campfire.")
     public static final BooleanBlockState CAMPFIRE_SIGNAL_FIRE;
 
-    /**
-     * Represents if a redstone torch or campfire, or furnace for example, is lit!
-     */
+    @StateId(id = "lit")
+    @ImplementedAt(implementedVersion = JVersion.v1_13)
+    @StateExplanation(explanation = "Represents if a furnace, torch, etc. is lit.")
     public static final BooleanBlockState IS_LIT;
 
-    /**
-     * Represents if a day light detector is inverted or not!
-     */
-    public static final BooleanBlockState DAYLIGHT_DETECTOR_INVERTED; //S <- represented in older versions in the block tile entity itself.
+    @StateId(id = "inverted")
+    @ImplementedAt(implementedVersion = JVersion.v1_13)
+    @StateExplanation(explanation = "Represents if the daylight detector has it's mode inverted.")
+    @StateChanged(changeExplanation = "The Daylight Detector's mode is stored in the BlockEntity in legacy versions (1.8-1.12), which is not accessible using BlockStates.")
+    public static final BooleanBlockState DAYLIGHT_DETECTOR_INVERTED;
 
-    /**
-     * The honey level of a bee hive!
-     */
+    @StateId(id = "honey_level")
+    @ImplementedAt(implementedVersion = JVersion.v1_15)
+    @StateExplanation(explanation = "Represents the level of honey of a beehive.")
     public static final IntegerBlockState HONEY_LEVEL;
 
-    /**
-     * Represents the title of a drip leaf!
-     */
+    @StateId(id = "tilt")
+    @ImplementedAt(implementedVersion = JVersion.v1_17)
+    @StateExplanation(explanation = "Represents how much tilt a dripleaf has.")
     public static final EnumBlockState<EnumTilt> DRIPLEAF_TILT;
 
-    /**
-     * Represents the phase a sculk sensor is currently in.
-     */
+    @StateId(id = "sculk_sensor_phase")
+    @ImplementedAt(implementedVersion = JVersion.v1_17)
+    @StateExplanation(explanation = "Represents the current state of a sculk sensor.")
     public static final EnumBlockState<EnumSculkSensorPhase> SCULK_SENSOR_PHASE;
 
-    /**
-     * Represents how much things it has, level 8 means it can be collected the bone meal!
-     */
+    @StateId(id = "level")
+    @ImplementedAt(implementedVersion = JVersion.v1_14)
+    @StateExplanation(explanation = "Represents the level of the composter.")
     public static final IntegerBlockState COMPOSTER_LEVEL;
 
     static {
@@ -369,24 +432,24 @@ public class StateList {
         ROTATION = IntegerBlockState.createInstance("rotation", 0, 15);
         AXIS = EnumBlockState.createInstance("axis", EnumAxis.class, EnumAxis.X);
 
-        BED_PART = EnumBlockState.createInstance("part", EnumBedPart.class, EnumBedPart.FOOT);
-        BED_OCCUPIED = BooleanBlockState.createInstance("occupied", false);
-        ANVIL_DAMAGE = IntegerBlockState.createInstance("damage", 0, 15);
+        PART = EnumBlockState.createInstance("part", EnumBedPart.class, EnumBedPart.FOOT);
+        OCCUPIED = BooleanBlockState.createInstance("occupied", false);
+        ANVIL_DAMAGE = IntegerBlockState.createInstance("damage", 0, 2);
 
         BREWING_STAND_HAS_BOTTLE_0 = BooleanBlockState.createInstance("has_bottle_0", false);
         BREWING_STAND_HAS_BOTTLE_1 = BooleanBlockState.createInstance("has_bottle_1", false);
         BREWING_STAND_HAS_BOTTLE_2 = BooleanBlockState.createInstance("has_bottle_2", false);
 
         POWERED_BY_REDSTONE = BooleanBlockState.createInstance("powered", false);
-        REDSTONE_POWER = IntegerBlockState.createInstance("power", 0, 15);
+        POWER = IntegerBlockState.createInstance("power", 0, 15);
 
-        AGE_TYPE_1 = IntegerBlockState.createInstance("age", 0, 1);
-        AGE_TYPE_2 = IntegerBlockState.createInstance("age", 0, 2);
-        AGE_TYPE_3 = IntegerBlockState.createInstance("age", 0, 3);
-        AGE_TYPE_4 = IntegerBlockState.createInstance("age", 0, 5);
-        AGE_TYPE_5 = IntegerBlockState.createInstance("age", 0, 7);
-        AGE_TYPE_6 = IntegerBlockState.createInstance("age", 0, 15);
-        AGE_TYPE_7 = IntegerBlockState.createInstance("age", 0, 25);
+        AGE_TO_1 = IntegerBlockState.createInstance("age", 0, 1);
+        AGE_TO_2 = IntegerBlockState.createInstance("age", 0, 2);
+        AGE_TO_3 = IntegerBlockState.createInstance("age", 0, 3);
+        AGE_TO_5 = IntegerBlockState.createInstance("age", 0, 5);
+        AGE_TO_7 = IntegerBlockState.createInstance("age", 0, 7);
+        AGE_TO_15 = IntegerBlockState.createInstance("age", 0, 15);
+        AGE_TO_25 = IntegerBlockState.createInstance("age", 0, 25);
 
         CAKE_BITES = IntegerBlockState.createInstance("bites", 0, 6);
 
@@ -423,7 +486,7 @@ public class StateList {
 
         JUKEBOX_HAS_RECORD = BooleanBlockState.createInstance("has_record", false);
 
-        LEAVES_DECAYABLE = BooleanBlockState.createInstance((JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_12) ? "decayable" : "persistent"), true);
+        LEAVES_PERSISTENT = BooleanBlockState.createInstance((JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13) ? "persistent" : "decayable"), (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_12)));
         LEAVES_DISTANCE = IntegerBlockState.createInstance("distance", 1, 7);
 
         EXTENDED = BooleanBlockState.createInstance("extended", false);
@@ -431,16 +494,14 @@ public class StateList {
 
         TRACK_POSITION = EnumBlockState.createInstance("shape", EnumTrackPosition.class, EnumTrackPosition.ASCENDING_EAST);
 
-        WEIGHTED_PRESSURE_PLATE_POWER = IntegerBlockState.createInstance("power", 0, 15);
-
         COMPARATOR_MODE = EnumBlockState.createInstance("mode", EnumComparatorMode.class, EnumComparatorMode.COMPARE);
 
         CONDITIONAL_COMMAND_BLOCK = BooleanBlockState.createInstance("conditional", false);
 
-        REDSTONE_WIRE_CONNECTION_NORTH = EnumBlockState.createInstance("north", EnumRedstoneWireConnection.class, EnumRedstoneWireConnection.SIDE);
-        REDSTONE_WIRE_CONNECTION_EAST = EnumBlockState.createInstance("east", EnumRedstoneWireConnection.class, EnumRedstoneWireConnection.SIDE);
-        REDSTONE_WIRE_CONNECTION_SOUTH = EnumBlockState.createInstance("south", EnumRedstoneWireConnection.class, EnumRedstoneWireConnection.SIDE);
-        REDSTONE_WIRE_CONNECTION_WEST = EnumBlockState.createInstance("west", EnumRedstoneWireConnection.class, EnumRedstoneWireConnection.SIDE);
+        REDSTONE_WIRE_CONNECTION_NORTH = EnumBlockState.createInstance("north", EnumRedstoneWireConnection.class, EnumRedstoneWireConnection.NONE);
+        REDSTONE_WIRE_CONNECTION_EAST = EnumBlockState.createInstance("east", EnumRedstoneWireConnection.class, EnumRedstoneWireConnection.NONE);
+        REDSTONE_WIRE_CONNECTION_SOUTH = EnumBlockState.createInstance("south", EnumRedstoneWireConnection.class, EnumRedstoneWireConnection.NONE);
+        REDSTONE_WIRE_CONNECTION_WEST = EnumBlockState.createInstance("west", EnumRedstoneWireConnection.class, EnumRedstoneWireConnection.NONE);
 
         REPEATER_LOCKED = BooleanBlockState.createInstance("locked", false);
         REPEATER_DELAY = IntegerBlockState.createInstance("delay", 0, 4);
@@ -462,8 +523,8 @@ public class StateList {
 
         TRAPDOOR_ATTACHED_HALF = EnumBlockState.createInstance("half", EnumTrapdoorHalf.class, EnumTrapdoorHalf.BOTTOM);
 
-        TRIPWIRE_SUSPENDED = BooleanBlockState.createInstance("suspended", false);
-        TRIPWIRE_ATTACHED = BooleanBlockState.createInstance("attached", false);
+        SUSPENDED = BooleanBlockState.createInstance("suspended", false);
+        ATTACHED = BooleanBlockState.createInstance("attached", false);
         TRIPWIRE_DISARMED = BooleanBlockState.createInstance("disarmed", false);
 
         LECTERN_HAS_BOOK = BooleanBlockState.createInstance("has_book", false);
@@ -496,7 +557,7 @@ public class StateList {
 
 
     public static StateType<?> getStateTypeByName(String typeName) {
-        return JReflection.getObjectFields(StateList.class, null)
+        return JFieldReflector.getObjectsFromFields(StateList.class, null, true)
                 .stream()
                 .filter(obj -> obj instanceof StateType) //checker for the specific type
                 .map(obj -> ((StateType<?>) obj)) //caster
@@ -506,5 +567,51 @@ public class StateList {
 
     private StateList() {}
 
+    /**
+     * Represents the ID of this state in NMS.
+     */
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface StateId {
+        String id();
+    }
+
+    /**
+     * The target block of this state.
+     */
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface TargetBlock {
+        JMaterial.MaterialEnum[] targets();
+    }
+
+    /**
+     * The explanation of what this state does.
+     */
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface StateExplanation {
+        String explanation();
+    }
+
+    /**
+     * Specifies that a state has been changed!
+     */
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface StateChanged {
+        String changeExplanation();
+    }
+
+    /**
+     * Specifies when a specific state was implemented.
+     */
+    @Target(ElementType.FIELD)
+    @Retention(RetentionPolicy.RUNTIME)
+    public @interface ImplementedAt {
+        JVersion implementedVersion();
+
+        JVersion removedVersion() default JVersion.UNKNOWN;
+    }
 
 }

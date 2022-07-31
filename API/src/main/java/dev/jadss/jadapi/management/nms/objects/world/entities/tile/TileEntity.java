@@ -1,13 +1,15 @@
 package dev.jadss.jadapi.management.nms.objects.world.entities.tile;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.NMSException;
 import dev.jadss.jadapi.management.nms.interfaces.DefinedPacket;
 import dev.jadss.jadapi.management.nms.interfaces.NMSManipulable;
 import dev.jadss.jadapi.management.nms.interfaces.NMSObject;
 import dev.jadss.jadapi.management.nms.objects.world.entities.types.TileEntityTypesInstance;
 import dev.jadss.jadapi.management.nms.objects.world.positions.BlockPosition;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
 
 public abstract class TileEntity implements NMSObject, NMSManipulable {
 
@@ -27,22 +29,22 @@ public abstract class TileEntity implements NMSObject, NMSManipulable {
 
     protected Object tileEntity;
 
-    public static final Class<?> tileEntityClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.level.block.entity" : "server." + JReflection.getNMSVersion()) + ".TileEntity");
+    public static final Class<?> TILE_ENTITY = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.level.block.entity" : "server." + NMS.getNMSVersion()) + ".TileEntity");
 
-    public TileEntity(Object nmsTileEntity) {
-        if (nmsTileEntity == null)
+    public TileEntity(Object entity) {
+        if (entity == null)
             throw new NMSException("The tile entity may not be null!");
-        if (!isTileEntityObject(nmsTileEntity))
+        if (!isTileEntityObject(entity))
             throw new NMSException("This is not an NMS TileEntity!");
 
-        tileEntity = nmsTileEntity;
+        tileEntity = entity;
     }
 
-    //todo: maybe add more tile entities?
     public static TileEntity parseTileEntity(Object nmsTileEntity) {
-        if (nmsTileEntity == null) throw new NMSException("The tile entity may not be null!");
+        if (nmsTileEntity == null)
+            throw new NMSException("The tile entity may not be null!");
 
-        if (nmsTileEntity.getClass().equals(TileEntitySign.tileEntitySignClass)) {
+        if (nmsTileEntity.getClass().equals(TileEntitySign.TILE_ENTITY_SIGN)) {
             return new TileEntitySign(nmsTileEntity);
         } else {
             return new TileEntity(nmsTileEntity) {
@@ -54,17 +56,17 @@ public abstract class TileEntity implements NMSObject, NMSManipulable {
         }
     }
 
-    public boolean isTileEntityObject(Object object) {
-        return tileEntityClass.isAssignableFrom(object.getClass());
+    public static boolean isTileEntityObject(Object entity) {
+        return TILE_ENTITY.isAssignableFrom(entity.getClass());
     }
 
     public abstract DefinedPacket getUpdatePacket(BlockPosition position);
 
     public TileEntityTypesInstance getTileEntityType() {
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_12))
-            throw new NMSException("Unsupported for now!");
+            throw new NMSException("TileEntityTypes is not existent in 1.12 and versions below.");
 
-        return new TileEntityTypesInstance(JReflection.getFieldObject(TileEntity.tileEntityClass, TileEntityTypesInstance.TILE_ENTITY_TYPE, tileEntity, (i) -> 0));
+        return new TileEntityTypesInstance(JFieldReflector.getObjectFromUnspecificField(TileEntity.TILE_ENTITY, TileEntityTypesInstance.TILE_ENTITY_TYPE, tileEntity));
     }
 
     @Override

@@ -1,16 +1,23 @@
 package dev.jadss.jadapi.management.nms.packets;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.NMSException;
 import dev.jadss.jadapi.management.nms.interfaces.DefinedPacket;
 import dev.jadss.jadapi.management.nms.objects.world.positions.BlockPosition;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JConstructorReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
 
 public class OutOpenSignEditor extends DefinedPacket {
 
-    public static final Class<?> openSignEditorPacketClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.protocol.game" : "server." + JReflection.getNMSVersion()) + ".PacketPlayOutOpenSignEditor");
+    public static final Class<?> openSignEditorPacketClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.protocol.game" : "server." + NMS.getNMSVersion()) + ".PacketPlayOutOpenSignEditor");
 
     private BlockPosition position;
+
+    public OutOpenSignEditor() {
+
+    }
 
     public OutOpenSignEditor(BlockPosition blockPosition) {
         this.position = blockPosition;
@@ -32,13 +39,13 @@ public class OutOpenSignEditor extends DefinedPacket {
             throw new NMSException("The packet specified is not parsable by this class.");
 
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
-            int x = JReflection.getFieldObject(openSignEditorPacketClass, int.class, packet, (i) -> 0);
-            int y = JReflection.getFieldObject(openSignEditorPacketClass, int.class, packet, (i) -> 1);
-            int z = JReflection.getFieldObject(openSignEditorPacketClass, int.class, packet, (i) -> 2);
+            int x = JFieldReflector.getObjectFromUnspecificField(openSignEditorPacketClass, int.class, (i) -> 0, packet);
+            int y = JFieldReflector.getObjectFromUnspecificField(openSignEditorPacketClass, int.class, (i) -> 1, packet);
+            int z = JFieldReflector.getObjectFromUnspecificField(openSignEditorPacketClass, int.class, (i) -> 2, packet);
             this.position = new BlockPosition(x, y, z);
         } else {
             this.position = new BlockPosition();
-            this.position.parse(JReflection.getFieldObject(openSignEditorPacketClass, BlockPosition.blockPositionClass, packet));
+            this.position.parse(JFieldReflector.getObjectFromUnspecificField(openSignEditorPacketClass, BlockPosition.blockPositionClass, packet));
         }
     }
 
@@ -47,9 +54,9 @@ public class OutOpenSignEditor extends DefinedPacket {
         Object packet;
 
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7)) {
-            packet = JReflection.executeConstructor(openSignEditorPacketClass, new Class[]{int.class, int.class, int.class}, this.position.getX(), this.position.getY(), this.position.getZ());
+            packet = JConstructorReflector.executeConstructor(openSignEditorPacketClass, new Class[]{int.class, int.class, int.class}, this.position.getX(), this.position.getY(), this.position.getZ());
         } else {
-            packet = JReflection.executeConstructor(openSignEditorPacketClass, new Class[]{BlockPosition.blockPositionClass}, this.position.build());
+            packet = JConstructorReflector.executeConstructor(openSignEditorPacketClass, new Class[]{BlockPosition.blockPositionClass}, this.position.build());
         }
 
         return packet;
@@ -68,5 +75,12 @@ public class OutOpenSignEditor extends DefinedPacket {
     @Override
     public DefinedPacket copy() {
         return new OutOpenSignEditor((BlockPosition) this.position.copy());
+    }
+
+    @Override
+    public String toString() {
+        return "OutOpenSignEditor{" +
+                "position=" + position +
+                '}';
     }
 }

@@ -1,15 +1,16 @@
 package dev.jadss.jadapi.management.nms.objects.world.block.state;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.objects.world.block.state.impl.BooleanState;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
 
 /**
  * Represents a Boolean BlockState!
  */
 public interface BooleanBlockState extends StateType<Boolean> {
 
-    public static final Class<?> blockStateBooleanClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.level.block.state.properties" : "server." + JReflection.getNMSVersion()) + ".BlockStateBoolean");
+    public static final Class<?> blockStateBooleanClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.level.block.state.properties" : "server." + NMS.getNMSVersion()) + ".BlockStateBoolean");
 
     /**
      * Create an instance of a BlockState.

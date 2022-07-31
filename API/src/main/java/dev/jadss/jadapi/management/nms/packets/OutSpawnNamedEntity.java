@@ -5,7 +5,9 @@ import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.NMSException;
 import dev.jadss.jadapi.management.nms.interfaces.DefinedPacket;
 import dev.jadss.jadapi.management.nms.objects.world.entities.EntityPlayer;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JConstructorReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -13,7 +15,7 @@ public class OutSpawnNamedEntity extends DefinedPacket {
 
     private EntityPlayer player;
 
-    private final Class<?> spawnNamedEntityPacketClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.protocol.game" : "server." + JReflection.getNMSVersion()) + ".PacketPlayOutNamedEntitySpawn");
+    private static final Class<?> spawnNamedEntityPacketClass = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.protocol.game" : "server." + NMS.getNMSVersion()) + ".PacketPlayOutNamedEntitySpawn");
 
     public OutSpawnNamedEntity() {
     }
@@ -32,7 +34,7 @@ public class OutSpawnNamedEntity extends DefinedPacket {
 
     @Override
     public Object build() {
-        return JReflection.executeConstructor(spawnNamedEntityPacketClass, new Class[]{EntityPlayer.entityHumanClass}, player.getHandle());
+        return JConstructorReflector.executeConstructor(spawnNamedEntityPacketClass, new Class[]{EntityPlayer.ENTITY_HUMAN}, player.getHandle());
     }
 
     @Override
@@ -42,7 +44,7 @@ public class OutSpawnNamedEntity extends DefinedPacket {
         if (!canParse(packet))
             throw new NMSException("The packet specified is not parsable by this class.");
 
-        int entityID = JReflection.getFieldObject(spawnNamedEntityPacketClass, int.class, packet, (i) -> 0);
+        int entityID = JFieldReflector.getObjectFromUnspecificField(spawnNamedEntityPacketClass, int.class, packet);
 
         Player gettingIt = null;
         for (Player player : Bukkit.getOnlinePlayers()) {
@@ -68,5 +70,12 @@ public class OutSpawnNamedEntity extends DefinedPacket {
     @Override
     public DefinedPacket copy() {
         return new OutSpawnNamedEntity(this.player);
+    }
+
+    @Override
+    public String toString() {
+        return "OutSpawnNamedEntity{" +
+                "player=" + player +
+                '}';
     }
 }

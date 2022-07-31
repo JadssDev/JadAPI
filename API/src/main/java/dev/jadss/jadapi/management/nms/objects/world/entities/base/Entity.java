@@ -2,18 +2,22 @@ package dev.jadss.jadapi.management.nms.objects.world.entities.base;
 
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
 import dev.jadss.jadapi.bukkitImpl.misc.JWorld;
+import dev.jadss.jadapi.management.nms.NMS;
 import dev.jadss.jadapi.management.nms.NMSException;
 import dev.jadss.jadapi.management.nms.interfaces.NMSManipulable;
 import dev.jadss.jadapi.management.nms.interfaces.NMSObject;
 import dev.jadss.jadapi.management.nms.objects.chat.IChatBaseComponent;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.JMappings;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JMethodReflector;
 
 import java.util.UUID;
 
 public abstract class Entity implements NMSObject, NMSManipulable {
 
-    public static final Class<?> entityClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.entity" : "server." + JReflection.getNMSVersion()) + ".Entity");
-    public static final Class<?> dataWatcherClass = JReflection.getReflectionClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.syncher" : "server." + JReflection.getNMSVersion()) + ".DataWatcher");
+    public static final Class<?> ENTITY_CLASS = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "world.entity" : "server." + NMS.getNMSVersion()) + ".Entity");
+    public static final Class<?> DATA_WATCHER_CLASS = JClassReflector.getClass("net.minecraft." + (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_17) ? "network.syncher" : "server." + NMS.getNMSVersion()) + ".DataWatcher");
 
     //todo:
     //Cool ideas maybe:
@@ -21,31 +25,39 @@ public abstract class Entity implements NMSObject, NMSManipulable {
 
     protected final Object entity;
 
-    public Entity(Object nmsEntity) {
-        if (nmsEntity == null) throw new NMSException("The entity may not be null!");
-        if (!isEntityObject(nmsEntity)) throwExceptionNotClass("Entity");
+    public Entity(Object entity) {
+        if (entity == null)
+            throw new NMSException("The entity may not be null!");
+        if (!isEntityObject(entity))
+            throwExceptionNotClass("Entity");
 
-        this.entity = nmsEntity;
+        this.entity = entity;
     }
 
-    public static boolean isEntityObject(Object entity) {
-        return entityClass.isAssignableFrom(entity.getClass());
+    public static boolean isEntityObject(Object object) {
+        return ENTITY_CLASS.isAssignableFrom(object.getClass());
     }
 
 
     //Custom methods.
 
-    public int getId() {
-        if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_17)) {
-            return (int) JReflection.executeMethod(entityClass, "getId", this.entity, new Class[]{});
-        } else { // No way of using some type of genius to get it except use the actual method name! Unfortunate.
-            return (int) JReflection.executeMethod(entityClass, "ae", this.entity, new Class[]{});
-        }
+    public static final JMappings ID_METHOD = JMappings.create(Entity.ENTITY_CLASS)
+            .add(JVersion.v1_7, "getId")
+            .add(JVersion.v1_18, "ae")
+            .finish();
+
+    public int getEntityId() {
+        return (int) JMethodReflector.executeMethod(ENTITY_CLASS, ID_METHOD.get(), this.entity, null);
     }
 
     public Object getDataWatcher() {
-        return JReflection.getFieldObject(entityClass, dataWatcherClass, this.entity);
+        return JFieldReflector.getObjectFromUnspecificField(ENTITY_CLASS, DATA_WATCHER_CLASS, this.entity);
     }
+
+    public static final JMappings GET_CUSTOM_NAME_METHOD = JMappings.create(Entity.ENTITY_CLASS)
+            .add(JVersion.v1_8, "getCustomName")
+            .add(JVersion.v1_18, "Z")
+            .finish();
 
     public IChatBaseComponent getCustomName() {
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7))
@@ -53,49 +65,55 @@ public abstract class Entity implements NMSObject, NMSManipulable {
 
         IChatBaseComponent component = new IChatBaseComponent();
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_12)) {
-            component.setMessage(JReflection.executeMethod(entityClass, new Class[]{}, this.entity, String.class, (i) -> i));
+            component.setMessage((String) JMethodReflector.executeMethod(ENTITY_CLASS, GET_CUSTOM_NAME_METHOD.get(), this.entity, null));
             component.setJsonMessage(IChatBaseComponent.defaultSimpleFormat.replace("%text%", component.getMessage()));
-            component.setJsonMode(true);
+            component.setJsonMode(false);
         } else {
-            component.parse(JReflection.executeMethod(entityClass, new Class[]{}, this.entity, IChatBaseComponent.iChatBaseComponentClass, (i) -> i));
+            component.parse(JMethodReflector.executeMethod(ENTITY_CLASS, GET_CUSTOM_NAME_METHOD.get(), this.entity, null));
         }
         return component;
     }
+
+    public static final JMappings SET_CUSTOM_NAME_METHOD = JMappings.create(Entity.ENTITY_CLASS)
+            .add(JVersion.v1_8, "setCustomName")
+            .add(JVersion.v1_18, "a")
+            .add(JVersion.v1_19, "b")
+            .finish();
 
     public void setCustomName(IChatBaseComponent component) {
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7))
             throw new NMSException("This method is not available on 1.7");
 
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_12)) {
-            JReflection.executeMethod(entityClass, new Class[]{String.class}, this.entity, null, (i) -> i, component.getMessage());
+            JMethodReflector.executeMethod(ENTITY_CLASS, SET_CUSTOM_NAME_METHOD.get(), new Class[]{String.class}, this.entity, new Object[]{component.getMessage()});
         } else {
-            JReflection.executeMethod(entityClass, new Class[]{IChatBaseComponent.iChatBaseComponentClass}, this.entity, null, (i) -> i, component.build());
+            JMethodReflector.executeMethod(ENTITY_CLASS, SET_CUSTOM_NAME_METHOD.get(), new Class[]{IChatBaseComponent.iChatBaseComponentClass}, this.entity, new Object[]{component.build()});
         }
     }
+
+    public static final JMappings IS_CUSTOM_NAME_VISIBLE_METHOD = JMappings.create(Entity.ENTITY_CLASS)
+            .add(JVersion.v1_8, "getCustomNameVisible")
+            .add(JVersion.v1_18, "cr")
+            .add(JVersion.v1_19, "cu")
+            .finish();
 
     public boolean isCustomNameVisible() {
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7))
             throw new NMSException("This method is not available on 1.7");
 
-        if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_17)) {
-            return (boolean) JReflection.executeMethod(entityClass, "getCustomNameVisible", this.entity, new Class[]{});
-        } else {
-            //There's no good way to check such name with unspecific methods, so this is the OnLy WAY.
-            return (boolean) JReflection.executeMethod(entityClass, "cr", this.entity, new Class[]{});
-        }
-
+        return (boolean) JMethodReflector.executeMethod(ENTITY_CLASS, IS_CUSTOM_NAME_VISIBLE_METHOD.get(), this.entity, null);
     }
+
+    public static final JMappings SET_CUSTOM_NAME_VISIBLE_METHOD = JMappings.create(Entity.ENTITY_CLASS)
+            .add(JVersion.v1_8, "getCustomNameVisible")
+            .add(JVersion.v1_18, "n")
+            .finish();
 
     public void setCustomNameVisible(boolean visible) {
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_7))
             throw new NMSException("This method is not available on 1.7");
 
-        if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_17)) {
-            JReflection.executeMethod(entityClass, "setCustomNameVisible", this.entity, new Class[]{boolean.class}, visible);
-        } else {
-            //There's no good way to check such name with unspecific methods, so this is the OnLy WAY.
-            JReflection.executeMethod(entityClass, "n", this.entity, new Class[]{boolean.class}, visible);
-        }
+        JMethodReflector.executeMethod(ENTITY_CLASS, SET_CUSTOM_NAME_VISIBLE_METHOD.get(), new Class[]{boolean.class}, this.entity, new Object[]{visible});
     }
 
     public boolean isInvisible() {
@@ -109,29 +127,38 @@ public abstract class Entity implements NMSObject, NMSManipulable {
         this.setFlagged(5, invisible);
     }
 
-    public void setNoGravity(boolean gravity) {
+    public static final JMappings SET_NO_GRAVITY_METHOD = JMappings.create(Entity.ENTITY_CLASS)
+            .add(JVersion.v1_9, "setNoGravity")
+            .add(JVersion.v1_18, "e")
+            .finish();
+
+    public void setNoGravity(boolean noGravity) {
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_9)) {
             throw new NMSException("You cannot use this method in versions below 1.9!");
         } else {
-            if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_17)) {
-                JReflection.executeMethod(entityClass, "setNoGravity", this.entity, new Class[]{boolean.class}, gravity);
-            } else {
-                JReflection.executeMethod(entityClass, "e", this.entity, new Class[]{boolean.class}, gravity);
-            }
+            JMethodReflector.executeMethod(ENTITY_CLASS, SET_NO_GRAVITY_METHOD.get(), new Class[]{boolean.class}, this.entity, new Object[]{noGravity});
         }
     }
+
+    public static final JMappings IS_NO_GRAVITY_METHOD = JMappings.create(Entity.ENTITY_CLASS)
+            .add(JVersion.v1_9, "isNoGravity")
+            .add(JVersion.v1_18, "aM")
+            .add(JVersion.v1_19, "aN")
+            .finish();
 
     public boolean isNoGravity() {
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_9)) {
             throw new NMSException("You cannot use this method in versions below 1.9!");
         } else {
-            if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_17)) {
-                return (boolean) JReflection.executeMethod(entityClass, "isNoGravity", this.entity, new Class[]{});
-            } else {
-                return (boolean) JReflection.executeMethod(entityClass, "aM", this.entity, new Class[]{});
-            }
+            return (boolean) JMethodReflector.executeMethod(ENTITY_CLASS, IS_NO_GRAVITY_METHOD.get(), new Class[]{}, this.entity, null);
         }
     }
+
+    public static final JMappings IS_FLAGGED_METHOD = JMappings.create(ENTITY_CLASS)
+            .add(JVersion.v1_7, "g")
+            .add(JVersion.v1_9, "getFlag")
+            .add(JVersion.v1_18, "h")
+            .finish();
 
     /**
      * this is advanced and should not be used unless you know what you are doing
@@ -140,14 +167,15 @@ public abstract class Entity implements NMSObject, NMSManipulable {
      * @return if the flag is set to true or false.
      */
     public boolean isFlagged(int flag) {
-        if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_8)) {
-            return (boolean) JReflection.executeMethod(entityClass, "g", this.entity, new Class[]{int.class}, flag);
-        } else if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_17)) {
-            return (boolean) JReflection.executeMethod(entityClass, "getFlag", this.entity, new Class[]{int.class}, flag);
-        } else { //Basically 1.18
-            return (boolean) JReflection.executeMethod(entityClass, "h", this.entity, new Class[]{int.class}, flag);
-        }
+        return (boolean) JMethodReflector.executeMethod(ENTITY_CLASS, IS_FLAGGED_METHOD.get(), new Class[]{int.class}, this.entity, new Object[]{flag});
     }
+
+    public static final JMappings SET_FLAGGED_METHOD = JMappings.create(ENTITY_CLASS)
+            .add(JVersion.v1_7, "a")
+            .add(JVersion.v1_8, "b")
+            .add(JVersion.v1_9, "setFlag")
+            .add(JVersion.v1_18, "b")
+            .finish();
 
     /**
      * this is advanced and should not be used unless you know what you are doing
@@ -156,15 +184,21 @@ public abstract class Entity implements NMSObject, NMSManipulable {
      * @param value the value to set the flag to.
      */
     public void setFlagged(int flag, boolean value) {
-        JReflection.executeMethod(entityClass, new Class[]{int.class, boolean.class}, this.entity, null, (i) -> (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_17) ? i : 0), flag, value);
+        JMethodReflector.executeMethod(ENTITY_CLASS, SET_FLAGGED_METHOD.get(), new Class[]{int.class, boolean.class}, this.entity, new Object[]{flag, value});
     }
 
-    public UUID getUniqueID() {
-        return (UUID) JReflection.executeMethod(entityClass, "getUniqueID", this.entity, new Class[]{});
+    public static final JMappings UNIQUE_ID_METHOD = JMappings.create(ENTITY_CLASS)
+            .add(JVersion.v1_7, "getUniqueID")
+            .add(JVersion.v1_18, "cm")
+            .add(JVersion.v1_19, "cp")
+            .finish();
+
+    public UUID getUniqueID() { //1.18 - cm //1.19 - cp
+        return (UUID) JMethodReflector.executeMethod(ENTITY_CLASS, UNIQUE_ID_METHOD.get(), this.entity, null);
     }
 
     public org.bukkit.entity.Entity getBukkitEntity() {
-        int thisEntityID = this.getId();
+        int thisEntityID = this.getEntityId();
         for (JWorld world : JWorld.getJWorlds())
             for (org.bukkit.entity.Entity entities : world.getWorld().getEntities())
                 if (entities.getEntityId() == thisEntityID)
@@ -176,11 +210,11 @@ public abstract class Entity implements NMSObject, NMSManipulable {
         return entity;
     }
 
-    protected void throwExceptionNotClass(String clazz) {
+    protected static void throwExceptionNotClass(String clazz) {
         throw new NMSException("This is not a NMS " + clazz + "!");
     }
 
-    protected void throwExceptionUnsupported() {
+    protected static void throwExceptionUnsupported() {
         throw new NMSException("This server does not contain this entity at their registry.");
     }
 }
