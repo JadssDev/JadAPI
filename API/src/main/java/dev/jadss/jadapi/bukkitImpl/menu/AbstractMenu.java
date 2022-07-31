@@ -146,8 +146,14 @@ public abstract class AbstractMenu<A extends AbstractMenu<A, T, K>, T extends Ab
         return context;
     }
 
+    /**
+     * Called when this menu is registered.
+     */
     protected abstract void onRegister();
 
+    /**
+     * Called when this menu is unregistered.
+     */
     protected abstract void onUnregister();
 
     /**
