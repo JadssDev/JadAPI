@@ -107,7 +107,7 @@ public class TestCommand {
             if (lastHologram.get() != null)
                 lastHologram.get().delete();
 
-            lastHologram.set(new JHologram(player.getPlayer().getLocation(), true, "&3Test", "&3&lHologram", "&a=)"));
+            lastHologram.set(new JHologram(JadAPI.getInstance().getJadPluginInstance(), player.getPlayer().getLocation(), true, "&3Test", "&3&lHologram", "&a=)"));
 
             player.sendMessage("&3&lJadAPI &7>> &eCreated!");
         }));
