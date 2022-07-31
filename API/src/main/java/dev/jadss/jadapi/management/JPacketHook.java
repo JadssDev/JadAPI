@@ -89,24 +89,6 @@ public class JPacketHook {
         this(registerer, packetHandler, checker, ticksToUnregister, executions, hookedPackets.toArray(new Class[hookedPackets.size()]), hookedPlayer, id);
     }
 
-    @Deprecated
-    @ForRemoval(willBeRemoved = true, expectedVersionForRemoval = "1.23.1", reason = "A new constrcutor was created to fit all needs.")
-    public JPacketHook(JadAPIPlugin registerer, Consumer<PacketEvent> packetHandler, int ticksToUnregister, int executionsRemaining, String id, JPlayer hookedPlayer, Class<?>... hookedPackets) {
-        this(registerer, packetHandler, null, ticksToUnregister, executionsRemaining, hookedPackets, hookedPlayer, id);
-    }
-
-    @Deprecated
-    @ForRemoval(willBeRemoved = true, expectedVersionForRemoval = "1.23.1", reason = "A new constrcutor was created to fit all needs.")
-    public JPacketHook(JadAPIPlugin registerer, Consumer<PacketEvent> packetHandler, int ticksToUnregister, int executionsRemaining, String id, boolean hookEveryPacket, JPlayer hookedPlayer) {
-        this(registerer, packetHandler, null, ticksToUnregister, executionsRemaining, hookedPlayer, id);
-    }
-
-    @Deprecated
-    @ForRemoval(willBeRemoved = true, expectedVersionForRemoval = "1.23.1", reason = "A new constrcutor was created to fit all needs.")
-    public JPacketHook(JadAPIPlugin registerer, Consumer<PacketEvent> packetHandler, int ticksToUnregister, int executionsRemaining, JPlayer hookedPlayer, Class<?>... hookedPackets) {
-        this(registerer, packetHandler, null, ticksToUnregister, executionsRemaining, hookedPackets, hookedPlayer, null);
-    }
-
     /**
      * <p>Register the PacketHook to JadEventHandler</p>
      * <p>Set this to true to start this PacketHook, starting this QuickEvent will instantly register it and making it able to be called in a nano second later, but it will unregister itself if the executions run out or ticks to unregister reaches 0!</p>
