@@ -5,7 +5,7 @@ import dev.jadss.jadapi.annotations.ForChange;
 /**
  * Way of <b>JadAPI</b> telling Errors with this custom Exception!
  */
-@ForChange(isMajor = true, expectedVersionForChange = "1.24", reason = "JException class only has Reasons for Errors, and it's not really Versatile, which makes it a big deal, so it's getting changed.")
+@ForChange(isMajor = true, expectedVersionForChange = "1.24.1", reason = "JException class only has Reasons for Errors, and it's not really Versatile, which makes it a big deal, so it's getting changed.")
 public class JException extends RuntimeException {
 
     public JException(Reason reason) {
