@@ -1,6 +1,5 @@
 package dev.jadss.jadapi.bukkitImpl.item;
 
-import dev.jadss.jadapi.annotations.ForChange;
 import dev.jadss.jadapi.interfaces.Copyable;
 import org.bukkit.Material;
 

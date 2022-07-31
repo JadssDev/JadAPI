@@ -1,10 +1,6 @@
 package dev.jadss.jadapi.bukkitImpl.item;
 
 import de.tr7zw.changeme.nbtapi.NBTItem;
-import org.bukkit.inventory.ItemStack;
-
-import java.lang.reflect.Field;
-import java.util.Arrays;
 
 /**
  * Represents the NBT data of an item.
