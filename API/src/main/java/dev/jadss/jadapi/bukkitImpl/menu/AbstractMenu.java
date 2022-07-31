@@ -62,6 +62,8 @@ public abstract class AbstractMenu<A extends AbstractMenu<A, T, K>, T extends Ab
 
             this.closeEventListener = new JQuickEvent<>(this.registerer, InventoryCloseEvent.class, EventPriority.MONITOR, (event) -> {
                 this.onClose(new CloseContext<>(this.getContext(event.getPlayer().getUniqueId()), event));
+
+                this.contexts.remove(this.getContext(event.getPlayer().getUniqueId()));
             }, -1, -1, (e) -> this.contexts.stream()
                     .anyMatch(context -> context.getPlayer().getPlayer().getUniqueId().equals(e.getPlayer().getUniqueId())), JQuickEvent.generateID())
                     .register(true);
