@@ -74,7 +74,7 @@ public abstract class AbstractInventory<T extends AbstractInventory<T, K>, K ext
                     this.setItem(i, item);
         } else {
             for (int i = 0; i < this.inventory.getSize(); i++)
-                if (this.inventory.getItem(i) == null)
+                if (this.getItem(i) != null && this.getItem(i).isValidNBTItem()) //checks if it's different than null && AUR
                     this.setItem(i, item);
         }
 
