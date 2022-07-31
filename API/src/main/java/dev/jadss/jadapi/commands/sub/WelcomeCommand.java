@@ -3,7 +3,7 @@ package dev.jadss.jadapi.commands.sub;
 import dev.jadss.jadapi.JadAPI;
 import dev.jadss.jadapi.bukkitImpl.entities.JPlayer;
 import dev.jadss.jadapi.management.labymod.displays.EconomyPacket;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.management.nms.NMS;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -40,7 +40,7 @@ public class WelcomeCommand {
                 Bukkit.getScheduler().runTaskLater(JadAPI.getInstance(), () -> {
                     JadAPI.getInstance().getLabyService().sendPacket(player, new EconomyPacket(Collections.singletonMap("cash", new EconomyPacket.EconomyType(true, 0, null, null))));
                     Bukkit.getScheduler().runTaskLater(JadAPI.getInstance(), () -> {
-                        JadAPI.getInstance().getLabyService().sendPacket(player, new EconomyPacket(Collections.singletonMap("cashst", new EconomyPacket.EconomyType(false, 0, null))));
+                        JadAPI.getInstance().getLabyService().sendPacket(player, new EconomyPacket(Collections.singletonMap("cash", new EconomyPacket.EconomyType(false, 0, null))));
                     }, 20L);
                 }, 500L);
             } else {
@@ -51,7 +51,7 @@ public class WelcomeCommand {
     }
 
     public static void showCoolStuff(JPlayer player) {
-        player.sendActionBar("&eThis &b&lserver &eis &brunning &3&lJadAPI " + JadAPI.getInstance().getDescription().getVersion() + " &eon &3&lNMS &f" + JReflection.getNMSVersion() + "&e!")
+        player.sendActionBar("&eThis &b&lserver &eis &brunning &3&lJadAPI " + JadAPI.getInstance().getDescription().getVersion() + " &eon &3&lNMS &f" + NMS.getNMSVersion() + "&e!")
                 .sendTitle("&3&lJadAPI", "&bAdvanced &3&lAPI", 5, 80, 10);
         Bukkit.getScheduler().runTaskLater(JadAPI.getInstance(), () -> {
             long id = -1; //todo: get id
