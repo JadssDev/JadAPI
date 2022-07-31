@@ -9,7 +9,8 @@ public class DebugOptions {
     private boolean packetHooksDebug;
     private boolean miscDebug;
 
-    public DebugOptions() { }
+    public DebugOptions() {
+    }
 
     public boolean doReflectionDebug() { return reflectionDebug; }
     public void setReflectionDebug(boolean reflectionDebug) { this.reflectionDebug = reflectionDebug; }
