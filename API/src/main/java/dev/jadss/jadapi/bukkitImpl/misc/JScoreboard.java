@@ -9,7 +9,7 @@ import dev.jadss.jadapi.interfaces.Copyable;
 import dev.jadss.jadapi.interfaces.misc.JPlaceholderParser;
 import dev.jadss.jadapi.interfaces.misc.Placeholder;
 import dev.jadss.jadapi.interfaces.scoreboard.JScoreboardAbstract;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JMethodReflector;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.scoreboard.DisplaySlot;
@@ -145,9 +145,9 @@ public final class JScoreboard implements Copyable<JScoreboard> {
 
     private static Objective createObjective(Scoreboard scoreboard, String title) {
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13)) {
-            return (Objective) JReflection.executeMethod(Scoreboard.class, "registerNewObjective", scoreboard, new Class[]{String.class, String.class, String.class}, title, "dummy", title);
+            return (Objective) JMethodReflector.executeMethod(Scoreboard.class, "registerNewObjective", new Class[]{String.class, String.class, String.class}, scoreboard, new Object[]{title, "dummy", title});
         } else {
-            return (Objective) JReflection.executeMethod(Scoreboard.class, "registerNewObjective", scoreboard, new Class[]{String.class, String.class}, title, "dummy");
+            return (Objective) JMethodReflector.executeMethod(Scoreboard.class, "registerNewObjective", new Class[]{String.class, String.class}, scoreboard, new Object[]{title, "dummy"});
         }
     }
 
@@ -157,7 +157,8 @@ public final class JScoreboard implements Copyable<JScoreboard> {
      * @param player the player to update it for.
      */
     public void updatePlayer(JPlayer player) {
-        if (this.title.toCharArray().length + 1 > 16) throw new JException(JException.Reason.SCOREBOARD_TITLE_TOO_LONG);
+        if (this.title.toCharArray().length + 1 > 16)
+            throw new JException(JException.Reason.SCOREBOARD_TITLE_TOO_LONG);
 
         Scoreboard board = player.getPlayer().getScoreboard();
 
