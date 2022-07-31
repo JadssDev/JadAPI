@@ -1,11 +1,13 @@
 package dev.jadss.jadapi.bukkitImpl.misc;
 
 import dev.jadss.jadapi.JadAPIPlugin;
+import dev.jadss.jadapi.annotations.ForChange;
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
 import dev.jadss.jadapi.bukkitImpl.item.JItemStack;
 import dev.jadss.jadapi.bukkitImpl.item.JMaterial;
 import dev.jadss.jadapi.bukkitImpl.sub.BukkitUtils;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JClassReflector;
+import dev.jadss.jadapi.utils.reflection.reflectors.JConstructorReflector;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
@@ -14,6 +16,7 @@ import org.bukkit.plugin.Plugin;
 import java.util.HashMap;
 import java.util.Map;
 
+@ForChange(isMajor = false, expectedVersionForChange = "1.24.1", reason = "Change this object to feature more utilities.")
 public class JShapedCraft {
 
     private final JadAPIPlugin plugin;
@@ -149,10 +152,10 @@ public class JShapedCraft {
     private static ShapedRecipe createRecipe(JItemStack result, Plugin plugin, String recipeName) {
         if (JVersion.getServerVersion().isNewerOrEqual(JVersion.v1_13)) {
             //updated
-            return (ShapedRecipe) JReflection.executeConstructor(ShapedRecipe.class, new Class[]{JReflection.getReflectionClass("org.bukkit.NamespacedKey"), ItemStack.class}, BukkitUtils.buildNamespacedKey(plugin, recipeName), result.buildItemStack());
+            return (ShapedRecipe) JConstructorReflector.executeConstructor(ShapedRecipe.class, new Class[]{JClassReflector.getClass("org.bukkit.NamespacedKey"), ItemStack.class}, BukkitUtils.buildNamespacedKey(plugin, recipeName), result.getBukkitItem());
         } else {
             //outdated
-            return (ShapedRecipe) JReflection.executeConstructor(ShapedRecipe.class, new Class[]{ItemStack.class}, result.buildItemStack());
+            return (ShapedRecipe) JConstructorReflector.executeConstructor(ShapedRecipe.class, new Class[]{ItemStack.class}, result.getBukkitItem());
         }
     }
 
