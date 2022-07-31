@@ -46,7 +46,6 @@ public final class JHead {
         JItemStack stack = new JItemStack(JMaterial.getRegistryMaterials().find("PLAYER_HEAD"));
         if (base64Value == null) return stack;
         UUID hash = new UUID(base64Value.hashCode(), base64Value.hashCode());
-        return
-                stack.setItemStack(Bukkit.getUnsafe().modifyItemStack(stack.buildItemStack(), "{SkullOwner:{Id:\"" + hash + "\",Properties:{textures:[{Value:\"" + base64Value + "\"}]}}}"));
+        return new JItemStack(Bukkit.getUnsafe().modifyItemStack(stack.getBukkitItem(), "{SkullOwner:{Id:\"" + hash + "\",Properties:{textures:[{Value:\"" + base64Value + "\"}]}}}"));
     }
 }
