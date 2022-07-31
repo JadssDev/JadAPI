@@ -312,7 +312,7 @@ public abstract class AbstractItemStack<T extends AbstractItemStack<T>> implemen
      * @return if it is a valid NBT item.
      */
     public boolean isValidNBTItem() {
-        return this.getType() != AIR_MATERIAL;
+        return this.item != null && this.getType() != AIR_MATERIAL;
     }
 
 
