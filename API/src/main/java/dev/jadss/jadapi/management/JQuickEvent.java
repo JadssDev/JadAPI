@@ -87,16 +87,6 @@ public final class JQuickEvent<E extends Event> {
         }
     }
 
-    @Deprecated
-    public JQuickEvent(JadAPIPlugin registerer, Class<E> eventClass, Consumer<E> eventHandler, EventPriority priority, int ticksToUnregister, int executionsRemaining, String id) {
-        this(registerer, eventClass, priority, eventHandler, ticksToUnregister, executionsRemaining, (Predicate<E>) JQuickEvent.ALWAYS_TRUE, id);
-    }
-
-    @Deprecated
-    public JQuickEvent(JadAPIPlugin registerer, Class<E> eventClass, Consumer<E> eventHandler, EventPriority priority, int ticksToUnregister, int executionsRemaining) {
-        this(registerer, eventClass, priority, eventHandler, ticksToUnregister, executionsRemaining, (Predicate<E>) JQuickEvent.ALWAYS_TRUE, generateID());
-    }
-
     /**
      * <p>Register the QuickEvent to JadEventHandler</p>
      * <p>Set this to true to start this QuickEvent, starting this QuickEvent will instantly register it and making it able to be called in a nano second later, but it will unregister itself if the executions run out or ticks to unregister reaches 0!</p>
