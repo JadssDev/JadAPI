@@ -105,7 +105,7 @@ public abstract class Entity implements NMSObject, NMSManipulable {
     }
 
     public static final JMappings SET_CUSTOM_NAME_VISIBLE_METHOD = JMappings.create(Entity.ENTITY_CLASS)
-            .add(JVersion.v1_8, "getCustomNameVisible")
+            .add(JVersion.v1_8, "setCustomNameVisible")
             .add(JVersion.v1_18, "n")
             .finish();
 
