@@ -103,7 +103,7 @@ public final class JHologram implements PacketListener<InInteractAtEntityPacket>
                 .toArray(JPlayer[]::new);
         playersShown.removeAll(Arrays.asList(players));
 
-        List<Object> packets = this.armorStands.stream().map(stand -> new OutEntityDestroy(new int[]{stand.getId()}).build()).collect(Collectors.toList());
+        List<Object> packets = this.armorStands.stream().map(stand -> new OutEntityDestroy(new int[]{stand.getEntityId()}).build()).collect(Collectors.toList());
         Arrays.stream(players).forEach(p -> packets.forEach(p::sendPacket));
 
         return this;
@@ -186,7 +186,7 @@ public final class JHologram implements PacketListener<InInteractAtEntityPacket>
      * Delete this hologram.
      */
     public void delete() {
-        List<Object> packets = this.armorStands.stream().map(stand -> new OutEntityDestroy(new int[]{stand.getId()}).build()).collect(Collectors.toList());
+        List<Object> packets = this.armorStands.stream().map(stand -> new OutEntityDestroy(new int[]{stand.getEntityId()}).build()).collect(Collectors.toList());
         this.playersShown.forEach(players -> packets.forEach(players::sendPacket));
 
         JadAPI.getInstance().getInformationManager().getHolograms().remove(this);
@@ -224,6 +224,7 @@ public final class JHologram implements PacketListener<InInteractAtEntityPacket>
 
     @Override
     public boolean shouldCallListeners(InInteractAtEntityPacket packet) {
-        return this.armorStands.stream().anyMatch(entity -> entity.getId() == packet.getEntityID());
+        return false;
+//        return this.armorStands.stream().anyMatch(entity -> entity.getEntityId() == packet.getEntityID());
     }
 }
