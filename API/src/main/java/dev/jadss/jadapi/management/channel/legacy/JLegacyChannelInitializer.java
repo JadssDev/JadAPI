@@ -1,11 +1,11 @@
 package dev.jadss.jadapi.management.channel.legacy;
 
-import dev.jadss.jadapi.JadAPI;
-import dev.jadss.jadapi.utils.JReflection;
 import net.minecraft.util.io.netty.channel.Channel;
 import net.minecraft.util.io.netty.channel.ChannelInitializer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+
+import java.lang.reflect.Method;
 
 @SuppressWarnings("all")
 public class JLegacyChannelInitializer extends ChannelInitializer<Channel> {
@@ -26,9 +26,13 @@ public class JLegacyChannelInitializer extends ChannelInitializer<Channel> {
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eAlready &3&lhooked &einto &b&lpackets&e!?"));
     }
 
-    public void initOldChannel(Channel channel) throws Exception {
-        JadAPI.getInstance().getDebug().setReflectionDebug(true);
-        JReflection.executeMethod(ChannelInitializer.class, "initChannel", channelInitializer, new Class[] { Channel.class }, channel);
-        JadAPI.getInstance().getDebug().setReflectionDebug(false);
+    public void initOldChannel(net.minecraft.util.io.netty.channel.Channel channel) throws Exception {
+        Method method = null;
+        for (Method m : channelInitializer.getClass().getDeclaredMethods())
+            if (m.getName().equals("initChannel")) method = m;
+        if (method == null)
+            return;
+        method.setAccessible(true);
+        method.invoke(channelInitializer, channel);
     }
 }

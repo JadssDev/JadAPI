@@ -9,7 +9,7 @@ import dev.jadss.jadapi.management.nms.objects.chat.IChatBaseComponent;
 import dev.jadss.jadapi.management.nms.objects.world.positions.BlockPosition;
 import dev.jadss.jadapi.management.nms.packets.InUpdateSign;
 import dev.jadss.jadapi.management.nms.packets.OutBlockChangePacket;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JFieldReflector;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -27,7 +27,7 @@ public final class SignChangeHandler {
         if(JadAPI.getInstance().getSigns().containsKey(player.getPlayer().getUniqueId())) {
             JSignRegister register = JadAPI.getInstance().getSigns().get(player.getPlayer().getUniqueId());
             JadAPI.getInstance().getSigns().remove(player.getPlayer().getUniqueId());
-            Location location = JReflection.getFieldObject(JSignRegister.class, Location.class, register);
+            Location location = JFieldReflector.getObjectFromUnspecificField(JSignRegister.class, Location.class, register);
             BlockPosition blockPosition = new BlockPosition(location.getX(), location.getY(), location.getZ());
 
             player.sendPacket(new OutBlockChangePacket(NMS.createBlock(JMaterial.getRegistryMaterials().find(JMaterial.MaterialEnum.AIR)).createBlockData(), blockPosition).build());

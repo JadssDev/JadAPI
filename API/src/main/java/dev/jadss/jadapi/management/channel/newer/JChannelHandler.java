@@ -112,21 +112,25 @@ public class JChannelHandler extends ChannelDuplexHandler {
             if (handshakeParser.canParse(packet)) {
                 handshakeParser.parse(packet);
 
-                if (handshakeParser.getProtocolEnum() == EnumProtocol.LOGIN)
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eCaptured a &3&lHandShaking Packet &eon Protocol \"&b&lLOGIN&e\"! Trying to find &3Player&e...."));
+                if (JadAPI.getInstance().getDebug().doMiscDebug())
+                    if (handshakeParser.getProtocolEnum() == EnumProtocol.LOGIN)
+                        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eCaptured a &3&lHandShaking Packet &eon Protocol \"&b&lLOGIN&e\"! Trying to find &3Player&e...."));
             } else if (loginStartParser.canParse(packet)) {
                 loginStartParser.parse(packet);
 
-                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eReceived &3&lMojang Authentication &bpacket &efrom &3" + loginStartParser.getGameProfile().getName() + "&e!"));
-                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eFound &3&lHandshaking Packet &bowner&e! &a&lMerging&e..."));
+                if (JadAPI.getInstance().getDebug().doMiscDebug()) {
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eReceived &3&lMojang Authentication &bpacket &efrom &3" + loginStartParser.getPlayerName() + "&e!"));
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eFound &3&lHandshaking Packet &bowner&e! &a&lMerging&e..."));
+                }
 
-                JadAPI.getInstance().getManagement().addChannelLookup(loginStartParser.getGameProfile().getName(), channelHandlerContext.channel());
+                JadAPI.getInstance().getManagement().addChannelLookup(loginStartParser.getPlayerName(), channelHandlerContext.channel());
 
                 JadAPI.getInstance().getPacketHooker().callPacketHooks(handshakeParser.build(), null, false, false);
                 EventResult result = JadAPI.getInstance().getPacketHooker().callPacketHooks(loginStartParser.build(), null, false, true);
-                Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &3&lPackets &ecalls &bfinished&e!"));
+                if (JadAPI.getInstance().getDebug().doMiscDebug())
+                    Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &3&lPackets &ecalls &bfinished&e!"));
 
-                new JQuickEvent<>(JadAPI.getInstance().getJadPlugin(), PlayerLoginEvent.class, EventPriority.MONITOR, loginEvent -> {
+                new JQuickEvent<>(JadAPI.getInstance().getJadPluginInstance(), PlayerLoginEvent.class, EventPriority.MONITOR, loginEvent -> {
                     JPlayer player = new JPlayer(loginEvent.getPlayer());
 
                     int updatedVersion = handshakeParser.getProtocol();
@@ -134,14 +138,15 @@ public class JChannelHandler extends ChannelDuplexHandler {
                         updatedVersion = Via.getAPI().getPlayerVersion(player.getPlayer().getUniqueId());
                     handshakeParser.setProtocol(updatedVersion);
 
-                    Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eFound &3" + player.getPlayer().getName() + " &eon &b&lLogin&e! Protocol &a&m->&b&l " + handshakeParser.getProtocol()));
+                    if (JadAPI.getInstance().getDebug().doMiscDebug())
+                        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eFound &3" + player.getPlayer().getName() + " &eon &b&lLogin&e! Protocol Version &a&m->&b&l " + handshakeParser.getProtocol()));
                     player.setValue("version", handshakeParser.getProtocol());
 
                     JadAPI.getInstance().getPacketHooker().callPacketHooks(handshakeParser.build(), player, false, false);
                     JadAPI.getInstance().getPacketHooker().callPacketHooks(loginStartParser.build(), player, false, false);
 
                     JadAPI.getInstance().getManagement().injectPlayer(player);
-                }, 60, -1, e -> e.getPlayer().getName().equalsIgnoreCase(loginStartParser.getGameProfile().getName()), JQuickEvent.generateID()).register(true);
+                }, 60, -1, e -> e.getPlayer().getName().equalsIgnoreCase(loginStartParser.getPlayerName()), JQuickEvent.generateID()).register(true);
             }
 
             return new EventResult(packet, false, false);
@@ -173,7 +178,7 @@ public class JChannelHandler extends ChannelDuplexHandler {
 
                 ByteBufWorker byteBuf = payloadPacket.getData().getASByteBuf();
 
-                String readableText = payloadPacket.getData().getASByteBuf().getReadableString();
+                String readableText = payloadPacket.getData().getASByteBuf().getReadableStrings();
 
                 if (payloadPacket.getChannel().equalsIgnoreCase("labymod3:main")) {
                     this.player.setValue("labymod_user", true);

@@ -24,8 +24,6 @@ public class JChannelInitializer extends ChannelInitializer<Channel> {
             channel.pipeline().addBefore("packet_handler", "GlobalJadAPIHandler", new JChannelHandler(0, null));
         else
             Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eAlready &3&lhooked &einto &b&lpackets&e!?"));
-
-        Bukkit.getConsoleSender().sendMessage(ChatColor.translateAlternateColorCodes('&', "&3&lJadAPI &7>> &eHooked &3&linto &b&lpackets of a channel!"));
     }
 
     public void initOldChannel(Channel channel) throws Exception {
