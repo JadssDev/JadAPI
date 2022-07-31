@@ -4,7 +4,7 @@ import dev.jadss.jadapi.bukkitImpl.entities.JEntity;
 import dev.jadss.jadapi.bukkitImpl.enums.JParticle;
 import dev.jadss.jadapi.bukkitImpl.enums.JVersion;
 import dev.jadss.jadapi.exceptions.JException;
-import dev.jadss.jadapi.utils.JReflection;
+import dev.jadss.jadapi.utils.reflection.reflectors.JMethodReflector;
 import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Location;
@@ -57,15 +57,20 @@ public class JWorld {
      * @return itself.
      */
     public JWorld spawnParticle(Location location, JParticle particle, float speed, int particleCount) {
-        Object parsedParticle = particle.parseParticle();
+        Enum<?> parsedParticle = particle.parseParticle();
         if (parsedParticle == null) throw new JException(JException.Reason.INVALID_CLASS);
 
         if (JVersion.getServerVersion().isLowerOrEqual(JVersion.v1_8)) {
-            JReflection.executeMethod(World.Spigot.class, "playEffect", this.world.spigot(),
+            JMethodReflector.executeMethod(World.Spigot.class, "playEffect",
+                    //          Location        Effect        int        int        float        float        float        float        int        int
                     new Class[]{Location.class, Effect.class, int.class, int.class, float.class, float.class, float.class, float.class, int.class, int.class},
-                    location, parsedParticle, 0, 0, 0, 0, 0, speed, particleCount, 300);
+                    this.world.spigot(),
+                    new Object[]{location, parsedParticle, 0, 0, 0, 0, 0, speed, particleCount, 300});
         } else {
-            JReflection.executeMethod(World.class, "spawnParticle", this.world, new Class[]{JReflection.getReflectionClass("org.bukkit.Particle"), Location.class, int.class, double.class, double.class, double.class}, parsedParticle, location, particleCount, 0, 0, 0);
+            JMethodReflector.executeMethod(World.class, "spawnParticle",
+                    new Class[]{JParticle.PARTICLE_CLASS, Location.class, int.class, double.class, double.class, double.class},
+                    this.world,
+                    new Object[]{parsedParticle, location, particleCount, 0, 0, 0});
         }
 
         return this;
