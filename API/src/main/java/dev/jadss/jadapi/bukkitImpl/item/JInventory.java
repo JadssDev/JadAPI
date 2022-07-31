@@ -72,9 +72,16 @@ public final class JInventory extends AbstractInventory<JInventory, JItemStack> 
     public JInventory copy() {
         Inventory newInventory;
         if (this.getType() == InventoryType.CHEST)
-            newInventory = Bukkit.createInventory(null, this.getSize(), this.displayName);
+            newInventory = Bukkit.createInventory(null, this.getSize(), ChatColor.translateAlternateColorCodes('&', this.displayName));
         else
-            newInventory = Bukkit.createInventory(null, this.getType(), this.displayName);
+            newInventory = Bukkit.createInventory(null, this.getType(), ChatColor.translateAlternateColorCodes('&', this.displayName));
+
+        JItemStack[] items = this.getInventoryContentsAsArray();
+        for (int i = 0; i < items.length; i++) {
+            JItemStack item = items[i];
+            if (item != null && item.getBukkitItem() != null && item.isValidNBTItem())
+                newInventory.setItem(i, item.getBukkitItem());
+        }
 
         return new JInventory(newInventory, this.displayName);
     }
